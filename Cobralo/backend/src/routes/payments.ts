@@ -1,0 +1,31 @@
+import { Router } from 'express';
+import {
+    getAllPayments,
+    getPaymentStats,
+    getAnalytics,
+    createPayment,
+    deletePayment,
+    updatePayment
+} from '../controllers/paymentController';
+
+const router = Router();
+
+// GET all payments with student info optionally filtered
+router.get('/', getAllPayments);
+
+// GET payment stats by month/year
+router.get('/stats', getPaymentStats);
+
+// GET advanced analytics
+router.get('/analytics', getAnalytics);
+
+// POST create payment record
+router.post('/', createPayment);
+
+// DELETE payment
+router.delete('/:id', deletePayment);
+
+// PUT update payment (available from controller)
+router.put('/:id', updatePayment);
+
+export default router;
