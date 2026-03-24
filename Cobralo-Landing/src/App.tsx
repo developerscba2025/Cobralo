@@ -15,8 +15,6 @@ import {
   MousePointer2,
   Rocket,
   Instagram,
-  Twitter,
-  Linkedin,
   ArrowUpRight,
   Send
 } from 'lucide-react';
