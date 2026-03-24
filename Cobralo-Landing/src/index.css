@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   --bg: #050805;
@@ -53,6 +53,7 @@ h1, h2, h3, h4 {
 .gradient-text {
   background: linear-gradient(135deg, #fff 0%, var(--primary-light) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -121,4 +122,101 @@ h1, h2, h3, h4 {
 
 .float-anim {
   animation: float 6s ease-in-out infinite;
+}
+
+/* New Enhancements */
+.glow-card {
+  position: relative;
+  z-index: 1;
+}
+
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+  background-size: 200% 100%;
+  border-radius: 26px;
+  z-index: -1;
+  animation: borderGlow 3s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes borderGlow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.step-number {
+  background: var(--primary);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.8rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.offer-banner {
+  background: var(--primary);
+  color: white;
+  padding: 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.offer-track {
+  display: inline-flex;
+  gap: 2rem;
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+.offer-banner span {
+  display: inline-block;
+  padding-right: 2rem;
+}
+
+/* Footer & Link Enhancements */
+.footer-link {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--primary-light);
+  transition: width 0.3s ease;
+}
+
+.footer-link:hover::after {
+  width: 100%;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.95); }
+}
+
+.pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
 }

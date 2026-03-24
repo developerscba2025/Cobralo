@@ -128,6 +128,58 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response) => 
 };
 
 /**
+ * POST /api/payments/create-link - Create a payment link for a student
+ */
+export const createStudentPaymentLink = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.userId) {
+            res.status(401).json({ error: 'Autenticación requerida' });
+            return;
+        }
+
+        const { studentId, amount, title } = req.body;
+
+        if (!studentId || !amount) {
+            res.status(400).json({ error: 'studentId y amount son requeridos' });
+            return;
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: req.userId },
+            select: { mpAccessToken: true, bizName: true }
+        });
+
+        if (!user?.mpAccessToken) {
+            res.status(400).json({ error: 'Debes configurar tu Access Token de Mercado Pago en Ajustes' });
+            return;
+        }
+
+        const returnUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success`;
+
+        const mpPreference = await createMercadoPagoPreference(
+            req.userId,
+            'CLASS_PAYMENT',
+            returnUrl,
+            user.mpAccessToken,
+            { 
+                title: title || `Clase de ${user.bizName || 'Tu Profe'}`, 
+                amount: Number(amount), 
+                studentId: Number(studentId) 
+            }
+        );
+
+        res.json({
+            checkoutUrl: mpPreference.initPoint,
+            preferenceId: mpPreference.preferenceId
+        });
+    } catch (error) {
+        console.error('Error creating student payment link:', error);
+        res.status(500).json({ error: 'Error al crear link de pago' });
+    }
+};
+
+
+/**
  * POST /api/subscription/webhook - Mercado Pago webhook handler
  * Este endpoint recibe notificaciones de Mercado Pago cuando un pago es confirmado
  */
@@ -187,8 +239,8 @@ export const handleMercadoPagoWebhook = async (req: any, res: Response) => {
 
             if (plan === 'PRO_MONTHLY') {
                 expiryDate.setMonth(expiryDate.getMonth() + 1);
-            } else if (plan === 'PRO_ANNUAL') {
-                expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+            } else if (plan === 'PRO_SEMESTRAL') {
+                expiryDate.setMonth(expiryDate.getMonth() + 6);
             }
 
             // Actualizar usuario a Pro

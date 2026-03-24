@@ -12,14 +12,17 @@ const Receipts: React.FC = () => {
     const [receipts, setReceipts] = useState<ReceiptData[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchReceipts = async () => {
             try {
                 const data = await api.getReceipts();
                 setReceipts(data);
+                setError(null);
             } catch (error) {
                 console.error('Error fetching receipts:', error);
+                setError('No se pudieron cargar los recibos');
                 showToast.error('No se pudieron cargar los recibos');
             } finally {
                 setLoading(false);
@@ -64,6 +67,28 @@ const Receipts: React.FC = () => {
             <Layout>
                 <div className="flex items-center justify-center min-h-[400px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                </div>
+            </Layout>
+        );
+    }
+
+    if (error) {
+        return (
+            <Layout>
+                <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-4">
+                    <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6">
+                        <ReceiptIcon size={40} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{error}</h3>
+                    <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm">
+                        Ocurrió un problema al obtener tus recibos. Por favor, intentá recargar la página.
+                    </p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="px-8 py-3 bg-slate-900 dark:bg-slate-700 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all"
+                    >
+                        Recargar Página
+                    </button>
                 </div>
             </Layout>
         );

@@ -81,31 +81,8 @@ export const createStudent = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        // Verificar límites del plan
-        const user = await prisma.user.findUnique({
-            where: { id: req.userId },
-            select: { plan: true }
-        });
-
-        if (!user) {
-            res.status(404).json({ error: 'Usuario no encontrado' });
-            return;
-        }
-
-        // Verificar que no supere el límite si es plan FREE
-        if (user.plan !== 'PRO') {
-            const studentCount = await prisma.student.count({
-                where: { ownerId: req.userId }
-            });
-
-            if (studentCount >= 5) {
-                res.status(403).json({
-                    error: 'Has alcanzado el límite de 5 estudiantes en plan FREE. Pasate a Pro para agregar más.',
-                    requiresPro: true
-                });
-                return;
-            }
-        }
+        // El límite de estudiantes se verifica mediante el middleware checkStudentLimit
+        // en la ruta POST /api/students
 
         const student = await prisma.student.create({
             data: {

@@ -124,7 +124,10 @@ export interface User {
     ratingToken?: string;
     ratingTokenExpires?: string;
     calendarToken?: string;
+    mpAccessToken?: string;
+    mpPublicKey?: string;
 }
+
 
 export interface Subscription {
     id: number;
@@ -634,7 +637,24 @@ export const api = {
             headers: { ...getAuthHeader() }
         });
         return res.json();
+    },
+
+    // ============ TOP TEACHERS ============
+    async getTopTeachers(): Promise<any[]> {
+        const res = await fetchWithTimeout(`${API_URL}/ratings/top-teachers`);
+        return res.json();
+    },
+
+    // ============ STUDENT PAYMENTS ============
+    async createStudentPaymentLink(data: { studentId: number, amount: number, title?: string }): Promise<{ checkoutUrl: string }> {
+        const res = await fetchWithTimeout(`${API_URL}/payments/create-link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify(data)
+        });
+        return res.json();
     }
 };
+
 
 

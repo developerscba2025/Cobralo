@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -30,6 +29,8 @@ model User {
   plan                  String                   @default("FREE")
   subscriptionExpiry    DateTime?
   mercadoPagoCustomerId String?
+  mpAccessToken         String?
+  mpPublicKey           String?
   createdAt             DateTime                 @default(now())
   updatedAt             DateTime                 @updatedAt
   calendarToken         String?                  @unique

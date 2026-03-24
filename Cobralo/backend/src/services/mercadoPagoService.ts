@@ -27,50 +27,79 @@ export const mercadoPagoClient = axios.create({
 });
 
 /**
- * Planes de suscripción disponibles
+ * Planes de suscripción disponibles (LANZAMIENTO - 50% OFF)
  */
 export const SUBSCRIPTION_PLANS = {
     PRO_MONTHLY: {
         id: 'pro-monthly',
         name: 'Plan Pro - Mensual',
-        description: 'Acceso ilimitado a todas las funcionalidades Pro',
-        price: 999, // ARS 9.99 por mes (se ajusta según económia)
+        description: 'Alumnos ilimitados, recordatorios WhatsApp y más',
+        price: 499, // ARS 499.00 (50% OFF - Original 999)
         currency: 'ARS',
         billingCycle: 'month',
         durationMonths: 1
     },
-    PRO_ANNUAL: {
-        id: 'pro-annual',
-        name: 'Plan Pro - Anual',
-        description: 'Acceso ilimitado a todas las funcionalidades Pro por un año',
-        price: 9999, // ARS 99.99 por año (20% descuento)
+    PRO_SEMESTRAL: {
+        id: 'pro-semestral',
+        name: 'Plan Pro - Semestral',
+        description: 'Suscripción por 6 meses con descuento adicional',
+        price: 2499, // ARS 2499.00 (50% OFF - Original ~4999)
         currency: 'ARS',
-        billingCycle: 'year',
-        durationMonths: 12
+        billingCycle: 'semester',
+        durationMonths: 6
     }
 };
 
 /**
  * Crear una preferencia de pago en Mercado Pago
+ * @param customAccessToken Para cobrar a nombre del profesor
  */
 export const createMercadoPagoPreference = async (
     userId: number,
-    planId: keyof typeof SUBSCRIPTION_PLANS,
-    returnUrl: string
+    planId: keyof typeof SUBSCRIPTION_PLANS | 'CLASS_PAYMENT',
+    returnUrl: string,
+    customAccessToken?: string,
+    classDetails?: { title: string; amount: number; studentId: number }
 ) => {
     try {
-        const plan = SUBSCRIPTION_PLANS[planId];
+        const headers: any = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${customAccessToken || mercadoPagoConfig.accessToken}`
+        };
 
-        const preference = {
-            items: [
+        let items = [];
+        let external_reference = '';
+        let metadata = {};
+
+        if (planId === 'CLASS_PAYMENT' && classDetails) {
+            items = [
+                {
+                    title: classDetails.title,
+                    quantity: 1,
+                    unit_price: classDetails.amount,
+                    currency_id: 'ARS'
+                }
+            ];
+            external_reference = `student-${classDetails.studentId}-user-${userId}`;
+            metadata = { student_id: classDetails.studentId, user_id: userId, type: 'class_payment' };
+        } else {
+            const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS];
+            items = [
                 {
                     title: plan.name,
                     description: plan.description,
                     quantity: 1,
-                    unit_price: plan.price / 100, // Convertir centavos a pesos
+                    unit_price: plan.price,
                     currency_id: plan.currency
                 }
-            ],
+            ];
+            external_reference = `user-${userId}-${planId}`;
+            metadata = { user_id: userId, plan_id: planId, type: 'subscription' };
+        }
+
+        const preference = {
+            items,
             payer: {
                 email: `user-${userId}@cobralo.app`
             },
@@ -79,14 +108,19 @@ export const createMercadoPagoPreference = async (
                 failure: `${returnUrl}?status=failure`,
                 pending: `${returnUrl}?status=pending`
             },
-            statement_descriptor: 'COBRALO PRO',
-            external_reference: `user-${userId}-${planId}`,
+            auto_return: 'approved',
+            external_reference,
+            metadata,
             expires: true,
             expiration_date_from: new Date().toISOString(),
             expiration_date_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         };
 
-        const response = await mercadoPagoClient.post('/checkout/preferences', preference);
+        const response = await axios.post(
+            `${mercadoPagoConfig.apiUrl}/checkout/preferences`, 
+            preference,
+            { headers }
+        );
 
         return {
             preferenceId: response.data.id,
@@ -102,9 +136,12 @@ export const createMercadoPagoPreference = async (
 /**
  * Obtener detalles de un pago en Mercado Pago
  */
-export const getMercadoPagoPayment = async (paymentId: string) => {
+export const getMercadoPagoPayment = async (paymentId: string, customAccessToken?: string) => {
     try {
-        const response = await mercadoPagoClient.get(`/v1/payments/${paymentId}`);
+        const headers = {
+            'Authorization': `Bearer ${customAccessToken || mercadoPagoConfig.accessToken}`
+        };
+        const response = await axios.get(`${mercadoPagoConfig.apiUrl}/v1/payments/${paymentId}`, { headers });
         return response.data;
     } catch (error) {
         console.error('Error getting Mercado Pago payment:', error);

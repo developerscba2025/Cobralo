@@ -7,8 +7,14 @@ import {
     deletePayment,
     updatePayment
 } from '../controllers/paymentController';
+import { createStudentPaymentLink } from '../controllers/subscriptionController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
+router.use(authMiddleware);
+
+// POST create payment link for student
+router.post('/create-link', createStudentPaymentLink);
 
 // GET all payments with student info optionally filtered
 router.get('/', getAllPayments);

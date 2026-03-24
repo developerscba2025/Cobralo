@@ -580,144 +580,145 @@ const Students = () => {
                             {isEditing ? 'Editar Alumno' : 'Nuevo Alumno'}
                         </h2>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">Nombre del Alumno</label>
-                                <input required type="text" placeholder="Ej: Juan Pérez" className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-medium" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">WhatsApp (sin 0 ni 15)</label>
-                                <input required type="tel" placeholder="Ej: 5491112345678" className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-medium" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">Servicio / Materia</label>
-                                <input 
-                                    list="services-list"
-                                    placeholder="Escribe o selecciona..."
-                                    className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none font-bold outline-none" 
-                                    value={formData.service_name} 
-                                    onChange={e => handleServiceChange(e.target.value)} 
-                                />
-                                <datalist id="services-list">
-                                    {services.map(s => <option key={s} value={s} />)}
-                                </datalist>
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">Subcategoría / Tema</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Ej: Álgebra, Nivel B1, etc." 
-                                    className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-medium" 
-                                    value={formData.sub_category || ''} 
-                                    onChange={e => setFormData({ ...formData, sub_category: e.target.value })} 
-                                />
-                            </div>
-
-                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl mb-4">
-                                <label className="text-xs font-bold text-slate-500 ml-1 mb-2 block">Tipo de Plan</label>
-                                <div className="flex gap-4">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="planType"
-                                            checked={formData.planType === 'MONTHLY'}
-                                            onChange={() => setFormData({ ...formData, planType: 'MONTHLY' })}
-                                            className="w-4 h-4 text-green-700 focus:ring-green-600"
-                                        />
-                                        <span className="font-medium text-slate-700 dark:text-slate-300">Mensual</span>
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="planType"
-                                            checked={formData.planType === 'PACK'}
-                                            onChange={() => setFormData({ ...formData, planType: 'PACK' })}
-                                            className="w-4 h-4 text-green-700 focus:ring-green-600"
-                                        />
-                                        <span className="font-medium text-slate-700 dark:text-slate-300">Pack de Clases</span>
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="planType"
-                                            checked={formData.planType === 'PER_CLASS'}
-                                            onChange={() => setFormData({ ...formData, planType: 'PER_CLASS' })}
-                                            className="w-4 h-4 text-green-700 focus:ring-green-600"
-                                        />
-                                        <span className="font-medium text-slate-700 dark:text-slate-300">Por Clase</span>
-                                    </label>
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            {/* SECCIÓN 1: DATOS PERSONALES */}
+                            <section>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-700 dark:text-green-400">
+                                        <Plus size={16} />
+                                    </div>
+                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Datos Personales</h3>
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">
-                                        {formData.planType === 'PACK' ? 'Clases en el Pack' : formData.planType === 'PER_CLASS' ? 'Crédito Inicial' : 'Clases al Mes'}
-                                    </label>
-                                    <input
-                                        required
-                                        type="number"
-                                        placeholder="Ej: 4"
-                                        className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-medium"
-                                        value={formData.planType === 'PACK' ? (formData.credits || '') : (formData.classes_per_month || '')}
-                                        onChange={e =>
-                                            (formData.planType === 'PACK' || formData.planType === 'PER_CLASS')
-                                                ? setFormData({ ...formData, credits: Number(e.target.value) })
-                                                : setFormData({ ...formData, classes_per_month: Number(e.target.value) })
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">Precio por Hora</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">{user?.currency || '$'}</span>
-                                        <input required type="number" placeholder="0" className="w-full p-4 pl-8 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold" value={formData.price_per_hour || ''} onChange={e => setFormData({ ...formData, price_per_hour: Number(e.target.value) })} />
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">Nombre Completo</label>
+                                            <input required type="text" autoComplete="off" placeholder="Ej: Juan Pérez" className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">WhatsApp (sin 0 ni 15)</label>
+                                            <input required type="tel" autoComplete="off" placeholder="54911..." className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </section>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">Método de Pago</label>
-                                    <select className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none font-bold outline-none" value={formData.payment_method} onChange={e => setFormData({ ...formData, payment_method: e.target.value })}>
-                                        <option value="Efectivo">Efectivo</option>
-                                        <option value="Transferencia">Transferencia</option>
-                                        <option value="Otro">Otro</option>
-                                    </select>
+                            {/* SECCIÓN 2: SERVICIO Y PLAN */}
+                            <section>
+                                <div className="flex items-center gap-2 mb-4 text-balance">
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400">
+                                        <Check size={16} />
+                                    </div>
+                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Servicio y Modalidad</h3>
                                 </div>
-                            </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">Materia / Servicio</label>
+                                            <input 
+                                                list="services-list"
+                                                autoComplete="off"
+                                                placeholder="Escribe o selecciona..."
+                                                className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner" 
+                                                value={formData.service_name} 
+                                                onChange={e => handleServiceChange(e.target.value)} 
+                                            />
+                                            <datalist id="services-list">
+                                                {services.map(s => <option key={s} value={s} />)}
+                                            </datalist>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">Subcategoría (Opcional)</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Ej: Álgebra" 
+                                                className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner" 
+                                                value={formData.sub_category || ''} 
+                                                onChange={e => setFormData({ ...formData, sub_category: e.target.value })} 
+                                            />
+                                        </div>
+                                    </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">Día de Vencimiento</label>
-                                    <input type="number" min="1" max="31" placeholder="Ej: 10" className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-medium" value={formData.deadline_day || ''} onChange={e => setFormData({ ...formData, deadline_day: Number(e.target.value) })} />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-slate-500 ml-3 mb-1 block">% Recargo por Mora</label>
-                                    <div className="relative">
-                                        <input type="number" placeholder="Ej: 10" className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-medium" value={formData.surcharge_percentage || ''} onChange={e => setFormData({ ...formData, surcharge_percentage: Number(e.target.value) })} />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-2xl flex gap-1">
+                                        {[
+                                            { id: 'MONTHLY', label: 'Mensual' },
+                                            { id: 'PACK', label: 'Pack' },
+                                            { id: 'PER_CLASS', label: 'Clases' }
+                                        ].map(plan => (
+                                            <button
+                                                key={plan.id}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, planType: plan.id as any })}
+                                                className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
+                                                    formData.planType === plan.id
+                                                        ? 'bg-white dark:bg-slate-800 text-green-700 dark:text-green-400 shadow-md scale-[1.02]'
+                                                        : 'text-slate-400 hover:text-slate-600'
+                                                }`}
+                                            >
+                                                {plan.label}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
-                            </div>
+                            </section>
 
-                            <div className="bg-slate-50 dark:bg-slate-900 p-5 rounded-[24px] border border-slate-100 dark:border-slate-700/50">
-                                <label className="text-xs font-black text-slate-500 uppercase tracking-wider ml-1 mb-2 block text-balance">¿Dónde querés recibir el dinero de este alumno?</label>
+                            {/* SECCIÓN 3: COSTOS Y PAGOS */}
+                            <section>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-700 dark:text-amber-400">
+                                        <Send size={16} />
+                                    </div>
+                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 text-balance">Costos y Configuración</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">
+                                                {formData.planType === 'PACK' ? 'Clases del Pack' : formData.planType === 'PER_CLASS' ? 'Créditos' : 'Clases al Mes'}
+                                            </label>
+                                            <input required type="number" className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner" value={formData.planType === 'PACK' ? (formData.credits || '') : (formData.classes_per_month || '')} onChange={e => (formData.planType === 'PACK' || formData.planType === 'PER_CLASS') ? setFormData({ ...formData, credits: Number(e.target.value) }) : setFormData({ ...formData, classes_per_month: Number(e.target.value) })} />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">Precio x Hora</label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">{user?.currency || '$'}</span>
+                                                <input required type="number" className="w-full p-4 pl-8 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner" value={formData.price_per_hour || ''} onChange={e => setFormData({ ...formData, price_per_hour: Number(e.target.value) })} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">Método de Pago</label>
+                                            <select className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none font-bold text-sm outline-none shadow-inner" value={formData.payment_method} onChange={e => setFormData({ ...formData, payment_method: e.target.value })}>
+                                                <option value="Efectivo">Efectivo 💵</option>
+                                                <option value="Transferencia">Transferencia 🏦</option>
+                                                <option value="Otro">Otro 💳</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2 mb-1 block">Día Vencimiento</label>
+                                            <input type="number" min="1" max="31" className="w-full p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner" value={formData.deadline_day || ''} onChange={e => setFormData({ ...formData, deadline_day: Number(e.target.value) })} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* SECCIÓN 4: RECEPCIÓN DE DINERO */}
+                            <section className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-[28px] border border-slate-100 dark:border-slate-700/50">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 block text-center">¿Dónde recibirás el dinero de este alumno?</label>
                                 
                                 {user?.paymentAccounts && user.paymentAccounts.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mb-4">
+                                    <div className="grid grid-cols-2 gap-2 mb-4">
                                         {user.paymentAccounts.map(account => (
                                             <button
                                                 key={account.id}
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, billing_alias: account.alias })}
-                                                className={`px-3 py-2 rounded-xl text-xs font-bold transition border-2 ${
+                                                className={`px-3 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all border-2 ${
                                                     formData.billing_alias === account.alias
-                                                        ? 'bg-green-600 border-green-600 text-white shadow-md shadow-green-200 dark:shadow-none'
-                                                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-green-200'
+                                                        ? 'bg-green-600 border-green-600 text-white shadow-lg'
+                                                        : 'bg-white dark:bg-slate-800 border-white dark:border-slate-700 text-slate-500 hover:border-green-200'
                                                 }`}
                                             >
                                                 {account.name}
@@ -729,58 +730,72 @@ const Students = () => {
                                 <input 
                                     type="text" 
                                     placeholder="CBU o Alias personalizado..." 
-                                    className="w-full p-4 bg-white dark:bg-slate-800 dark:text-white rounded-2xl border-none outline-none font-bold placeholder:text-slate-300 dark:placeholder:text-slate-600 shadow-sm" 
+                                    className="w-full p-4 bg-white dark:bg-slate-800 dark:text-white rounded-2xl border-none outline-none font-bold text-sm text-center shadow-sm placeholder:text-slate-300" 
                                     value={formData.billing_alias || ''} 
                                     onChange={e => setFormData({ ...formData, billing_alias: e.target.value })} 
                                 />
-                                <p className="text-[10px] text-slate-400 font-medium italic mt-2 ml-1">
-                                    {formData.billing_alias ? 'Usaremos el alias seleccionado para los recordatorios.' : 'Si lo dejas vacío, usaremos tu cuenta predeterminada.'}
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter text-center mt-3 opacity-60">
+                                    {formData.billing_alias ? 'SE USARÁ EN LOS RECORDATORIOS DE WHATSAPP' : 'SE USARÁ TU CUENTA PREDETERMINADA'}
                                 </p>
-                            </div>
+                            </section>
 
-                            <div className="border-t border-slate-100 dark:border-slate-700 pt-4 mt-6">
-                                <label className="text-sm font-black text-slate-800 dark:text-white mb-3 block flex items-center gap-2">
-                                    <Clock size={16} className="text-green-600" /> Horarios de Clase
-                                </label>
+                            {/* SECCIÓN 5: HORARIOS */}
+                            <section className="border-t border-slate-100 dark:border-slate-700 pt-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <Clock size={16} className="text-green-600" />
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-600">Horarios de Clase</h3>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-lg">
+                                        {formSchedules.length} {formSchedules.length === 1 ? 'hora' : 'horas'} / sem
+                                    </span>
+                                </div>
 
                                 <div className="flex flex-wrap gap-2 mb-4">
                                     {formSchedules.map((s, i) => (
-                                        <div key={i} className="flex items-center gap-2 bg-green-50 dark:bg-green-600/10 px-3 py-1.5 rounded-xl text-xs font-bold text-green-800 dark:text-green-300 border border-green-100 dark:border-green-600/20">
+                                        <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 px-4 py-2 rounded-2xl text-xs font-black text-slate-700 dark:text-slate-300 shadow-sm border border-slate-50 dark:border-slate-700 group">
                                             <span>{['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][s.dayOfWeek]} {s.startTime}</span>
-                                            <button type="button" onClick={() => handleRemoveSchedule(i)} className="hover:text-red-500 p-0.5 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 transition"><X size={14} /></button>
+                                            <button type="button" onClick={() => handleRemoveSchedule(i)} className="text-slate-300 group-hover:text-red-500 transition"><X size={14} /></button>
                                         </div>
                                     ))}
-                                    {formSchedules.length === 0 && <span className="text-xs text-slate-400 italic py-1.5">Sin horarios definidos</span>}
+                                    {formSchedules.length === 0 && <p className="text-xs text-slate-300 italic py-2 ml-2">Sin horarios definidos aún.</p>}
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <select value={newScheduleDay} onChange={e => setNewScheduleDay(Number(e.target.value))} className="flex-1 p-3 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-xl text-sm font-bold outline-none border-none">
+                                    <select value={newScheduleDay} onChange={e => setNewScheduleDay(Number(e.target.value))} className="flex-1 p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl text-sm font-bold outline-none border-none shadow-inner appearance-none">
                                         {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((d, i) => (
                                             <option key={i} value={i}>{d}</option>
                                         ))}
                                     </select>
-                                    <input type="time" value={newScheduleTime} onChange={e => setNewScheduleTime(e.target.value)} className="w-24 p-3 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-xl text-sm font-bold outline-none border-none" />
-                                    <button onClick={handleAddSchedule} className="p-3 bg-green-700 hover:bg-green-800 text-white rounded-xl transition shadow-lg shadow-green-600/20">
+                                    <input type="time" value={newScheduleTime} onChange={e => setNewScheduleTime(e.target.value)} className="w-28 p-4 bg-slate-50 dark:bg-slate-900 dark:text-white rounded-2xl text-sm font-bold outline-none border-none shadow-inner" />
+                                    <button type="button" onClick={handleAddSchedule} className="p-4 bg-green-700 hover:bg-green-800 text-white rounded-2xl transition shadow-lg shadow-green-600/20 active:scale-95">
                                         <Plus size={20} />
                                     </button>
                                 </div>
-                            </div>
+                            </section>
 
-                            <div className="bg-green-50 dark:bg-green-600/10 p-4 rounded-2xl mt-4 border border-green-100 dark:border-green-600/20">
-                                <p className="text-sm text-green-700 dark:text-green-300 font-medium">
-                                    {formData.planType === 'PACK' ? 'Precio Total del Pack:' : 'Cuota mensual calculada:'}
-                                </p>
-                                <p className="font-black text-3xl text-green-800 dark:text-green-400 mt-1">
-                                    {user?.currency || '$'}{
-                                        formData.planType === 'PACK'
-                                            ? calculateAmount(formData.price_per_hour || 0, formData.credits || 0).toLocaleString('es-AR')
-                                            : calculateAmount(formData.price_per_hour || 0, formData.classes_per_month || 0).toLocaleString('es-AR')
-                                    }
-                                </p>
+                            {/* FOOTER: TOTAL Y RESUMEN */}
+                            <div className="pt-6">
+                                <div className="bg-green-700 dark:bg-green-600 p-6 rounded-[32px] text-white shadow-xl shadow-green-700/20 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110"></div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-green-200 mb-1 relative z-10">
+                                        {formData.planType === 'PACK' ? 'Total Pack Contratado' : 'Cuota Mensual Estimada'}
+                                    </p>
+                                    <div className="flex items-end gap-1 relative z-10">
+                                        <span className="text-xl font-bold mb-1 opacity-80">{user?.currency || '$'}</span>
+                                        <span className="text-4xl font-black tracking-tighter">
+                                            {formData.planType === 'PACK'
+                                                ? calculateAmount(formData.price_per_hour || 0, formData.credits || 0).toLocaleString('es-AR')
+                                                : calculateAmount(formData.price_per_hour || 0, formData.classes_per_month || 0).toLocaleString('es-AR')
+                                            }
+                                        </span>
+                                    </div>
+                                    
+                                    <button type="submit" className="w-full bg-white text-green-700 font-extrabold py-4 rounded-[] rounded-2xl mt-6 transition-all hover:bg-green-50 active:scale-95 shadow-lg shadow-black/10">
+                                        {isEditing ? 'Guardar Cambios' : 'Registrar Alumno'}
+                                    </button>
+                                </div>
                             </div>
-                            <button type="submit" className="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-4 rounded-2xl transition">
-                                {isEditing ? 'Guardar Cambios' : 'Guardar Alumno'}
-                            </button>
                         </form>
                     </div>
                 </div>

@@ -10,6 +10,7 @@ import {
     resetMonth,
     getPendingContacts
 } from '../controllers/studentController';
+import { checkStudentLimit } from '../middleware/subscriptionMiddleware';
 
 const router = Router();
 
@@ -29,7 +30,7 @@ router.get('/', getAllStudents);
 router.get('/:id', getStudentById);
 
 // POST create student
-router.post('/', createStudent);
+router.post('/', checkStudentLimit, createStudent);
 
 // DELETE student
 router.delete('/:id', deleteStudent);

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ProFeature, ProBadge, useProFeature } from './ProGuard';
+import { api } from '../services/api';
+import { ProFeature } from './ProGuard';
 import styles from './Receipts.module.css';
+import { showToast } from './Toast';
 
 interface Receipt {
     id: number;
@@ -16,11 +18,11 @@ interface Receipt {
 }
 
 export const ReceiptsList: React.FC = () => {
-    const { token, isPro } = useAuth();
+    const { isPro } = useAuth();
     const [receipts, setReceipts] = useState<Receipt[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const { isAvailable: canGeneratePDF } = useProFeature('PDF');
+    const [actionLoading, setActionLoading] = useState<number | null>(null);
 
     useEffect(() => {
         fetchReceipts();
@@ -28,13 +30,7 @@ export const ReceiptsList: React.FC = () => {
 
     const fetchReceipts = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/receipts', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) throw new Error('Error al cargar recibos');
-
-            const data = await response.json();
+            const data = await api.getReceipts();
             setReceipts(data);
         } catch (err) {
             setError('Error al cargar los recibos');
@@ -45,47 +41,32 @@ export const ReceiptsList: React.FC = () => {
     };
 
     const handleGeneratePDF = async (receiptId: number) => {
-        if (!isPro) {
-            return; // ProFeature lo manejará
-        }
-
+        if (!isPro) return;
+        
+        setActionLoading(receiptId);
         try {
-            const response = await fetch(
-                `http://localhost:3000/api/receipts/${receiptId}/pdf`,
-                {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }
-            );
-
-            if (!response.ok) throw new Error('Error al generar PDF');
-
-            const data = await response.json();
-            // Aquí iría la descarga del PDF
-            console.log('PDF generado:', data);
-        } catch (err) {
+            await api.downloadReceiptPDF(receiptId);
+            showToast.success('¡Recibo descargado!');
+        } catch (err: any) {
             console.error(err);
+            showToast.error(err.message || 'Error al generar PDF');
+        } finally {
+            setActionLoading(null);
         }
     };
 
     const handleSendWhatsApp = async (receiptId: number) => {
-        if (!isPro) {
-            return;
-        }
+        if (!isPro) return;
 
+        setActionLoading(receiptId);
         try {
-            const response = await fetch(
-                `http://localhost:3000/api/receipts/${receiptId}/send-whatsapp`,
-                {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }
-            );
-
-            if (!response.ok) throw new Error('Error al enviar');
-
-            alert('Recibo enviado por WhatsApp');
-        } catch (err) {
+            await api.sendReceiptWhatsApp(receiptId);
+            showToast.success('Recibo enviado por WhatsApp');
+        } catch (err: any) {
             console.error(err);
+            showToast.error('Error al enviar WhatsApp');
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -144,8 +125,9 @@ export const ReceiptsList: React.FC = () => {
                                     <button
                                         className={styles.actionButton}
                                         onClick={() => handleGeneratePDF(receipt.id)}
+                                        disabled={actionLoading === receipt.id}
                                     >
-                                        📄 PDF
+                                        {actionLoading === receipt.id ? '⌛...' : '📄 PDF'}
                                     </button>
                                 </ProFeature>
 
@@ -154,8 +136,9 @@ export const ReceiptsList: React.FC = () => {
                                     <button
                                         className={`${styles.actionButton} ${styles.whatsapp}`}
                                         onClick={() => handleSendWhatsApp(receipt.id)}
+                                        disabled={actionLoading === receipt.id}
                                     >
-                                        💬 WhatsApp
+                                        {actionLoading === receipt.id ? '⌛...' : '💬 WhatsApp'}
                                     </button>
                                 </ProFeature>
 

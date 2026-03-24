@@ -32,6 +32,11 @@ router.get('/feed/:token', async (req: Request, res: Response) => {
             return;
         }
 
+        if (!user.isPro) {
+            res.status(403).send('Calendar sync is a PRO feature. Please upgrade your plan.');
+            return;
+        }
+
         const schedules = (user as any).schedules || [];
         const dayMap = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
         

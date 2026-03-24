@@ -9,7 +9,7 @@ interface PricingModalProps {
 
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
     const { isPro, user } = useAuth();
-    const [selectedPlan, setSelectedPlan] = useState<'PRO_MONTHLY' | 'PRO_ANNUAL'>('PRO_MONTHLY');
+    const [selectedPlan, setSelectedPlan] = useState<'PRO_MONTHLY' | 'PRO_SEMESTRAL'>('PRO_MONTHLY');
     const [loading, setLoading] = useState(false);
 
     if (!isOpen || isPro) return null;
@@ -17,7 +17,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
     const handleCheckout = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:3000/api/subscription/checkout', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/subscription/checkout`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,7 +29,6 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
             const data = await response.json();
 
             if (data.checkoutUrl) {
-                // Redirigir al link de pago
                 window.location.href = data.checkoutUrl;
             } else {
                 alert('Error al iniciar el pago. Intenta de nuevo.');
@@ -48,22 +47,20 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                 <button className={styles.closeButton} onClick={onClose}>✕</button>
 
                 <div className={styles.header}>
-                    <h1>Planes de Cobralo</h1>
-                    <p>Elige el plan que mejor se adapta a tu academia</p>
+                    <h1>Lanzamiento Cobralo <span className={styles.launchDiscount}>50% OFF</span></h1>
+                    <p>¡Aprovecha nuestra oferta de lanzamiento y lleva tu academia al siguiente nivel!</p>
                 </div>
 
                 <div className={styles.pricingContainer}>
                     {/* Plan FREE */}
                     <div className={styles.planCard}>
                         <h2>FREE</h2>
-                        <p className={styles.price}>Gratis</p>
+                        <p className={styles.price}>Siempre $0</p>
                         <ul className={styles.features}>
                             <li>✓ Hasta 5 estudiantes</li>
                             <li>✓ Control de asistencia</li>
                             <li>✓ Registro de pagos</li>
-                            <li>✗ Reportes avanzados</li>
-                            <li>✗ Recibos PDF</li>
-                            <li>✗ Envío por WhatsApp</li>
+                            <li>✗ Funciones Premium</li>
                         </ul>
                         <button className={styles.buttonSecondary} disabled>
                             Plan actual {user?.plan === 'FREE' ? '✓' : ''}
@@ -72,7 +69,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
 
                     {/* Plan PRO */}
                     <div className={`${styles.planCard} ${styles.featured}`}>
-                        <div className={styles.badge}>Lo más popular</div>
+                        <div className={styles.badge}>Plan Pro - Alumnos Ilimitados</div>
                         <h2>PRO</h2>
 
                         <div className={styles.planSelector}>
@@ -84,31 +81,32 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                                     onChange={(e) => setSelectedPlan(e.target.value as 'PRO_MONTHLY')}
                                 />
                                 <span className={styles.price}>
-                                    $999 <small>/mes</small>
+                                    <span className={styles.originalPrice}>$999</span>
+                                    $499 <small>/mes</small>
                                 </span>
                             </label>
-                            <label className={selectedPlan === 'PRO_ANNUAL' ? styles.selected : ''}>
+                            <label className={selectedPlan === 'PRO_SEMESTRAL' ? styles.selected : ''}>
                                 <input
                                     type="radio"
-                                    value="PRO_ANNUAL"
-                                    checked={selectedPlan === 'PRO_ANNUAL'}
-                                    onChange={(e) => setSelectedPlan(e.target.value as 'PRO_ANNUAL')}
+                                    value="PRO_SEMESTRAL"
+                                    checked={selectedPlan === 'PRO_SEMESTRAL'}
+                                    onChange={(e) => setSelectedPlan(e.target.value as 'PRO_SEMESTRAL')}
                                 />
                                 <span className={styles.price}>
-                                    $9.999 <small>/año</small>
+                                    <span className={styles.originalPrice}>$4999</span>
+                                    $2499 <small>/semestre</small>
                                 </span>
-                                <span className={styles.savings}>Ahorra 17%</span>
+                                <span className={styles.savings}>Ahorro Extra</span>
                             </label>
                         </div>
 
                         <ul className={styles.features}>
                             <li>✓ Estudiantes ilimitados</li>
-                            <li>✓ Control de asistencia avanzado</li>
-                            <li>✓ Registro de pagos completo</li>
-                            <li>✓ Reportes de ganancias por alumno</li>
-                            <li>✓ Generación de recibos PDF</li>
-                            <li>✓ Envío de recibos por WhatsApp</li>
-                            <li>✓ Soporte prioritario</li>
+                            <li>✓ Recordatorios WhatsApp</li>
+                            <li>✓ Recibos PDF Personalizados</li>
+                            <li>✓ Dashboards Avanzados</li>
+                            <li>✓ Google Calendar Sync</li>
+                            <li>✓ Exportación a Excel</li>
                         </ul>
 
                         <button
@@ -116,13 +114,24 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                             onClick={handleCheckout}
                             disabled={loading}
                         >
-                            {loading ? 'Procesando...' : '💳 Pasar a Pro'}
+                            {loading ? 'Procesando...' : '💳 Suscribirme con Mercado Pago'}
                         </button>
                     </div>
                 </div>
 
+                <div className={styles.transferSection}>
+                    <h3>🏦 Transferencia Bancaria (PRO Semestral)</h3>
+                    <p>Si prefieres pagar vía transferencia (pago único por 6 meses), utiliza los siguientes datos y envía el comprobante por WhatsApp:</p>
+                    <div className={styles.transferDetails}>
+                        <p><strong>Alias:</strong> cobralo.app.mp</p>
+                        <p><strong>CBU:</strong> 0000003100012345678901</p>
+                        <p><strong>Monto:</strong> $2.499 (50% OFF Lanzamiento)</p>
+                        <p><strong>Titular:</strong> Cobralo Soluciones</p>
+                    </div>
+                </div>
+
                 <p className={styles.disclaimer}>
-                    Cancela tu suscripción en cualquier momento. Sin compromisos a largo plazo.
+                    Acceso inmediato al confirmar el pago. Los precios incluyen IVA.
                 </p>
             </div>
         </div>

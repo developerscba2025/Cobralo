@@ -25,6 +25,11 @@
     animation: slideIn 0.3s ease;
 }
 
+:global(.dark) .modalContent {
+    background: #0f172a;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+}
+
 @keyframes slideIn {
     from {
         opacity: 0;
@@ -64,6 +69,10 @@
     font-weight: 700;
 }
 
+:global(.dark) .header h1 {
+    color: #f8fafc;
+}
+
 .header p {
     color: #6c757d;
     font-size: 16px;
@@ -87,6 +96,11 @@
     background: #ffffff;
 }
 
+:global(.dark) .planCard {
+    background: #1e293b;
+    border-color: #334155;
+}
+
 .planCard:hover {
     border-color: #667eea;
     box-shadow: 0 12px 24px rgba(102, 126, 234, 0.1);
@@ -97,6 +111,11 @@
     background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
     transform: scale(1.05);
     box-shadow: 0 12px 24px rgba(102, 126, 234, 0.15);
+}
+
+:global(.dark) .planCard.featured {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #6366f1;
 }
 
 .planCard.featured:hover {
@@ -153,6 +172,12 @@
     background: white;
 }
 
+:global(.dark) .planSelector label {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
 .planSelector label:hover {
     border-color: #667eea;
     background: #f8f9ff;
@@ -161,6 +186,11 @@
 .planSelector label.selected {
     border-color: #667eea;
     background: #f0f2ff;
+}
+
+:global(.dark) .planSelector label.selected {
+    border-color: #6366f1;
+    background: #312e81;
 }
 
 .planSelector input {
@@ -195,6 +225,11 @@
     padding: 8px 0;
     color: #495057;
     border-bottom: 1px solid #e9ecef;
+}
+
+:global(.dark) .features li {
+    color: #94a3b8;
+    border-bottom-color: #334155;
 }
 
 .features li:last-child {
@@ -258,4 +293,76 @@
     .header h1 {
         font-size: 24px;
     }
+}
+
+.transferSection {
+    margin-top: 32px;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px dashed #667eea;
+    text-align: left;
+}
+
+:global(.dark) .transferSection {
+    background: #1e293b;
+    border-color: #6366f1;
+}
+
+.transferSection h3 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    color: #212529;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.transferDetails {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+:global(.dark) .transferDetails {
+    background: #0f172a;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+.transferDetails p {
+    margin: 4px 0;
+}
+
+.transferDetails strong {
+    color: #667eea;
+}
+
+.launchDiscount {
+    background: #ff4757;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.originalPrice {
+    text-decoration: line-through;
+    color: #adb5bd;
+    font-size: 0.6em;
+    margin-right: 8px;
 }

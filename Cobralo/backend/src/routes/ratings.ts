@@ -24,8 +24,68 @@ const auth = (req: any, res: any, next: any) => {
     }
 };
 
+import { requirePro } from '../middleware/subscriptionMiddleware';
+
+// GET /api/ratings/top-teachers - Public route to show top rated PRO teachers
+router.get('/top-teachers', async (req, res) => {
+    try {
+        const topTeachers = await prisma.user.findMany({
+            where: { isPro: true },
+            select: {
+                id: true,
+                name: true,
+                bizName: true,
+                businessCategory: true,
+                ratings: {
+                    select: {
+                        value: true,
+                        comment: true,
+                        studentName: true,
+                        showComment: true,
+                        createdAt: true
+                    }
+                }
+            }
+        });
+
+        const formattedTeachers = topTeachers.map(user => {
+            const ratingsCount = user.ratings.length;
+            const avgRating = ratingsCount > 0 
+                ? user.ratings.reduce((acc, r) => acc + r.value, 0) / ratingsCount 
+                : 0;
+            
+            // Get latest featured review (one with showComment=true)
+            const latestReview = user.ratings
+                .filter(r => r.showComment)
+                .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+
+            return {
+                id: user.id,
+                name: user.name,
+                bizName: user.bizName,
+                category: user.businessCategory,
+                avgRating: Number(avgRating.toFixed(1)),
+                reviewCount: ratingsCount,
+                featuredReview: latestReview ? {
+                    comment: latestReview.comment,
+                    author: latestReview.studentName,
+                    date: latestReview.createdAt
+                } : null
+            };
+        })
+        .filter(t => t.reviewCount > 0)
+        .sort((a, b) => b.avgRating - a.avgRating)
+        .slice(0, 6);
+
+        res.json(formattedTeachers);
+    } catch (error) {
+        console.error('Error fetching top teachers:', error);
+        res.status(500).json({ error: 'Error al obtener profesores destacados' });
+    }
+});
+
 // POST /api/ratings/generate-link - Teacher generates a temporary link
-router.post('/generate-link', auth, async (req: any, res) => {
+router.post('/generate-link', auth, requirePro, async (req: any, res) => {
     console.log('📍 POST /api/ratings/generate-link called by user:', req.userId);
     try {
         const userId = req.userId;
