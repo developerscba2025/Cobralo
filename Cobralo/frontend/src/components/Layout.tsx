@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
 
     return (
-        <div className="flex h-screen overflow-hidden bg-[#F8FAFC] dark:bg-slate-900 transition-colors duration-300">
+        <div className="flex h-screen overflow-hidden bg-[#F8FAFC] dark:bg-bg-dark transition-colors duration-300">
             {/* Search Modal */}
             <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
@@ -46,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
             {/* Sidebar - Desktop */}
-            <aside className="w-64 bg-slate-900 dark:bg-slate-950 text-white p-6 hidden md:flex flex-col border-r border-slate-800">
+            <aside className="w-64 bg-slate-900 dark:bg-bg-soft text-white p-6 hidden md:flex flex-col border-r border-slate-800">
                 <div className="mb-10 text-xl font-black italic tracking-tighter uppercase text-green-400 flex items-center gap-2">
                     <span>COBRALO</span>
                 </div>
@@ -134,7 +134,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto">
                 {/* Mobile Header */}
-                <div className="md:hidden sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+                <div className="md:hidden sticky top-0 z-30 bg-white/80 dark:bg-bg-dark/80 backdrop-blur-lg border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
                         className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"

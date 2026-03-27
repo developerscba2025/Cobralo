@@ -84,6 +84,49 @@ router.get('/top-teachers', async (req, res) => {
     }
 });
 
+// GET /api/ratings/public/profile/:id - Public route to show a teacher's full profile
+router.get('/public/profile/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await prisma.user.findUnique({
+            where: { id: Number(id) },
+            select: {
+                id: true,
+                name: true,
+                bizName: true,
+                businessCategory: true,
+                ratings: {
+                    where: { showComment: true },
+                    select: {
+                        value: true,
+                        comment: true,
+                        studentName: true,
+                        createdAt: true
+                    },
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Profesor no encontrado' });
+        }
+
+        const avgRating = user.ratings.length > 0
+            ? user.ratings.reduce((acc, r) => acc + r.value, 0) / user.ratings.length
+            : 0;
+
+        res.json({
+            ...user,
+            avgRating: Number(avgRating.toFixed(1)),
+            reviewCount: user.ratings.length
+        });
+    } catch (error) {
+        console.error('Error fetching public profile:', error);
+        res.status(500).json({ error: 'Error al obtener el perfil' });
+    }
+});
+
 // POST /api/ratings/generate-link - Teacher generates a temporary link
 router.post('/generate-link', auth, requirePro, async (req: any, res) => {
     console.log('📍 POST /api/ratings/generate-link called by user:', req.userId);

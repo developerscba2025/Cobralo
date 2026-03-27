@@ -22,8 +22,12 @@ import {
     RefreshCw,
     Copy,
     Eye,
-    EyeOff
+    EyeOff,
+    HelpCircle,
+    FileText
 } from 'lucide-react';
+import SupportModal from '../components/SupportModal';
+import LegalModal from '../components/LegalModal';
 import { showToast } from '../components/Toast';
 import { useTheme } from '../context/ThemeContext';
 import { ProFeature, ProBadge } from '../components/ProGuard';
@@ -32,6 +36,9 @@ const Settings = () => {
     const { updateUser: updateAuthUser } = useAuth();
     const { setTheme, theme } = useTheme();
     const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences' | 'business' | 'services' | 'subscription' | 'billing' | 'reminders' | 'ratings'>('profile');
+    
+    const [isSupportOpen, setIsSupportOpen] = useState(false);
+    const [legalModal, setLegalModal] = useState<{ isOpen: boolean, type: 'terms' | 'privacy' }>({ isOpen: false, type: 'terms' });
     
     // Categories for organization
     const categories = [
@@ -70,6 +77,16 @@ const Settings = () => {
             tabs: [
                 { id: 'reminders', label: 'Plantillas de Mensaje', icon: MessageSquare },
                 { id: 'ratings', label: 'Testimonios', icon: Star }
+            ] 
+        },
+        { 
+            id: 'support', 
+            label: 'Ayuda y Legal', 
+            icon: HelpCircle, 
+            tabs: [
+                { id: 'support-trigger', label: 'Soporte Técnico', icon: HelpCircle, isAction: true, onClick: () => setIsSupportOpen(true) },
+                { id: 'terms-trigger', label: 'Términos y Condiciones', icon: FileText, isAction: true, onClick: () => setLegalModal({ isOpen: true, type: 'terms' }) },
+                { id: 'privacy-trigger', label: 'Privacidad', icon: Shield, isAction: true, onClick: () => setLegalModal({ isOpen: true, type: 'privacy' }) }
             ] 
         }
     ];
@@ -327,7 +344,13 @@ const Settings = () => {
                                 {cat.tabs.map(tab => (
                                     <button
                                         key={tab.id}
-                                        onClick={() => setActiveTab(tab.id as any)}
+                                        onClick={() => {
+                                            if ((tab as any).isAction) {
+                                                (tab as any).onClick();
+                                            } else {
+                                                setActiveTab(tab.id as any);
+                                            }
+                                        }}
                                         className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-bold text-sm ${
                                             activeTab === tab.id
                                                 ? 'bg-green-700 text-white shadow-lg shadow-green-100 dark:shadow-none translate-x-1'
@@ -336,6 +359,7 @@ const Settings = () => {
                                     >
                                         <tab.icon size={18} className={activeTab === tab.id ? 'opacity-100' : 'opacity-50'} />
                                         {tab.label}
+                                        {(tab as any).isAction && <ExternalLink size={12} className="ml-auto opacity-30" />}
                                     </button>
                                 ))}
                             </div>
@@ -1137,6 +1161,18 @@ const Settings = () => {
                     </div>
                 )}
             </div>
+            
+            {/* Modals */}
+            <SupportModal 
+                isOpen={isSupportOpen} 
+                onClose={() => setIsSupportOpen(false)} 
+                onSent={() => showToast.success('Mensaje enviado con éxito')} 
+            />
+            <LegalModal 
+                isOpen={legalModal.isOpen} 
+                type={legalModal.type} 
+                onClose={() => setLegalModal({ ...legalModal, isOpen: false })} 
+            />
         </div>
     </Layout>
 );

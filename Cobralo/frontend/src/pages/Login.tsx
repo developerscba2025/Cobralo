@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { showToast } from '../components/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +10,8 @@ const Login = () => {
     const navigate = useNavigate();
     const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
 
-    const [isRegister, setIsRegister] = useState(false);
+    const [searchParams] = useSearchParams();
+    const [isRegister, setIsRegister] = useState(searchParams.get('tab') === 'register');
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     

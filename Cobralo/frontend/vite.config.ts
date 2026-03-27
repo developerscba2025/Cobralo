@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Cobralo App',
         short_name: 'Cobralo',
         description: 'Gestión de alumnos y pagos',
-        theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        theme_color: '#16a34a',
+        background_color: '#050805',
         display: 'standalone',
         start_url: '/',
         icons: [

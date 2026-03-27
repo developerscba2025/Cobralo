@@ -12,6 +12,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import ToastContainer from './components/Toast';
+import PublicProfile from './pages/PublicProfile';
 
 function App() {
 
@@ -58,6 +59,7 @@ function App() {
               </PrivateRoute>
             } />
             <Route path="/rate/:token" element={<RateTeacher />} />
+            <Route path="/profile/:id" element={<PublicProfile />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
