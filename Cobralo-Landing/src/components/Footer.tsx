@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Instagram, ArrowUpRight } from 'lucide-react';
+import { APP_URL } from '../config';
 
 interface FooterProps {
   onOpenSupport: () => void;
@@ -47,8 +48,7 @@ const Footer = ({ onOpenSupport, onOpenLegal }: FooterProps) => {
               {[
                 { name: 'Funciones', href: '#funciones' },
                 { name: 'Precios', href: '#precios' },
-                { name: 'Testimonios', href: '#testimonios' },
-                { name: 'App Login', href: 'https://www.cobraloapp.com' }
+                { name: 'App Login', href: `${APP_URL}/login` }
               ].map(link => (
                 <a 
                   key={link.name} 

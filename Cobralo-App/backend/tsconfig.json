@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "CommonJS",
+        "lib": [
+            "ES2020"
+        ],
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "src/get-students.ts",
+        "src/get-users.ts",
+        "src/update-password.ts",
+        "src/check-users.ts",
+        "src/test-create-student.ts",
+        "src/test-reminders.ts",
+        "src/test-sqlite.ts"
+    ]
+}

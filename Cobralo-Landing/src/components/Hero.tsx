@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { APP_URL } from '../config';
 
 const Hero = () => (
   <section className="relative min-h-screen flex items-center justify-center pt-12 overflow-hidden">
@@ -46,7 +47,7 @@ const Hero = () => (
         <motion.a
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          href="https://www.cobraloapp.com/register"
+          href={`${APP_URL}/login?register=true`}
           className="btn btn-primary px-10 py-4 text-lg"
         >
           Probar gratis

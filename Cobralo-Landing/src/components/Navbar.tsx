@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, LogIn } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
-const APP_URL = 'http://localhost:5174'; // Change to your production App URL
+import { APP_URL } from '../config';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation();
+  const isHome = location.pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -20,12 +23,19 @@ const Navbar = () => {
         <a href="#" className="text-2xl font-black italic tracking-tighter text-[#22c55e]">COBRALO</a>
 
         <div className="hidden md:flex items-center gap-8">
-          {['Funciones', 'Profes', 'Precios'].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-text-muted hover:text-text transition-colors">
-              {item}
-            </a>
-          ))}
-          <a href={`${APP_URL}/login`} className="text-sm font-bold text-text-muted hover:text-white transition-all flex items-center gap-2">
+          {isHome ? (
+            ['Funciones', 'Precios'].map((item) => (
+              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-text-muted hover:text-text transition-colors">
+                {item}
+              </a>
+            ))
+          ) : (
+            <Link to="/" className="text-sm font-medium text-text-muted hover:text-text transition-colors">
+              Inicio
+            </Link>
+          )}
+          
+          <a href={`${APP_URL}/login`} className="text-sm font-medium text-text-muted hover:text-text transition-colors flex items-center gap-2">
             <LogIn size={16} /> Ingresar
           </a>
           <motion.a
@@ -51,7 +61,7 @@ const Navbar = () => {
             exit={{ opacity: 0, y: -10 }}
             className="absolute top-full left-0 right-0 bg-black border-b border-white/10 p-4 flex flex-col gap-4 md:hidden"
           >
-            {['Funciones', 'Profes', 'Precios'].map((item) => (
+            {['Funciones', 'Precios'].map((item) => (
               <a key={item} onClick={() => setIsOpen(false)} href={`#${item.toLowerCase()}`} className="text-lg font-medium text-text-muted">
                 {item}
               </a>
