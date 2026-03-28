@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    Int                      @id @default(autoincrement())
+  email                 String                   @unique
+  password              String
+  name                  String
+  bizName               String?
+  bizAlias              String?
+  businessCategory      String?
+  phoneNumber           String?
+  taxId                 String?
+  billingAddress        String?
+  reminderTemplate      String?
+  ratingToken           String?
+  ratingTokenExpires    DateTime?
+  defaultPrice          Float                    @default(0)
+  defaultService        String                   @default("General")
+  defaultSurcharge      Float                    @default(10)
+  currency              String?                  @default("$")
+  receiptFooter         String?
+  isPro                 Boolean                  @default(false)
+  plan                  String                   @default("FREE")
+  bio                   String?                  @default("Profesional destacado en Cobralo.")
+  city                  String?                  @default("CABA")
+  tags                  String?                  @default("Profesional")
+  notificationsEnabled  Boolean                  @default(true)
+  isPublicProfileVisible Boolean                 @default(true)
+  subscriptionExpiry    DateTime?
+  mercadoPagoCustomerId String?
+  mpAccessToken         String?
+  mpPublicKey           String?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  calendarToken         String?                  @unique
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+  attendance            Attendance[]
+  paymentAccounts       BusinessPaymentAccount[]
+  schedules             ClassSchedule[]
+  expenses              Expense[]
+  payments              PaymentHistory[]
+  ratings               Rating[]
+  notes                 StudentNote[]
+  students              Student[]
+  subscriptions         Subscription?
+  userServices          UserService[]
+
+  @@map("users")
+}
+
+model Student {
+  id                   Int              @id @default(autoincrement())
+  ownerId              Int
+  name                 String
+  phone                String?
+  service_name         String?
+  price_per_hour       Decimal?
+  class_duration_min   Int?
+  classes_per_month    Int?
+  amount               Decimal?
+  payment_method       String?
+  surcharge_percentage Int?
+  deadline_day         Int?
+  due_day              Int?
+  status               String?          @default("pending")
+  planType             String?          @default("MONTHLY")
+  credits              Int?             @default(0)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  sub_category         String?
+  billing_alias        String?
+  attendance           Attendance[]
+  schedules            ClassSchedule[]
+  payments             PaymentHistory[]
+  notes                StudentNote[]
+  owner                User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("students")
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  ownerId   Int
+  studentId Int
+  status    String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([studentId])
+  @@map("attendance")
+}
+
+model PaymentHistory {
+  id        Int      @id @default(autoincrement())
+  ownerId   Int
+  studentId Int
+  amount    Decimal
+  paidAt    DateTime @default(now())
+  month     Int
+  year      Int
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([studentId])
+  @@map("payment_history")
+}
+
+model StudentNote {
+  id        Int      @id @default(autoincrement())
+  ownerId   Int
+  studentId Int
+  content   String
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([studentId])
+  @@map("student_notes")
+}
+
+model ClassSchedule {
+  id        Int      @id @default(autoincrement())
+  ownerId   Int
+  studentId Int
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([studentId])
+  @@map("class_schedules")
+}
+
+model Expense {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int
+  description String
+  amount      Decimal
+  category    String?  @default("General")
+  date        DateTime @default(now())
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("expenses")
+}
+
+model Subscription {
+  id                      Int       @id @default(autoincrement())
+  userId                  Int       @unique
+  plan                    String
+  status                  String    @default("active")
+  startDate               DateTime  @default(now())
+  expiryDate              DateTime?
+  mercadoPagoCustomerId   String?
+  mercadoPagoPreferenceId String?
+  mercadoPagoOrderId      String?
+  updatedAt               DateTime  @updatedAt
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model UserService {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  name         String
+  defaultPrice Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_services")
+}
+
+model Rating {
+  id          Int      @id @default(autoincrement())
+  ownerId     Int
+  value       Int
+  comment     String?
+  studentName String?
+  showComment Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("ratings")
+}
+
+model BusinessPaymentAccount {
+  id        Int      @id @default(autoincrement())
+  ownerId   Int
+  name      String
+  alias     String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("business_payment_accounts")
+}
