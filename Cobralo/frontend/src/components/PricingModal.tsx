@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
@@ -8,7 +9,7 @@ interface PricingModalProps {
 }
 
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
-    const { isPro, user } = useAuth();
+    const { isPro } = useAuth();
     const [selectedPlan, setSelectedPlan] = useState<'PRO_MONTHLY' | 'PRO_TRIMESTRAL'>('PRO_MONTHLY');
     const [loading, setLoading] = useState(false);
 
