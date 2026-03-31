@@ -1,0 +1,38 @@
+INSTRUCCIONES PARA SUBIR A HOSTGATOR (cPanel)
+
+Esta carpeta "hostgator_build" contiene todo lo que necesitas para subir tu aplicación a producción con el dominio final. Sigue estos pasos exactos:
+
+--- PARTE 1: FRONTEND (Página web e interfaz) ---
+1. Entra a tu cPanel en HostGator y abre el "Administrador de Archivos".
+2. Ve a la carpeta `public_html`.
+3. Adentro de la carpeta `public_html` que creé aquí, verás varios archivos (index.html, assets, etc). Comprime todos esos archivos en un .zip.
+4. Sube ese .zip al `public_html` de tu cPanel y extráelo ahí mismo. (Asegúrate de que index.html quede directo en public_html, no en una subcarpeta).
+
+--- PARTE 2: BACKEND (Base de datos y Servidor Node.js) ---
+1. En el Administrador de Archivos de cPanel, ve a la carpeta RAÍZ de tu hospedaje (una carpeta arriba de public_html, usualmente llamada /home/tuusuario/).
+2. Crea una nueva carpeta llamada `cobralo_backend`.
+3. Comprime el contenido de la carpeta `backend` de este paquete en un .zip.
+4. Sube el .zip a `/home/tuusuario/cobralo_backend` y extráelo.
+5. Edita o crea un archivo `.env` en esa misma carpeta `cobralo_backend` configurando tus variables reales (copia la estructura del .env.example que te dejé ahí, pero pon los datos de tu nueva base de datos de PostgreSQL, tus URLs, MercadoPago, etc). Asegúrate de tener: 
+   PORT=3000
+   NODE_ENV=production
+
+--- PARTE 3: CONFIGURAR LA APP EN CPANEL ---
+1. Ve a la página principal de tu cPanel.
+2. Ve a la sección de Software y haz click en "Setup Node.js App".
+3. Toca el botón "Create Application".
+4. Configúralo de la siguiente manera:
+   - Node.js version: Elige la más alta recomendada (20.x o superior).
+   - Application mode: Production
+   - Application root: `cobralo_backend`
+   - Application URL: Elige tu dominio y en el cuadro de la derecha escribe "api" (para que la URL quede como tudominio.com/api).
+   - Application startup file: `dist/server.js` (IMPORTANTE).
+5. Dale a "Create" (o "Save").
+6. Abajo verás una sección que dice "Run NPM Install". Dale click para que instale los módulos del backend.
+7. Una vez instalado todo, abre la terminal desde el cPanel (sección Avanzada -> Terminal) o por SSH e ingresa al backend:
+   `cd cobralo_backend`
+   Ejecuta el comando para crear las tablas en tu base de datos:
+   `npx prisma db push`
+8. Reinicia la aplicación desde el panel de "Setup Node.js App".
+
+¡Listo! Si vas a tudominio.com verás la página web, y si entras al panel y te logueas, la aplicación se comunicará mágicamente con la base de datos a través de tudominio.com/api.
