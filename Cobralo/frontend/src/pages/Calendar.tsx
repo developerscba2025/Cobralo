@@ -3,11 +3,12 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import type { UnifiedSchedule, Student } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Plus, Trash2, X, AlertCircle, Download } from 'lucide-react';
+import { User, Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { ProFeature } from '../components/ProGuard';
+import EmptyState from '../components/EmptyState';
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7am to 9pm
@@ -18,6 +19,7 @@ const Calendar = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedMobileDay, setSelectedMobileDay] = useState(new Date().getDay());
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null }>({
         isOpen: false,
         id: null
@@ -70,7 +72,13 @@ const Calendar = () => {
                 return;
             }
 
-            showToast.success('Clase agendada correctamente');
+            if ((result as any).conflicts && (result as any).conflicts.length > 0) {
+                const names = (result as any).conflicts.map((c: any) => c.student?.name || 'Otro alumno').join(', ');
+                showToast.error(`${names} ya están en ese horario`);
+            } else {
+                showToast.success('Clase agendada correctamente');
+            }
+            
             setIsModalOpen(false);
             fetchData();
         } catch (error) {
@@ -213,8 +221,8 @@ const Calendar = () => {
                 </div>
             </header>
 
-            {/* Calendar Grid */}
-            <div className="bg-surface backdrop-blur-xl rounded-[40px] border border-border-main overflow-hidden shadow-2xl h-[calc(100vh-220px)] flex flex-col relative">
+            {/* Calendar Grid (Desktop) */}
+            <div className="hidden md:flex bg-surface backdrop-blur-xl rounded-[40px] border border-border-main overflow-hidden shadow-2xl h-[calc(100vh-220px)] flex-col relative">
                 <div className="overflow-auto flex-1 custom-scrollbar relative">
                     <table className="w-full border-collapse table-fixed min-w-[1000px] relative">
                         <thead className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md">
@@ -299,6 +307,85 @@ const Calendar = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {/* Calendar Mobile View */}
+            <div className="md:hidden flex flex-col min-h-[500px]">
+                {/* Day Selector Pills */}
+                <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-6 -mx-4 px-4 sticky top-0 z-20 bg-bg-app/90 backdrop-blur-md pt-2">
+                    {weekDates.map((d, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setSelectedMobileDay(index)}
+                            className={`flex flex-col items-center justify-center min-w-[72px] h-[86px] rounded-[24px] p-3 transition-all ${
+                                selectedMobileDay === index
+                                    ? 'bg-primary-main text-white shadow-lg shadow-primary-glow border border-primary-light/30'
+                                    : d.isToday
+                                        ? 'bg-primary-main/10 text-primary-main border border-primary-main/20'
+                                        : 'bg-surface border border-border-main text-text-muted hover:border-primary-main/30'
+                            }`}
+                        >
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-90">{d.short}</span>
+                            <span className={`text-2xl font-black mt-1 leading-none ${selectedMobileDay === index ? 'text-white' : 'text-text-main'}`}>
+                                {d.date}
+                            </span>
+                            {d.isToday && selectedMobileDay !== index && <div className="w-1 h-1 rounded-full bg-primary-main mt-1.5" />}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Mobile Schedule List */}
+                <div className="flex-1 space-y-4">
+                    {(() => {
+                        const daySchedules = schedules.filter(s => s.dayOfWeek === selectedMobileDay).sort((a,b) => a.startTime.localeCompare(b.startTime));
+                        if (daySchedules.length === 0) {
+                            return (
+                                <EmptyState
+                                    icon={CalendarIcon}
+                                    title="Día Libre"
+                                    description="No tienes clases agendadas para este día."
+                                    actionLabel="Nueva Clase"
+                                    onAction={() => {
+                                        setFormData(prev => ({ ...prev, dayOfWeek: selectedMobileDay }));
+                                        setIsModalOpen(true);
+                                    }}
+                                />
+                            );
+                        }
+                        return daySchedules.map((s, idx) => (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                key={s.id} 
+                                className="card-premium p-5 flex gap-5 items-center bg-surface"
+                            >
+                                <div className="flex flex-col items-center justify-center min-w-[50px]">
+                                    <div className="font-black text-primary-main text-lg leading-none">{s.startTime.split(':')[0]}</div>
+                                    <div className="text-[10px] font-black uppercase text-text-muted mt-0.5">{s.startTime.split(':')[1]}</div>
+                                </div>
+                                
+                                <div className="w-px h-10 bg-border-main/50"></div>
+
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-base font-bold text-text-main truncate leading-tight">{s.student?.name}</h4>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mt-1 opacity-80 truncate">{s.student?.service_name}</p>
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                    <span className="text-[9px] font-black text-text-muted uppercase tracking-widest bg-bg-app px-2 py-1 rounded-md">
+                                        a {s.endTime}
+                                    </span>
+                                    <button
+                                        onClick={() => setDeleteModal({ isOpen: true, id: s.id })}
+                                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ));
+                    })()}
                 </div>
             </div>
 

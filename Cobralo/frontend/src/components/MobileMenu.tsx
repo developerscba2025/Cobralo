@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PieChart, Users, Settings, LogOut, HelpCircle, ShieldCheck, Clock } from 'lucide-react';
+import { X, PieChart, Users, Settings, LogOut, HelpCircle, ShieldCheck, Clock, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ interface MobileMenuProps {
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport, onOpenLegal }) => {
     const location = useLocation();
     const { logout, user } = useAuth();
+    const { theme, toggleTheme } = useTheme();
 
     const isActive = (path: string) => {
         return location.pathname === path
@@ -97,6 +99,22 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport,
 
                             {/* Footer Area */}
                              <div className="p-4 border-t border-border-emerald space-y-2 bg-bg-app/30">
+                                {/* Theme Toggle */}
+                                <button 
+                                    onClick={toggleTheme}
+                                    className="w-full flex items-center gap-4 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:bg-primary-main/10 hover:text-primary-main transition-all"
+                                >
+                                    <motion.div
+                                        key={theme}
+                                        initial={{ rotate: -90, opacity: 0 }}
+                                        animate={{ rotate: 0, opacity: 1 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                                    </motion.div>
+                                    {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
+                                </button>
+
                                 <button 
                                     onClick={() => { onOpenSupport?.(); onClose(); }}
                                     className="w-full flex items-center gap-4 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:bg-primary-main/10 hover:text-primary-main"

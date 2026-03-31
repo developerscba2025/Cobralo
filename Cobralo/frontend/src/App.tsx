@@ -76,6 +76,9 @@ function App() {
             } />
 
             {/* Redirecciones de Compatibilidad */}
+            <Route path="/app/rate/:token" element={<Navigate to="/rate/:token" replace />} />
+            <Route path="/app/profile/:id" element={<Navigate to="/profile/:id" replace />} />
+            
             <Route path="/login" element={<Navigate to="/app/login" replace />} />
             <Route path="/register" element={<Navigate to="/app/login?register=true" replace />} />
             <Route path="/forgot-password" element={<Navigate to="/app/forgot-password" replace />} />

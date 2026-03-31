@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import type { Attendance, Student } from '../services/api';
-import { X, Check, XCircle, Calendar as CalendarIcon, Loader2, Sparkles } from 'lucide-react';
+import { X, Check, XCircle, Calendar as CalendarIcon, Loader2, Sparkles, PlusCircle, Plus } from 'lucide-react';
+import { showToast } from './Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AttendanceModalProps {
@@ -14,6 +15,7 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
     const [history, setHistory] = useState<Attendance[]>([]);
     const [loading, setLoading] = useState(true);
     const [marking, setMarking] = useState(false);
+    const [isAdjusting, setIsAdjusting] = useState(false);
 
     useEffect(() => {
         loadHistory();
@@ -41,8 +43,30 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
             onUpdate(); // Refresh student data (credits)
         } catch (error) {
             console.error('Error marking attendance:', error);
+            showToast.error('Error al registrar asistencia');
         } finally {
             setMarking(false);
+        }
+    };
+
+    const handleQuickAdjustment = async (type: 'EXTRA_CLASS' | 'ADD_CREDITS', count: number = 1) => {
+        setIsAdjusting(true);
+        try {
+            const updates: Partial<Student> = {};
+            if (type === 'EXTRA_CLASS') {
+                updates.amount = (Number(student.amount) || 0) + ((Number(student.price_per_hour) || 0) * count);
+            } else {
+                updates.credits = (Number(student.credits) || 0) + count;
+            }
+
+            await api.updateStudent(student.id, updates);
+            showToast.success(type === 'EXTRA_CLASS' ? 'Clase extra registrada' : 'Créditos añadidos');
+            onUpdate(); // Refresh parent view
+        } catch (error) {
+            console.error('Error in quick adjustment:', error);
+            showToast.error('Error al actualizar');
+        } finally {
+            setIsAdjusting(false);
         }
     };
 
@@ -101,8 +125,27 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
                                 <Sparkles className="absolute -right-4 -top-4 text-primary-main/10 group-hover:scale-150 transition-transform duration-700" size={80} />
                                 <div>
                                     <span className="text-[10px] label-premium opacity-50 block mb-1">Créditos Restantes</span>
-                                    <div className="text-4xl font-black text-primary-main">
-                                        {student.credits || 0}
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-4xl font-black text-primary-main">
+                                            {student.credits || 0}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => handleQuickAdjustment('ADD_CREDITS', 1)}
+                                                disabled={isAdjusting}
+                                                className="p-1.5 bg-primary-main/10 text-primary-main rounded-lg hover:bg-primary-main hover:text-white transition-all shadow-sm active:scale-90"
+                                                title="+1 Clase"
+                                            >
+                                                <Plus size={16} strokeWidth={3} />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleQuickAdjustment('ADD_CREDITS', 4)}
+                                                disabled={isAdjusting}
+                                                className="px-2 py-1 bg-primary-main text-white text-[10px] font-black rounded-lg hover:bg-green-600 transition-all shadow-md active:scale-90"
+                                            >
+                                                +4 PACK
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -110,6 +153,25 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
                                         Plan Pack
                                     </span>
                                 </div>
+                            </div>
+                        )}
+
+                        {student.planType === 'MONTHLY' && (
+                            <div className="mb-8 flex justify-between items-center bg-zinc-50 dark:bg-bg-dark/50 p-4 rounded-2xl border border-zinc-100 dark:border-border-emerald/30">
+                                <div>
+                                    <span className="text-[9px] label-premium opacity-50 block mb-0.5">Cuota {new Date().toLocaleDateString('es-AR', { month: 'long' })}</span>
+                                    <p className="font-black text-lg text-text-main leading-none">
+                                        $ {Number(student.amount).toLocaleString('es-AR')}
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={() => handleQuickAdjustment('EXTRA_CLASS', 1)}
+                                    disabled={isAdjusting}
+                                    className="flex items-center gap-2 px-4 py-2 bg-primary-main/10 hover:bg-primary-main text-primary-main hover:text-white rounded-xl transition-all font-black text-[10px] uppercase tracking-widest active:scale-95 shadow-sm border border-primary-main/10"
+                                >
+                                    <PlusCircle size={14} />
+                                    Clase Extra
+                                </button>
                             </div>
                         )}
 

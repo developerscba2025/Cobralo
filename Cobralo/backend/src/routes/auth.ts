@@ -247,7 +247,9 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                 facebookUrl: true,
                 subscriptionExpiry: true,
                 paymentAccounts: true,
-                calendarToken: true
+                calendarToken: true,
+                ratingToken: true,
+                ratingTokenExpires: true
             }
         });
 
@@ -266,7 +268,8 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                     id: true, email: true, name: true, bizName: true, bizAlias: true, businessCategory: true,
                     phoneNumber: true, reminderTemplate: true, defaultPrice: true, defaultService: true,
                     defaultSurcharge: true, currency: true, receiptFooter: true, taxId: true, billingAddress: true,
-                    isPro: true, plan: true, biography: true, photoUrl: true, instagramUrl: true, facebookUrl: true, paymentAccounts: true, calendarToken: true
+                    isPro: true, plan: true, biography: true, photoUrl: true, instagramUrl: true, facebookUrl: true, paymentAccounts: true, calendarToken: true,
+                    ratingToken: true, ratingTokenExpires: true
                 }
             });
             res.json(userWithToken);
@@ -332,7 +335,9 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                 instagramUrl: true,
                 facebookUrl: true,
                 paymentAccounts: true,
-                calendarToken: true
+                calendarToken: true,
+                ratingToken: true,
+                ratingTokenExpires: true
             }
         });
 
@@ -365,7 +370,9 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                     instagramUrl: true,
                     facebookUrl: true,
                     paymentAccounts: true,
-                    calendarToken: true
+                    calendarToken: true,
+                    ratingToken: true,
+                    ratingTokenExpires: true
                 }
             });
             res.json(userWithToken);

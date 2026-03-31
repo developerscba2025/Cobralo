@@ -19,6 +19,8 @@ interface User {
     plan: string;
     subscriptionExpiry?: string | null;
     calendarToken?: string;
+    ratingToken?: string;
+    ratingTokenExpires?: string | null;
     paymentAccounts?: {
         id: number;
         name: string;

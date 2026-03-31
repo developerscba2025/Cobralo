@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { Lock, X, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Sparkles, CheckCircle2, X } from 'lucide-react';
+import { showToast } from './Toast';
 
 interface ProLockProps {
     featureName: string;
@@ -15,28 +16,35 @@ export const ProLock: React.FC<ProLockProps> = ({ featureName, children }) => {
         return <>{children}</>;
     }
 
+    const handleClick = () => {
+        showToast.error(`¡Función Pro bloqueada! Desbloqueá ${featureName} mejorando tu plan.`);
+        setShowModal(true);
+    };
+
     return (
         <div className="relative group overflow-hidden rounded-[24px]">
             {/* The Locked Content (Blurred) */}
-            <div className="opacity-40 blur-[4px] pointer-events-none select-none grayscale">
+            <div className="opacity-40 blur-[5px] pointer-events-none select-none grayscale transition-all duration-700">
                 {children}
             </div>
 
             {/* The Lock Overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-black/5 dark:bg-emerald-950/5 backdrop-blur-[2px] border border-white/10 dark:border-emerald-500/5 transition-all group-hover:backdrop-blur-[4px]">
-                <div className="w-12 h-12 bg-white dark:bg-bg-soft rounded-full flex items-center justify-center shadow-lg dark:shadow-none mb-4 border border-zinc-100 dark:border-border-emerald group-hover:scale-110 transition-transform">
-                    <Lock className="text-primary-main" size={20} />
+            <div 
+                onClick={handleClick}
+                className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-black/[0.02] dark:bg-emerald-950/[0.02] backdrop-blur-[2px] border border-white/5 dark:border-emerald-500/5 transition-all group-hover:backdrop-blur-[4px] cursor-pointer"
+            >
+                <div className="w-14 h-14 bg-white/90 dark:bg-bg-soft/90 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl dark:shadow-none mb-4 border border-zinc-100 dark:border-border-emerald group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                    <Lock className="text-primary-main" size={24} strokeWidth={2.5} />
                 </div>
                 
-                <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-2 text-zinc-900 dark:text-emerald-50 text-center">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-zinc-900 dark:text-emerald-50 text-center opacity-80 group-hover:opacity-100 transition-opacity">
                     Funcionalidad Pro
                 </h4>
                 
                 <button
-                    className="btn btn-primary text-xs !py-2.5 shadow-lg shadow-primary-main/20"
-                    onClick={() => setShowModal(true)}
+                    className="bg-primary-main/10 text-primary-main hover:bg-primary-main hover:text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary-main/5 group-hover:shadow-primary-main/20"
                 >
-                    Desbloquear {featureName}
+                    Desbloquear
                 </button>
             </div>
 

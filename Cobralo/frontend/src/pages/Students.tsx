@@ -9,11 +9,13 @@ import ConfirmModal from '../components/ConfirmModal';
 import QRPayment from '../components/QRPayment';
 import { 
     Search, Plus, Check, Trash2, Edit3, MessageCircle, Download, 
-    Filter, X, StickyNote, Send, Clock, Calendar as CalendarIcon
+    Filter, X, StickyNote, Send, Clock, Calendar as CalendarIcon, Users, Star
 } from 'lucide-react';
 import StudentNotes from '../components/StudentNotes';
 import ScheduleModal from '../components/ScheduleModal';
 import AttendanceModal from '../components/AttendanceModal';
+import SkeletonCard from '../components/SkeletonCard';
+import EmptyState from '../components/EmptyState';
 
 const Students = () => {
     const { user, isPro } = useAuth();
@@ -77,7 +79,8 @@ const Students = () => {
         planType: 'MONTHLY',
         credits: 0,
         sub_category: '',
-        billing_alias: ''
+        billing_alias: '',
+        class_duration_min:60
     });
 
     // Form Schedules
@@ -87,10 +90,11 @@ const Students = () => {
 
     const handleAddSchedule = (e: React.MouseEvent) => {
         e.preventDefault();
-        // Calc end time + 1h
+        // Calc end time + custom duration
         const [h, m] = newScheduleTime.split(':').map(Number);
+        const duration = Number(formData.class_duration_min) || 60;
         const endD = new Date();
-        endD.setHours(h, m + 60);
+        endD.setHours(h, m + duration);
         const endTime = `${endD.getHours().toString().padStart(2, '0')}:${endD.getMinutes().toString().padStart(2, '0')}`;
 
         setFormSchedules([...formSchedules, { dayOfWeek: newScheduleDay, startTime: newScheduleTime, endTime }]);
@@ -104,7 +108,10 @@ const Students = () => {
     const services = [...new Set([...defaultServices, ...userServices.map(s => s.name), ...students.map(s => s.service_name).filter(Boolean)])].sort();
     const paymentMethods = [...new Set(students.map(s => s.payment_method).filter(Boolean))];
 
-    const calculateAmount = (pph: number, classes: number) => pph * classes;
+    const calculateAmount = (pph: number, classes: number, duration: number = 60) => {
+        const pricePerMin = pph / 60;
+        return Math.round(pricePerMin * duration * classes);
+    };
 
     useEffect(() => {
         loadStudents();
@@ -133,11 +140,14 @@ const Students = () => {
     };
 
     const resetForm = () => {
+        // Prefill with first available service if possible
+        const firstService = userServices.length > 0 ? userServices[0] : null;
+        
         setFormData({
             name: '', 
             phone: '', 
-            service_name: user?.defaultService || 'General',
-            price_per_hour: Number(user?.defaultPrice) || 0, 
+            service_name: firstService ? firstService.name : (user?.defaultService || 'General'),
+            price_per_hour: firstService ? Number(firstService.defaultPrice) : (Number(user?.defaultPrice) || 0), 
             classes_per_month: 4,
             payment_method: 'Efectivo', 
             deadline_day: 10, 
@@ -145,7 +155,8 @@ const Students = () => {
             planType: 'MONTHLY', 
             credits: 0,
             sub_category: '',
-            billing_alias: user?.bizAlias || ''
+            billing_alias: user?.bizAlias || '',
+            class_duration_min: 60
         });
         setFormSchedules([]);
         setIsEditing(false);
@@ -153,6 +164,12 @@ const Students = () => {
     };
 
     const handleOpenCreate = () => {
+        // Enforce services check
+        if (userServices.length === 0) {
+            showToast.error('Primero debés definir tus Servicios Ofrecidos en Configuración.');
+            return;
+        }
+
         const studentLimit = user?.plan === 'PRO' ? Infinity : (user?.plan === 'INITIAL' ? 10 : 5);
         if (!isPro || students.length >= studentLimit) {
             const limitMsg = user?.plan === 'INITIAL' 
@@ -189,7 +206,8 @@ const Students = () => {
             planType: student.planType || 'MONTHLY',
             credits: student.credits || 0,
             sub_category: student.sub_category || '',
-            billing_alias: student.billing_alias || user?.bizAlias || ''
+            billing_alias: student.billing_alias || user?.bizAlias || '',
+            class_duration_min: student.class_duration_min || 60
         });
 
         // Load schedules if present
@@ -212,13 +230,13 @@ const Students = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const amount = formData.planType === 'PACK'
-            ? calculateAmount(formData.price_per_hour || 0, 1) * (formData.credits || 0)
-            : calculateAmount(formData.price_per_hour || 0, formData.classes_per_month || 0);
+            ? calculateAmount(formData.price_per_hour || 0, 1, formData.class_duration_min) * (formData.credits || 0)
+            : calculateAmount(formData.price_per_hour || 0, formData.classes_per_month || 0, formData.class_duration_min);
 
         const payload: any = {
             ...formData,
             amount,
-            class_duration_min: 60,
+            class_duration_min: formData.class_duration_min || 60,
             due_day: 1,
             schedules: formSchedules
         };
@@ -323,6 +341,32 @@ const Students = () => {
         }
     };
 
+    const handleRequestTestimonial = async (student: Student) => {
+        if (!student.phone) {
+            showToast.error('Este alumno no tiene número guardado.');
+            return;
+        }
+
+        let link = '';
+        const now = new Date();
+        const expires = user?.ratingTokenExpires ? new Date(user.ratingTokenExpires) : new Date(0);
+
+        if (user?.ratingToken && expires > now) {
+            link = `${window.location.origin}/rating/teacher/${user.ratingToken}`;
+        } else {
+            try {
+                const data = await api.generateRatingLink();
+                link = `${window.location.origin}/rating/teacher/${data.token}`;
+            } catch (error) {
+                showToast.error('Error al generar el link de testimonio');
+                return;
+            }
+        }
+
+        const message = `Hola ${student.name}, quería pedirte unos minutos para dejar una calificación y testimonio sobre las clases. Es 100% anónimo si así lo prefieres: ${link}`;
+        window.open(`https://wa.me/${student.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+    };
+
     // Filter students
     const filteredStudents = students.filter(s => {
         const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -338,23 +382,50 @@ const Students = () => {
             showToast.error('Función no disponible en el plan actual');
             return;
         }
-        const headers = ['Nombre', 'Teléfono', 'Servicio', 'Cuota', 'Método de Pago', 'Estado'];
-        const rows = filteredStudents.map(s => [
-            s.name,
-            s.phone || '',
-            s.service_name || '',
-            s.amount?.toString() || '0',
-            s.payment_method || '',
-            s.status === 'paid' ? 'Cobrado' : 'Pendiente'
-        ]);
 
-        const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+        const DAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        
+        const headers = [
+            'Alumno', 'WhatsApp', 'Servicio', 'Subcategoría', 'Plan', 
+            'Horarios', 'Créditos', 'Cuota', 'Día Vencimiento', 
+            'Método de Pago', 'Estado'
+        ];
+
+        const rows = filteredStudents.map(s => {
+            const schedulesStr = (s.schedules || [])
+                .map(sc => `${DAYS[sc.dayOfWeek]} ${sc.startTime}`)
+                .join(' | ');
+
+            return [
+                s.name,
+                s.phone || '',
+                s.service_name || '',
+                s.sub_category || '',
+                s.planType || 'MONTHLY',
+                s.schedules?.length ? schedulesStr : 'Sin definir',
+                s.planType === 'PACK' ? (s.credits || 0).toString() : '-',
+                `${user?.currency || '$'}${Number(s.amount).toLocaleString('es-AR')}`,
+                s.deadline_day?.toString() || '10',
+                s.payment_method || '',
+                s.status === 'paid' ? 'Cobrado' : 'Pendiente'
+            ];
+        });
+
+        // Robust CSV formatting with proper quoting and escaping
+        const formatRow = (row: string[]) => 
+            row.map(val => `"${val.replace(/"/g, '""')}"`).join(',');
+
+        const csvContent = "\uFEFF" + [headers, ...rows].map(formatRow).join('\n');
+        
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
+        const dateStr = new Date().toISOString().split('T')[0];
+        
         link.href = URL.createObjectURL(blob);
-        link.download = `alumnos_${new Date().toISOString().split('T')[0]}.csv`;
+        link.download = `Cobralo_Reporte_Alumnos_${dateStr}.csv`;
         link.click();
-        showToast.success('Archivo exportado');
+        
+        showToast.success('Reporte exportado con éxito');
     };
 
     // WhatsApp link generator
@@ -508,11 +579,15 @@ const Students = () => {
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={6} className="p-10 text-center text-text-muted">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-main mx-auto"></div>
-                                    </td></tr>
+                                    <SkeletonCard variant="row" count={5} />
                                 ) : filteredStudents.length === 0 ? (
-                                    <tr><td colSpan={6} className="p-10 text-center text-text-muted">No se encontraron alumnos</td></tr>
+                                    <tr><td colSpan={6} className="p-10">
+                                        <EmptyState 
+                                            icon={Users}
+                                            title="No hay alumnos"
+                                            description="No se encontraron alumnos con los filtros actuales o aún no has cargado ninguno."
+                                        />
+                                    </td></tr>
                                 ) : filteredStudents.map(student => (
                                     <tr key={student.id} className="border-b border-border-main/40 hover:bg-bg-app transition transition-colors">
                                         <td className="p-4">
@@ -563,6 +638,9 @@ const Students = () => {
                                                 <button onClick={() => setDeleteModal({ isOpen: true, studentId: student.id })} className="p-3 bg-zinc-50 dark:bg-bg-dark rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition border border-zinc-100 dark:border-border-emerald" title="Eliminar">
                                                     <Trash2 size={16} />
                                                 </button>
+                                                <button onClick={() => handleRequestTestimonial(student)} className="p-3 bg-zinc-50 dark:bg-bg-dark rounded-xl text-zinc-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10 transition border border-zinc-100 dark:border-border-emerald" title="Solicitar Testimonio">
+                                                    <Star size={16} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -575,13 +653,15 @@ const Students = () => {
                 {/* Mobile view */}
                 <div className="md:hidden space-y-4">
                     {loading ? (
-                        <div className="p-12 text-center">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-main mx-auto"></div>
+                        <div className="pt-2">
+                            <SkeletonCard variant="card" count={3} />
                         </div>
                     ) : filteredStudents.length === 0 ? (
-                        <div className="p-12 text-center text-text-muted bg-surface/50 rounded-3xl border border-dashed border-border-main">
-                            No se encontraron alumnos
-                        </div>
+                        <EmptyState 
+                            icon={Users}
+                            title="Sin resultados"
+                            description="No se encontraron alumnos."
+                        />
                     ) : filteredStudents.map(student => (
                         <div key={student.id} className="card-premium p-6 flex flex-col gap-5 relative overflow-hidden group">
                             {/* Status indicator bar (Subtle) */}
@@ -619,7 +699,7 @@ const Students = () => {
                                     <p className="text-sm font-bold text-text-main font-mono shrink-0 truncate">{student.phone}</p>
                                 </div>
                                 <div className="border-l border-border-main/30 pl-4">
-                                    <p className="label-premium !text-[9px] mb-1.5">Móximo Horarios</p>
+                                    <p className="label-premium !text-[9px] mb-1.5">Horarios</p>
                                     <div className="flex flex-wrap gap-1">
                                         {student.schedules?.length ? (
                                             student.schedules.slice(0, 1).map((s: any, idx: number) => (
@@ -657,6 +737,13 @@ const Students = () => {
                                 <div className="flex gap-2">
                                     <button onClick={() => setDeleteModal({ isOpen: true, studentId: student.id })} className="p-3.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-500/60 hover:text-red-500 rounded-2xl transition-all" title="Eliminar Alumno">
                                         <Trash2 size={22} />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleRequestTestimonial(student)} 
+                                        className="p-3.5 bg-yellow-500/5 hover:bg-yellow-500/10 border border-yellow-500/20 text-yellow-600/70 hover:text-yellow-500 rounded-2xl transition-all" 
+                                        title="Solicitar Testimonio"
+                                    >
+                                        <Star size={22} strokeWidth={2.5} />
                                     </button>
                                     <a 
                                         href={generateWaLink(student)} 
@@ -713,14 +800,16 @@ const Students = () => {
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-1 block">Materia / Servicio</label>
-                                                    <input 
-                                                        list="services-list"
-                                                        autoComplete="off"
-                                                        placeholder="Música, Inglés..."
-                                                        className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all" 
+                                                    <select 
+                                                        className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all appearance-none" 
                                                         value={formData.service_name} 
                                                         onChange={e => handleServiceChange(e.target.value)} 
-                                                    />
+                                                    >
+                                                        {userServices.map(s => (
+                                                            <option key={s.id} value={s.name}>{s.name} - {user?.currency || '$'}{Number(s.defaultPrice).toLocaleString()}</option>
+                                                        ))}
+                                                        {userServices.length === 0 && <option value="General">General</option>}
+                                                    </select>
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-1 block">Subcategoría (Opcional)</label>
@@ -799,6 +888,31 @@ const Students = () => {
                                                 </div>
                                             </div>
 
+                                            <div className="grid grid-cols-1 gap-4">
+                                                <div>
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-2 block">Duración de Clase (minutos)</label>
+                                                    <div className="flex gap-2 mb-3">
+                                                        {[30, 45, 60, 90, 120].map(m => (
+                                                            <button 
+                                                                key={m} 
+                                                                type="button" 
+                                                                onClick={() => setFormData({ ...formData, class_duration_min: m })}
+                                                                className={`flex-1 py-2 rounded-xl text-[10px] font-black transition-all ${formData.class_duration_min === m ? 'bg-primary-main text-white shadow-lg' : 'bg-zinc-100 dark:bg-bg-dark text-zinc-400'}`}
+                                                            >
+                                                                {m} min
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <input 
+                                                        type="number" 
+                                                        className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all" 
+                                                        placeholder="Otra duración..." 
+                                                        value={formData.class_duration_min || ''} 
+                                                        onChange={e => setFormData({ ...formData, class_duration_min: Number(e.target.value) })} 
+                                                    />
+                                                </div>
+                                            </div>
+
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-1 block">Vencimiento (Día)</label>
@@ -852,10 +966,10 @@ const Students = () => {
                                             <div className="flex items-end gap-1">
                                                 <span className="text-xl font-bold mb-1 opacity-80">{user?.currency || '$'}</span>
                                                 <span className="text-4xl font-black tracking-tighter">
-                                                    {formData.planType === 'PACK'
-                                                        ? calculateAmount(formData.price_per_hour || 0, formData.credits || 0).toLocaleString('es-AR')
-                                                        : calculateAmount(formData.price_per_hour || 0, formData.classes_per_month || 0).toLocaleString('es-AR')
-                                                    }
+                                                    {(formData.planType === 'PACK'
+                                                        ? calculateAmount(formData.price_per_hour || 0, 1, formData.class_duration_min || 60) * (formData.credits || 0)
+                                                        : calculateAmount(formData.price_per_hour || 0, formData.classes_per_month || 0, formData.class_duration_min || 60)
+                                                    ).toLocaleString('es-AR')}
                                                 </span>
                                             </div>
                                             <button type="submit" className="w-full bg-white text-primary-main font-black uppercase tracking-widest text-[10px] py-4 rounded-2xl mt-6 transition-all hover:bg-zinc-50 active:scale-95 shadow-lg shadow-black/10">

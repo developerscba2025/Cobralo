@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, Cell
 } from 'recharts';
-import { ArrowRight, MessageCircle, TrendingUp, Users, DollarSign, Zap } from 'lucide-react';
+import { ArrowRight, MessageCircle, TrendingUp, Users, DollarSign, Zap, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Student } from '../services/api';
+import EmptyState from '../components/EmptyState';
 
 interface ProDashboardProps {
     stats: {
@@ -30,6 +31,15 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     students = [],
     pendingAdjustment
 }) => {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile(); // Check initial
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const pendingStudents = students.filter(s => s.status === 'pending');
 
     const generateWaLink = (student: Student) => {
@@ -120,7 +130,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             <p className="label-premium mt-1 !tracking-widest">Últimos 30 días</p>
                         </div>
                     </div>
-                    <div className="h-60 md:h-72">
+                    <div className="h-48 md:h-72">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>
@@ -137,14 +147,17 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                     tickLine={false} 
                                     axisLine={false} 
                                     tick={{ fontWeight: 900, opacity: 0.5 }}
+                                    interval={isMobile ? 1 : 0}
                                 />
                                 <YAxis 
+                                    hide={isMobile}
                                     stroke="currentColor" 
                                     fontSize={10} 
                                     tickLine={false} 
                                     axisLine={false} 
                                     tickFormatter={(v) => `${user?.currency || '$'}${v}`}
                                     tick={{ fontWeight: 900, opacity: 0.5 }}
+                                    width={45}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -179,7 +192,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             <p className="label-premium mt-1 !tracking-widest">Tráfico del mes</p>
                         </div>
                     </div>
-                    <div className="h-60 md:h-72">
+                    <div className="h-48 md:h-72">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="currentColor" vertical={false} opacity={0.1} />
@@ -190,13 +203,16 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                     tickLine={false} 
                                     axisLine={false}
                                     tick={{ fontWeight: 900, opacity: 0.5 }}
+                                    interval={isMobile ? 1 : 0}
                                 />
                                 <YAxis 
+                                    hide={isMobile}
                                     stroke="currentColor" 
                                     fontSize={10} 
                                     tickLine={false} 
                                     axisLine={false}
                                     tick={{ fontWeight: 900, opacity: 0.5 }}
+                                    width={30}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -232,9 +248,11 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     </div>
                     <div className="space-y-4">
                         {todaysSchedules.length === 0 ? (
-                            <div className="text-center py-12 text-zinc-400 font-bold bg-bg-dark rounded-2xl border border-dashed border-border-emerald">
-                                <p className="uppercase tracking-widest text-[10px]">No hay clases para hoy.</p>
-                            </div>
+                            <EmptyState
+                                icon={Activity}
+                                title="Libre"
+                                description="Hoy no tienes clases agendadas."
+                            />
                         ) : (
                             todaysSchedules.map((schedule: any) => (
                                 <div key={schedule.id} className="flex items-center gap-4 p-4 card-sub border-l-4 border-primary-main group hover:translate-x-1 transition-all">

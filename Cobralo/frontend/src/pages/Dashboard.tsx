@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import type { PaymentStats, Student } from '../services/api';
+import SkeletonCard from '../components/SkeletonCard';
 import ProDashboard from './ProDashboard';
 import BasicDashboard from './BasicDashboard';
 
@@ -83,8 +84,12 @@ const Dashboard = () => {
     if (loading || !user) {
         return (
             <Layout>
-                <div className="flex items-center justify-center min-h-[400px]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main"></div>
+                <div className="space-y-8 animate-in fade-in duration-500">
+                    {/* Fake Header Skeletons */}
+                    <SkeletonCard variant="stat" count={3} />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                        <SkeletonCard variant="chart" count={2} />
+                    </div>
                 </div>
             </Layout>
         );

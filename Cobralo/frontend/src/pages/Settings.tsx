@@ -353,13 +353,15 @@ const Settings = () => {
                     className={`lg:sticky lg:top-24 space-y-8 animate-in fade-in slide-in-from-left-4 duration-700 ${!isNavOpen ? 'hidden lg:block' : 'block'}`}
                 >
                     <div className="flex flex-col gap-1">
-                        <div className="flex items-center justify-between mb-4 md:mb-6">
-                             <h3 className={`text-[10px] font-black text-zinc-400 dark:text-emerald-500/40 uppercase tracking-[0.2em] ml-4 transition-opacity duration-300 ${isCollapsed && !isMobile ? 'opacity-0 h-0 pointer-events-none' : 'opacity-100'}`}>
-                                Navegación
-                            </h3>
+                        <div className={`flex items-center mb-4 md:mb-6 ${isCollapsed && !isMobile ? 'justify-center w-full' : 'justify-between px-4'}`}>
+                             {(!isCollapsed || isMobile) && (
+                                 <h3 className="text-[10px] font-black text-zinc-400 dark:text-emerald-500/40 uppercase tracking-[0.2em] animate-in fade-in duration-300">
+                                    Navegación
+                                </h3>
+                             )}
                             <button 
                                 onClick={() => setIsCollapsed(!isCollapsed)}
-                                className="hidden lg:flex p-2 rounded-xl bg-zinc-50 dark:bg-bg-dark text-text-muted hover:text-primary-main transition-colors mr-2"
+                                className={`hidden lg:flex p-2 rounded-xl bg-zinc-50 dark:bg-bg-dark text-text-muted hover:text-primary-main transition-all ${isCollapsed && !isMobile ? 'w-10 h-10 items-center justify-center' : ''}`}
                                 title={isCollapsed ? "Expandir" : "Contraer"}
                             >
                                 <Menu size={14} />
@@ -373,7 +375,7 @@ const Settings = () => {
                                         {cat.label}
                                     </h4>
                                 ) : (
-                                    <div className="h-px bg-zinc-100 dark:bg-white/5 mx-4 mb-4" />
+                                    <div className="h-px bg-zinc-100 dark:bg-white/5 w-8 mx-auto mb-4" />
                                 )}
                                 
                                 <div className="flex flex-col gap-1">
@@ -389,11 +391,15 @@ const Settings = () => {
                                                 }
                                             }}
                                             title={isCollapsed ? tab.label : ""}
-                                            className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-black uppercase tracking-widest text-[10px] group ${
+                                            className={`flex items-center gap-3 transition-all font-black uppercase tracking-widest text-[10px] group ${
+                                                isCollapsed && !isMobile 
+                                                    ? 'justify-center p-0 w-12 h-12 mx-auto rounded-2xl' 
+                                                    : 'px-4 py-3 rounded-2xl'
+                                            } ${
                                                 activeTab === tab.id
-                                                    ? 'bg-primary-main text-white shadow-lg shadow-primary-glow dark:shadow-none translate-x-1'
+                                                    ? 'bg-primary-main text-white shadow-lg shadow-primary-glow dark:shadow-none'
                                                     : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-bg-soft hover:text-zinc-800 dark:hover:text-emerald-50'
-                                            } ${isCollapsed && !isMobile ? 'justify-center px-0 w-12 mx-auto' : ''}`}
+                                            }`}
                                         >
                                             <tab.icon size={18} className={`${activeTab === tab.id ? 'opacity-100' : 'opacity-50 group-hover:opacity-100 transition-opacity'}`} />
                                             {(!isCollapsed || isMobile) && (
@@ -752,13 +758,13 @@ const Settings = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm font-black text-zinc-800 dark:text-emerald-50 uppercase tracking-tight">Tu Perfil Público</p>
-                                            <p className="text-xs font-bold text-primary-main/60 tracking-tight">{window.location.origin}/app/profile/{user.bizAlias || user.id}</p>
+                                            <p className="text-xs font-bold text-primary-main/60 tracking-tight">{window.location.origin}/profile/{user.bizAlias || user.id}</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => {
-                                            navigator.clipboard.writeText(`${window.location.origin}/app/profile/${user.bizAlias || user.id}`);
-                                            showToast.success('¡Copiado!');
+                                            navigator.clipboard.writeText(`${window.location.origin}/profile/${user.bizAlias || user.id}`);
+                                            showToast.success('¡Enlace copiado!');
                                         }}
                                         className="px-8 py-4 bg-white dark:bg-bg-soft text-zinc-900 dark:text-emerald-50 font-black uppercase tracking-widest text-[10px] rounded-2xl border border-zinc-100 dark:border-border-emerald hover:bg-zinc-50 transition shadow-sm"
                                     >
@@ -909,11 +915,11 @@ const Settings = () => {
                                         <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-4 ml-2">Link Para Alumnos</label>
                                         <div className="flex gap-4">
                                             <div className="flex-1 bg-zinc-50 dark:bg-bg-dark p-5 rounded-[24px] font-mono text-xs font-bold text-primary-main truncate flex items-center border border-zinc-100 dark:border-border-emerald">
-                                                {`${window.location.origin}/app/rate/${ratingToken}`}
+                                                {`${window.location.origin}/rate/${ratingToken}`}
                                             </div>
                                             <button 
                                                 onClick={() => {
-                                                    navigator.clipboard.writeText(`${window.location.origin}/app/rate/${ratingToken}`);
+                                                    navigator.clipboard.writeText(`${window.location.origin}/rate/${ratingToken}`);
                                                     showToast.success('Copiado');
                                                 }}
                                                 className="p-5 bg-primary-main/10 text-primary-main rounded-[24px] hover:bg-primary-main/20 transition-all border border-primary-main/20"

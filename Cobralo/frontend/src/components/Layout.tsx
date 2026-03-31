@@ -14,6 +14,7 @@ import SupportModal from './SupportModal';
 import LegalModal from './LegalModal';
 
 import BottomNav from './BottomNav';
+import { api } from '../services/api';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -28,6 +29,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const [isSupportOpen, setIsSupportOpen] = useState(false);
     const [isLegalOpen, setIsLegalOpen] = useState(false);
     const [legalType, setLegalType] = useState<'terms' | 'privacy'>('terms');
+    const [pendingCount, setPendingCount] = useState(0);
+
+    // Fetch pending notifications count
+    useEffect(() => {
+        if (!user) return;
+        const fetchPending = async () => {
+            try {
+                const students = await api.getStudents();
+                setPendingCount(students.filter((s:any) => s.status === 'pending').length);
+            } catch (error) {
+                // Silently fail for navigation badge
+            }
+        };
+        fetchPending();
+    }, [location.pathname, user]);
 
     // Global keyboard shortcut Ctrl+K
     useEffect(() => {
@@ -209,7 +225,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} onSent={() => showToast.success('Mensaje enviado correctamente')} />
             <LegalModal isOpen={isLegalOpen} onClose={() => setIsLegalOpen(false)} type={legalType} />
-            <BottomNav />
+            <AnimatePresence>
+                {!isMobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="md:hidden"
+                    >
+                        <BottomNav pendingCount={pendingCount} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

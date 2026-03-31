@@ -39,7 +39,8 @@ const defaultOrigins = [
   'https://cobralo.info',
   'http://localhost:5173',
   'http://localhost:5174',
-  'http://localhost:5175'
+  'http://localhost:5175',
+  'http://localhost:5176',
 ];
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
@@ -51,6 +52,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error(`Blocked by CORS: origin='${origin}', allowedOrigins=[${allowedOrigins.join(', ')}]`);
       callback(new Error('Not allowed by CORS'));
     }
   },

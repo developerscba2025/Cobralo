@@ -107,13 +107,11 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
                     { AND: [{ startTime: { lt: endTime } }, { endTime: { gte: endTime } }] },
                     { AND: [{ startTime: { gte: startTime } }, { endTime: { lte: endTime } }] }
                 ]
+            },
+            include: {
+                student: { select: { name: true } }
             }
         });
-
-        if (conflicts.length > 0) {
-            res.status(400).json({ error: 'Hay un conflicto de horario', conflicts });
-            return;
-        }
 
         const schedule = await prisma.classSchedule.create({
             data: {
@@ -128,7 +126,7 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        res.json(schedule);
+        res.json({ ...schedule, conflicts });
     } catch (error) {
         console.error('Error creating schedule:', error);
         res.status(500).json({ error: 'Error creating schedule' });
