@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-accent: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Theme Tokens Linked to CSS Variables */
+  --color-primary-main: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-glow: var(--primary-glow);
+  
+  --spacing-safe-top: env(safe-area-inset-top);
+  --spacing-safe-bottom: env(safe-area-inset-bottom);
+  --spacing-safe-left: env(safe-area-inset-left);
+  --spacing-safe-right: env(safe-area-inset-right);
+  
+  --color-bg-app: var(--bg-app);
+  --color-bg-soft: var(--surface);
+  --color-bg-dark: var(--bg-app);
+  --color-surface: var(--surface);
+  --color-bg-soft-app: var(--surface);
+  
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-text-soft: var(--text-soft);
+  
+  --color-border-emerald: var(--border-main);
+  --color-border-main: var(--border-main);
+
+  /* Radius */
+  --radius-premium: 32px;
+  --radius-inner: 16px;
+}
+
+@layer base {
+  :root {
+    --primary: #22c55e;
+    --primary-light: #4ade80;
+    --primary-glow: rgba(34, 197, 94, 0.2);
+    
+    --bg-app: #f8fafc;
+    --surface: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-soft: #475569;
+    --border-main: #e2e8f0;
+
+    /* Semantic supports for legacy */
+    --bg: var(--bg-app);
+    --bg-soft: var(--surface);
+    --text: var(--text-main);
+  }
+
+  .dark {
+    --primary: #22c55e;
+    --primary-light: #4ade80;
+    --primary-glow: rgba(34, 197, 94, 0.4);
+
+    --bg-app: hsla(150, 15%, 3%, 1); /* Deep Obsidian */
+    --surface: hsla(150, 15%, 8%, 1); /* Elevated Surface */
+    --text-main: #f0f7f0;
+    --text-muted: #8ba38b;
+    --text-soft: #a1bca1;
+    --border-main: rgba(34, 197, 94, 0.12);
+
+    /* Semantic supports for legacy */
+    --bg: var(--bg-app);
+    --bg-soft: var(--surface);
+    --text: var(--text-main);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    transition: background-color 0.3s ease;
+  }
+
+  body {
+    @apply font-sans bg-bg-app text-text-main;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-accent;
+    letter-spacing: -0.02em;
+  }
+
+  /* Universal scrollbar fix */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 10px;
+  }
+}
+
+@layer utilities {
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .container {
+      padding: 0 2rem;
+    }
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .px-safe {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .section-padding {
+    padding: 3rem 0;
+  }
+
+  @media (min-width: 768px) {
+    .section-padding {
+      padding: 6rem 0;
+    }
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #fff 0%, var(--primary-light) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .glass-card {
+    background: rgba(15, 23, 15, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+    border-radius: 24px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.8rem;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(22, 163, 74, 0.5);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    background: var(--primary-light);
+  }
+
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+    color: var(--text-muted);
+  }
+
+  .label-premium {
+    @apply text-[10px] font-black uppercase tracking-[0.2em] text-text-muted dark:text-emerald-500/60 font-accent;
+  }
+
+  .card-premium {
+    @apply bg-bg-soft-app rounded-[24px] md:rounded-[32px] border border-border-emerald shadow-sm dark:shadow-none transition-colors duration-300;
+  }
+
+  .float-anim { animation: float 6s ease-in-out infinite; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .offer-banner {
+    background: var(--primary);
+    color: white;
+    padding: 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .offer-track {
+    display: inline-flex;
+    gap: 2rem;
+    animation: marquee 30s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0%); }
+  }
+}

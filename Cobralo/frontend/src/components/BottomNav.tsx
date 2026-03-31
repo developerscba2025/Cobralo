@@ -1,0 +1,40 @@
+import { Link, useLocation } from 'react-router-dom';
+import { PieChart, Users, Clock, Settings } from 'lucide-react';
+
+const BottomNav = () => {
+    const location = useLocation();
+
+    const menuItems = [
+        { path: '/app/dashboard', icon: PieChart, label: 'Inicio' },
+        { path: '/app/students', icon: Users, label: 'Alumnos' },
+        { path: '/app/calendar', icon: Clock, label: 'Agenda' },
+        { path: '/app/settings', icon: Settings, label: 'Más' },
+    ];
+
+    const isActive = (path: string) => location.pathname === path;
+
+    return (
+        <nav className="fixed bottom-0 left-0 right-0 bg-surface/80 backdrop-blur-lg border-t border-border-main px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 z-40 md:hidden flex justify-around items-center">
+            {menuItems.map((item) => (
+                <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex flex-col items-center gap-1 p-2 min-w-[64px] transition-all ${
+                        isActive(item.path)
+                            ? 'text-primary-main'
+                            : 'text-text-muted hover:text-text-main'
+                    }`}
+                >
+                    <div className={`p-1 rounded-xl transition-all ${isActive(item.path) ? 'bg-primary-main/10 scale-110' : ''}`}>
+                        <item.icon size={22} strokeWidth={isActive(item.path) ? 2.5 : 2} />
+                    </div>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${isActive(item.path) ? 'opacity-100' : 'opacity-60'}`}>
+                        {item.label}
+                    </span>
+                </Link>
+            ))}
+        </nav>
+    );
+};
+
+export default BottomNav;
