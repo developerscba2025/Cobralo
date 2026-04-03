@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PieChart, Users, Settings, LogOut, HelpCircle, ShieldCheck, Clock, Moon, Sun } from 'lucide-react';
+import { X, LogOut, HelpCircle, ShieldCheck, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -13,22 +13,10 @@ interface MobileMenuProps {
 }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport, onOpenLegal }) => {
-    const location = useLocation();
+
     const { logout, user } = useAuth();
     const { theme, toggleTheme } = useTheme();
 
-    const isActive = (path: string) => {
-        return location.pathname === path
-            ? 'bg-primary-main text-white shadow-lg'
-            : 'text-text-main hover:bg-primary-main/10 hover:text-primary-main';
-    };
-
-    const menuItems = [
-        { path: '/app/dashboard', icon: PieChart, label: 'Dashboard' },
-        { path: '/app/students', icon: Users, label: 'Alumnos' },
-        { path: '/app/calendar', icon: Clock, label: 'Calendario' },
-        { path: '/app/settings', icon: Settings, label: 'Configuración' },
-    ];
 
     return (
         <AnimatePresence>
@@ -80,22 +68,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport,
                                 </div>
                             )}
 
-                            {/* Navigation */}
-                            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                                {menuItems.map((item) => (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onClick={onClose}
-                                        className={`flex items-center justify-between p-4 rounded-2xl transition-all ${isActive(item.path)}`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <item.icon size={22} className={location.pathname === item.path ? 'text-white' : 'text-slate-400'} />
-                                            <span className="font-black uppercase tracking-widest text-[10px]">{item.label}</span>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </nav>
+                            <div className="flex-1 overflow-y-auto" />
 
                             {/* Footer Area */}
                              <div className="p-4 border-t border-border-emerald space-y-2 bg-bg-app/30">

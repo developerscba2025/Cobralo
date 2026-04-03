@@ -9,6 +9,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { ProFeature } from '../components/ProGuard';
 import EmptyState from '../components/EmptyState';
+import AttendanceBulkModal from '../components/AttendanceBulkModal';
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7am to 9pm
@@ -19,14 +20,23 @@ const Calendar = () => {
     const [students, setStudents] = useState<Student[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [attendanceModal, setAttendanceModal] = useState<{ isOpen: boolean; schedule: UnifiedSchedule | null }>({
+        isOpen: false,
+        schedule: null
+    });
     const [selectedMobileDay, setSelectedMobileDay] = useState(new Date().getDay());
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null }>({
         isOpen: false,
         id: null
     });
 
-    const [formData, setFormData] = useState({
-        studentId: '',
+    const [formData, setFormData] = useState<{
+        studentIds: number[];
+        dayOfWeek: number;
+        startTime: string;
+        endTime: string;
+    }>({
+        studentIds: [],
         dayOfWeek: 1,
         startTime: '09:00',
         endTime: '10:00'
@@ -54,14 +64,14 @@ const Calendar = () => {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.studentId) {
-            showToast.error('Selecciona un alumno');
+        if (formData.studentIds.length === 0) {
+            showToast.error('Selecciona al menos un alumno');
             return;
         }
 
         try {
             const result = await api.createSchedule({
-                studentId: Number(formData.studentId),
+                studentIds: formData.studentIds,
                 dayOfWeek: formData.dayOfWeek,
                 startTime: formData.startTime,
                 endTime: formData.endTime
@@ -80,6 +90,7 @@ const Calendar = () => {
             }
             
             setIsModalOpen(false);
+            setFormData(prev => ({ ...prev, studentIds: [] }));
             fetchData();
         } catch (error) {
             showToast.error('Error al agendar la clase');
@@ -196,7 +207,7 @@ const Calendar = () => {
                     {user?.plan === 'PRO' || user?.plan === 'INITIAL' ? (
                         <button
                             onClick={handleExportICS}
-                            className="flex items-center gap-2 px-6 py-3 bg-surface border border-border-main text-text-main rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-bg-app transition-all active:scale-95 shadow-sm"
+                            className="hidden lg:flex items-center gap-2 px-6 py-3 bg-surface border border-border-main text-text-main rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-bg-app transition-all active:scale-95 shadow-sm"
                         >
                             <Download size={20} />
                             Sincronizar
@@ -204,7 +215,7 @@ const Calendar = () => {
                     ) : (
                         <ProFeature featureName="Sincronización con Google Calendar" inline>
                             <button
-                                className="flex items-center gap-2 px-6 py-3 bg-surface border border-border-main text-text-muted rounded-2xl font-black uppercase tracking-widest text-[10px] opacity-40 cursor-not-allowed"
+                                className="hidden lg:flex items-center gap-2 px-6 py-3 bg-surface border border-border-main text-text-muted rounded-2xl font-black uppercase tracking-widest text-[10px] opacity-40 cursor-not-allowed"
                             >
                                 <Download size={20} />
                                 Sincronizar
@@ -213,7 +224,7 @@ const Calendar = () => {
                     )}
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition-all flex items-center gap-2 active:scale-95"
+                        className="hidden lg:flex bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition-all items-center gap-2 active:scale-95"
                     >
                         <Plus size={20} />
                         Nueva Clase
@@ -275,7 +286,8 @@ const Calendar = () => {
                                                             key={s.id}
                                                             initial={{ opacity: 0, x: -5 }}
                                                             animate={{ opacity: 1, x: 0 }}
-                                                            className="bg-primary-main/10 dark:bg-primary-main/15 border-l-4 border-primary-main shadow-sm p-3 rounded-xl group cursor-default hover:bg-primary-main/20 transition-all"
+                                                            onClick={() => setAttendanceModal({ isOpen: true, schedule: s })}
+                                                            className="bg-primary-main/10 dark:bg-primary-main/15 border-l-4 border-primary-main shadow-sm p-3 rounded-xl group cursor-pointer hover:bg-primary-main/20 transition-all"
                                                         >
                                                             <div className="flex items-center justify-between gap-1 mb-1 relative z-10">
                                                                 <span className="text-[10px] font-black text-primary-main uppercase tracking-widest opacity-80">
@@ -292,10 +304,12 @@ const Calendar = () => {
                                                                 </button>
                                                             </div>
                                                             <div className="text-sm font-bold text-text-main leading-tight truncate">
-                                                                {s.student?.name}
+                                                                {s.students && s.students.length > 1 
+                                                                    ? `${s.students[0].name} +${s.students.length - 1}` 
+                                                                    : (s.students?.[0]?.name || s.student?.name || 'Clase Grupal')}
                                                             </div>
                                                             <div className="text-[9px] text-text-muted mt-0.5 font-bold uppercase tracking-tighter truncate opacity-70">
-                                                                {s.student?.service_name || 'General'}
+                                                                {s.students && s.students.length > 1 ? `${s.students.length} alumnos` : (s.students?.[0]?.service_name || s.student?.service_name || 'General')}
                                                             </div>
                                                         </motion.div>
                                                     ))}
@@ -313,12 +327,12 @@ const Calendar = () => {
             {/* Calendar Mobile View */}
             <div className="md:hidden flex flex-col min-h-[500px]">
                 {/* Day Selector Pills */}
-                <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-6 -mx-4 px-4 sticky top-0 z-20 bg-bg-app/90 backdrop-blur-md pt-2">
+                <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-6 -mx-4 px-4 sticky top-0 z-20 bg-bg-app/90 backdrop-blur-md pt-2 snap-x snap-mandatory">
                     {weekDates.map((d, index) => (
                         <button
                             key={index}
                             onClick={() => setSelectedMobileDay(index)}
-                            className={`flex flex-col items-center justify-center min-w-[72px] h-[86px] rounded-[24px] p-3 transition-all ${
+                            className={`snap-center flex flex-col items-center justify-center min-w-[72px] h-[86px] rounded-[24px] p-3 transition-all ${
                                 selectedMobileDay === index
                                     ? 'bg-primary-main text-white shadow-lg shadow-primary-glow border border-primary-light/30'
                                     : d.isToday
@@ -368,9 +382,18 @@ const Calendar = () => {
                                 
                                 <div className="w-px h-10 bg-border-main/50"></div>
 
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-base font-bold text-text-main truncate leading-tight">{s.student?.name}</h4>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mt-1 opacity-80 truncate">{s.student?.service_name}</p>
+                                <div 
+                                    className="flex-1 min-w-0"
+                                    onClick={() => setAttendanceModal({ isOpen: true, schedule: s })}
+                                >
+                                    <h4 className="text-base font-bold text-text-main truncate leading-tight">
+                                        {s.students && s.students.length > 1 
+                                            ? `${s.students[0].name} +${s.students.length - 1}` 
+                                            : (s.students?.[0]?.name || s.student?.name || 'Clase Grupal')}
+                                    </h4>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mt-1 opacity-80 truncate">
+                                        {s.students && s.students.length > 1 ? `${s.students.length} alumnos` : (s.students?.[0]?.service_name || s.student?.service_name || 'General')}
+                                    </p>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     <span className="text-[9px] font-black text-text-muted uppercase tracking-widest bg-bg-app px-2 py-1 rounded-md">
@@ -400,6 +423,14 @@ const Calendar = () => {
                     <span className="tracking-tight">Los choques de horario son prevenidos automáticamente.</span>
                 </div>
             </div>
+
+            {/* Mobile FAB */}
+            <button
+                onClick={() => setIsModalOpen(true)}
+                className="lg:hidden fixed bottom-[90px] right-4 w-14 h-14 bg-primary-main text-white rounded-full flex items-center justify-center shadow-lg shadow-primary-glow z-40 active:scale-95 transition-transform"
+            >
+                <Plus size={24} strokeWidth={2.5} />
+            </button>
 
             {/* Create Modal */}
             <AnimatePresence>
@@ -432,20 +463,24 @@ const Calendar = () => {
 
                             <form onSubmit={handleCreate} className="space-y-6">
                                 <div>
-                                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Alumno</label>
-                                    <div className="relative">
-                                        <User className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" size={20} />
-                                        <select
-                                            required
-                                            value={formData.studentId}
-                                            onChange={e => setFormData({ ...formData, studentId: e.target.value })}
-                                            className="w-full pl-14 pr-6 py-5 bg-surface border border-border-main rounded-3xl text-text-main outline-none focus:ring-2 focus:ring-primary-main/20 transition-all appearance-none font-bold shadow-inner"
-                                        >
-                                            <option value="" className="dark:bg-bg-dark">Seleccionar alumno...</option>
-                                            {students.map(s => (
-                                                <option key={s.id} value={s.id} className="dark:bg-bg-dark">{s.name}</option>
-                                            ))}
-                                        </select>
+                                    <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Alumnos (uno o más)</label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[160px] overflow-y-auto p-4 bg-surface border border-border-main rounded-3xl shadow-inner custom-scrollbar font-bold text-sm">
+                                        {students.map(s => (
+                                            <label key={s.id} className="flex items-center gap-3 p-2 hover:bg-primary-main/5 rounded-xl cursor-pointer transition-all">
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={formData.studentIds.includes(s.id)}
+                                                    onChange={(e) => {
+                                                        const ids = e.target.checked 
+                                                            ? [...formData.studentIds, s.id]
+                                                            : formData.studentIds.filter(id => id !== s.id);
+                                                        setFormData({ ...formData, studentIds: ids });
+                                                    }}
+                                                    className="w-5 h-5 rounded-md accent-primary-main border-border-main"
+                                                />
+                                                <span className="text-text-main truncate">{s.name}</span>
+                                            </label>
+                                        ))}
                                     </div>
                                 </div>
 
@@ -503,6 +538,13 @@ const Calendar = () => {
                 onConfirm={handleDelete}
                 onCancel={() => setDeleteModal({ isOpen: false, id: null })}
                 variant="danger"
+            />
+
+            <AttendanceBulkModal 
+                isOpen={attendanceModal.isOpen}
+                onClose={() => setAttendanceModal({ isOpen: false, schedule: null })}
+                schedule={attendanceModal.schedule}
+                onSuccess={fetchData}
             />
         </Layout>
     );

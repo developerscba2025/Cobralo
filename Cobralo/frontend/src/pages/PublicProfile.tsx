@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, MessageSquare, Loader2, Award, CheckCircle2, Building2 } from 'lucide-react';
+import { staggerContainerVariants, listItemVariants, floatVariants } from '../utils/motion';
 
 
 const PublicProfile = () => {
@@ -50,26 +51,47 @@ const PublicProfile = () => {
     return (
         <div className="min-h-screen bg-[#050805] text-slate-200 selection:bg-green-500/30">
             {/* Header / Banner */}
-            <div className="h-48 bg-gradient-to-br from-green-950 via-[#050805] to-black relative overflow-hidden">
-                <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500 rounded-full blur-[120px]"></div>
+            <div className="h-56 bg-gradient-to-br from-green-950 via-[#050805] to-black relative overflow-hidden">
+                <div className="absolute inset-0 opacity-30">
+                    <motion.div 
+                        animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.2, 0.4, 0.2] 
+                        }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-24 -right-24 w-[500px] h-[500px] bg-green-500/20 rounded-full blur-[120px]"
+                    ></motion.div>
+                    <motion.div 
+                        animate={{ 
+                            scale: [1, 1.3, 1],
+                            opacity: [0.1, 0.3, 0.1] 
+                        }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "linear", delay: 2 }}
+                        className="absolute -bottom-24 -left-24 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[120px]"
+                    ></motion.div>
                 </div>
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
             </div>
 
             <div className="max-w-4xl mx-auto px-6 -mt-20 relative z-10 pb-20">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-900/50 backdrop-blur-3xl border border-white/5 rounded-[40px] p-8 md:p-12 shadow-2xl"
+                    transition={{ type: "spring", damping: 25, stiffness: 100 }}
+                    className="bg-slate-900/40 backdrop-blur-[40px] border border-white/10 rounded-[48px] p-10 md:p-14 shadow-[0_32px_120px_-20px_rgba(0,0,0,0.8)]"
                 >
                     <div className="flex flex-col md:flex-row gap-8 items-start justify-between">
-                        <div className="flex gap-6 items-center">
-                            <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-green-600 flex items-center justify-center text-white text-4xl md:text-5xl font-black shadow-inner">
+                        <div className="flex flex-col md:flex-row gap-8 items-center">
+                            <motion.div 
+                                variants={floatVariants}
+                                initial="initial"
+                                animate="animate"
+                                className="w-32 h-32 md:w-40 md:h-40 rounded-[40px] bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center text-white text-5xl md:text-6xl font-black shadow-[0_20px_40px_-10px_rgba(34,197,94,0.4)] ring-4 ring-white/10"
+                            >
                                 {profile.name[0].toUpperCase()}
-                            </div>
-                            <div>
-                                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase italic">
+                            </motion.div>
+                            <div className="text-center md:text-left">
+                                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic font-accent leading-none mb-2">
                                     {profile.bizName || profile.name}
                                 </h1>
                                 <p className="text-green-500 font-bold flex items-center gap-2 mt-1">
@@ -85,9 +107,9 @@ const PublicProfile = () => {
                                             />
                                         ))}
                                     </div>
-                                    <span className="text-sm font-black text-white">{profile.avgRating}</span>
-                                    <span className="text-xs text-slate-500 uppercase font-bold tracking-widest border-l border-white/10 pl-3">
-                                        {profile.reviewCount} reseñas
+                                    <span className="text-base font-black text-white">{profile.avgRating}</span>
+                                    <span className="text-xs text-slate-500 uppercase font-black tracking-[0.2em] border-l border-white/10 pl-4 py-1">
+                                        {profile.reviewCount} <span className="opacity-60">reseñas</span>
                                     </span>
                                 </div>
                             </div>
@@ -104,51 +126,57 @@ const PublicProfile = () => {
                         {/* Summary */}
                         <div className="lg:col-span-8 space-y-12">
                             <section>
-                                <h2 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
-                                    <MessageSquare size={14} className="text-green-500" /> Testimonios Recientes
+                                <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.4em] mb-8 flex items-center gap-3 font-accent">
+                                    <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                                        <MessageSquare size={16} className="text-green-500" />
+                                    </div> 
+                                    Testimonios Recientes
                                 </h2>
                                 
-                                <div className="space-y-6">
+                                <motion.div 
+                                    variants={staggerContainerVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                                >
                                     {profile.ratings.length === 0 ? (
-                                        <div className="p-8 rounded-[32px] bg-white/5 border border-dashed border-white/10 text-center">
-                                            <p className="text-slate-500 font-bold">Aún no hay testimonios públicos.</p>
+                                        <div className="col-span-full p-12 rounded-[40px] bg-white/5 border border-dashed border-white/10 text-center">
+                                            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs opacity-50">Aún no hay testimonios públicos.</p>
                                         </div>
                                     ) : (
                                         profile.ratings.map((r: any, idx: number) => (
                                             <motion.div
                                                 key={idx}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: idx * 0.1 }}
-                                                className="p-8 bg-white/5 rounded-[32px] border border-white/5 relative group"
+                                                variants={listItemVariants}
+                                                className="p-10 bg-white/5 backdrop-blur-xl rounded-[40px] border border-white/5 hover:border-green-500/30 transition-all group"
                                             >
-                                                <div className="flex justify-between items-start mb-4">
-                                                    <div className="flex gap-0.5">
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div className="flex gap-1">
                                                         {[...Array(5)].map((_, i) => (
                                                             <Star 
                                                                 key={i} 
-                                                                size={14} 
+                                                                size={16} 
                                                                 className={i < r.value ? 'fill-amber-400 text-amber-400' : 'text-slate-800'} 
                                                             />
                                                         ))}
                                                     </div>
-                                                    <span className="text-[10px] font-black text-slate-600 uppercase">
+                                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
                                                         {new Date(r.createdAt).toLocaleDateString()}
                                                     </span>
                                                 </div>
-                                                <p className="text-slate-300 font-medium italic leading-relaxed mb-4">
+                                                <p className="text-slate-200 text-lg font-medium italic leading-relaxed mb-8 opacity-90">
                                                     "{r.comment}"
                                                 </p>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black text-green-500">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-xs font-black text-green-500 ring-1 ring-white/5">
                                                         {r.studentName[0]}
                                                     </div>
-                                                    <span className="text-xs font-black text-white uppercase tracking-tight">{r.studentName}</span>
+                                                    <span className="text-sm font-black text-white uppercase tracking-tight font-accent">{r.studentName}</span>
                                                 </div>
                                             </motion.div>
                                         ))
                                     )}
-                                </div>
+                                </motion.div>
                             </section>
                         </div>
 

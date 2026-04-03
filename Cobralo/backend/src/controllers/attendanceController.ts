@@ -79,6 +79,15 @@ export const getStudentAttendance = async (req: AuthRequest, res: Response) => {
                 studentId,
                 ownerId: req.userId
             },
+            include: {
+                schedule: {
+                    select: {
+                        startTime: true,
+                        endTime: true,
+                        dayOfWeek: true
+                    }
+                }
+            },
             orderBy: { date: 'desc' },
             take: 50
         });
@@ -218,5 +227,71 @@ export const deleteAttendance = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Error al eliminar asistencia:', error);
         res.status(500).json({ error: 'Error al eliminar asistencia' });
+    }
+};
+
+/**
+ * POST /api/attendance/bulk - Record multiple attendance records
+ */
+export const recordBulkAttendance = async (req: AuthRequest, res: Response) => {
+    try {
+        const { scheduleId, records, date } = req.body;
+
+        if (!req.userId) {
+            res.status(401).json({ error: 'Autenticación requerida' });
+            return;
+        }
+
+        if (!records || !Array.isArray(records)) {
+            res.status(400).json({ error: 'Records array is required' });
+            return;
+        }
+
+        const attendanceDate = date ? new Date(date) : new Date();
+
+        const results = await prisma.$transaction(async (tx) => {
+            const createdRecords = [];
+
+            for (const record of records) {
+                const { studentId, status } = record;
+
+                // 1. Create attendance record
+                const att = await tx.attendance.create({
+                    data: {
+                        ownerId: req.userId!,
+                        studentId: Number(studentId),
+                        status,
+                        date: attendanceDate,
+                        scheduleId: scheduleId ? Number(scheduleId) : null
+                    }
+                });
+
+                // 2. If student is PACK and status is PRESENT, decrement credits
+                const student = await tx.student.findUnique({ 
+                    where: { 
+                        id: Number(studentId),
+                        ownerId: req.userId!
+                    } 
+                });
+
+                if (student?.planType === 'PACK' && status === 'PRESENT') {
+                    if ((student.credits || 0) > 0) {
+                        await tx.student.update({
+                            where: { id: Number(studentId) },
+                            data: { credits: { decrement: 1 } }
+                        });
+                    }
+                }
+
+                createdRecords.push(att);
+            }
+
+            return createdRecords;
+        });
+
+        res.status(201).json(results);
+    } catch (error) {
+        console.error('Error al registrar asistencias múltiples:', error);
+        res.status(500).json({ error: 'Error al registrar asistencias' });
     }
 };

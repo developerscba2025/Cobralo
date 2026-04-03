@@ -61,10 +61,14 @@ export interface Student {
 
 export interface ClassSchedule {
     id: number;
-    studentId: number;
+    studentId?: number;
+    studentIds?: number[];
     dayOfWeek: number;
     startTime: string;
     endTime: string;
+    capacity?: number;
+    student?: { id: number; name: string; service_name: string; phone: string };
+    students?: Array<{ id: number; name: string; service_name: string; phone: string }>;
 }
 
 export interface Payment {
@@ -85,9 +89,15 @@ export interface Payment {
 
 export interface UnifiedSchedule extends ClassSchedule {
     student: {
+        id: number;
         name: string;
         service_name: string;
     };
+    students: Array<{
+        id: number;
+        name: string;
+        service_name: string;
+    }>;
 }
 
 export interface Expense {
@@ -358,7 +368,13 @@ export const api = {
     },
 
     // POST /api/calendar
-    async createSchedule(data: { studentId: number; dayOfWeek: number; startTime: string; endTime: string }): Promise<ClassSchedule> {
+    async createSchedule(data: { 
+        studentId?: number; 
+        studentIds?: number[]; 
+        dayOfWeek: number; 
+        startTime: string; 
+        endTime: string 
+    }): Promise<ClassSchedule> {
         const res = await fetchWithTimeout(`${API_URL}/calendar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
@@ -490,6 +506,19 @@ export const api = {
 
     async markAttendance(data: { studentId: number; status: string; date?: string }): Promise<Attendance> {
         const res = await fetchWithTimeout(`${API_URL}/attendance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify(data)
+        });
+        return res.json();
+    },
+
+    async recordBulkAttendance(data: { 
+        scheduleId?: number; 
+        records: Array<{ studentId: number; status: string }>; 
+        date?: string 
+    }): Promise<Attendance[]> {
+        const res = await fetchWithTimeout(`${API_URL}/attendance/bulk`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
             body: JSON.stringify(data)

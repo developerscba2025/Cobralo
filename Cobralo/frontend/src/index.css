@@ -91,6 +91,7 @@
   /* Universal scrollbar fix */
   ::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
@@ -102,6 +103,13 @@
 }
 
 @layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .container {
     width: 100%;
     max-width: 1200px;
@@ -184,7 +192,7 @@
   }
 
   .label-premium {
-    @apply text-[10px] font-black uppercase tracking-[0.2em] text-text-muted dark:text-emerald-500/60 font-accent;
+    @apply text-[12px] font-black uppercase tracking-[0.2em] text-text-muted dark:text-emerald-400/90 font-accent;
   }
 
   .card-premium {

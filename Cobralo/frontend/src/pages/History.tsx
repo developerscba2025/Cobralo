@@ -7,6 +7,8 @@ import { Calendar, DollarSign, User, Trash2, Filter, Download } from 'lucide-rea
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { ProFeature } from '../components/ProGuard';
+import { motion, AnimatePresence } from 'framer-motion';
+import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 
 const MONTHS = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -68,10 +70,10 @@ const History = () => {
             <ProFeature featureName="Historial y Reportes">
                 <>
                 <header className="mb-10">
-                    <h1 className="text-3xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+                    <h1 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight uppercase italic font-accent">
                         Historial de Pagos
                     </h1>
-                    <p className="text-zinc-500 dark:text-zinc-400 font-medium tracking-tight">
+                    <p className="text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest text-[11px] mt-1">
                         Registro de todos los cobros realizados.
                     </p>
                 </header>
@@ -137,9 +139,17 @@ const History = () => {
                                             <th className="p-5 label-premium">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <motion.tbody
+                                        variants={staggerContainerVariants}
+                                        initial="initial"
+                                        animate="animate"
+                                    >
                                         {payments.map(payment => (
-                                            <tr key={payment.id} className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition">
+                                            <motion.tr 
+                                                key={payment.id} 
+                                                variants={listItemVariants}
+                                                className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition"
+                                            >
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-xl bg-primary-main/10 dark:bg-primary-main/10 flex items-center justify-center">
@@ -149,7 +159,7 @@ const History = () => {
                                                             <p className="font-bold text-zinc-800 dark:text-white truncate max-w-[150px] md:max-w-none">
                                                                 {payment.student?.name || 'Alumno eliminado'}
                                                             </p>
-                                                            <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">{payment.student?.service_name}</p>
+                                                            <p className="label-premium !text-[10px] mt-0.5">{payment.student?.service_name}</p>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -182,36 +192,45 @@ const History = () => {
                                                         </button>
                                                     </div>
                                                 </td>
-                                            </tr>
+                                            </motion.tr>
                                         ))}
-                                    </tbody>
+                                    </motion.tbody>
                                 </table>
                             </div>
 
                             {/* Mobile Card View */}
-                            <div className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800">
+                            <motion.div 
+                                variants={staggerContainerVariants}
+                                initial="initial"
+                                animate="animate"
+                                className="md:hidden divide-y divide-zinc-100 dark:divide-zinc-800"
+                            >
                                 {payments.map(payment => (
-                                    <div key={payment.id} className="p-5 flex flex-col gap-4">
+                                    <motion.div 
+                                        key={payment.id} 
+                                        variants={listItemVariants}
+                                        className="p-6 flex flex-col gap-5 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors"
+                                    >
                                         <div className="flex justify-between items-start">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-primary-main/10 flex items-center justify-center">
                                                     <User size={18} className="text-primary-main" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-zinc-800 dark:text-white">
+                                                    <p className="font-black text-lg text-zinc-900 dark:text-white">
                                                         {payment.student?.name || 'Alumno eliminado'}
                                                     </p>
-                                                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">{payment.student?.service_name}</p>
+                                                    <p className="label-premium !text-[11px] mt-0.5">{payment.student?.service_name}</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right font-black text-primary-main">
+                                            <div className="text-right font-black text-2xl text-primary-main">
                                                 {user?.currency || '$'}{Number(payment.amount).toLocaleString('es-AR')}
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-end border-t border-zinc-50 dark:border-zinc-800/50 pt-4 mt-1">
                                             <div>
-                                                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1">Período / Fecha</p>
-                                                <p className="text-xs font-bold text-zinc-600 dark:text-zinc-300">
+                                                <p className="label-premium !text-[10px] mb-2 font-accent">Período / Fecha</p>
+                                                <p className="text-[13px] font-bold text-zinc-600 dark:text-zinc-300">
                                                     {MONTHS[payment.month - 1]} {payment.year} · {new Date(payment.paidAt).toLocaleDateString('es-AR')}
                                                 </p>
                                             </div>
@@ -232,10 +251,10 @@ const History = () => {
                                                     <Trash2 size={20} />
                                                 </button>
                                             </div>
-                                        </div>
-                                    </div>
+                                            </div>
+                                    </motion.div>
                                 ))}
-                            </div>
+                            </motion.div>
                         </>
                     )}
                 </div>

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PieChart, Users, Settings, Moon, Sun, LogOut, Menu, 
-  Search, HelpCircle, ExternalLink, Clock
+  Search, HelpCircle, ExternalLink, Clock, BookOpen
 } from 'lucide-react';
 import { showToast } from './Toast';
 import MobileMenu from './MobileMenu';
@@ -15,6 +15,7 @@ import LegalModal from './LegalModal';
 
 import BottomNav from './BottomNav';
 import { api } from '../services/api';
+import { GENTLE_SPRING } from '../utils/motion';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -83,7 +84,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             />
 
             {/* Sidebar - Desktop */}
-            <aside className="w-64 bg-surface border-r border-border-main p-6 hidden md:flex flex-col relative z-20 transition-colors">
+            <aside className="w-64 bg-surface border-r border-border-main p-6 hidden lg:flex flex-col relative z-20 transition-colors">
                 <div className="mb-10 text-xl font-black italic tracking-tighter uppercase text-primary-main flex items-center group cursor-default">
                     <span>COBRALO</span>
                 </div>
@@ -107,6 +108,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
                     <Link to="/app/calendar" className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isActive('/app/calendar')}`}>
                         <Clock size={20} /> Calendario
+                    </Link>
+                    <Link to="/app/classes" className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isActive('/app/classes')}`}>
+                        <BookOpen size={20} /> Clases
                     </Link>
                     <Link to="/app/settings" className={`flex items-center justify-between p-3 rounded-xl transition-all ${isActive('/app/settings')}`}>
                         <div className="flex items-center gap-3">
@@ -187,14 +191,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-h-0 bg-bg-app overflow-y-auto custom-scrollbar transition-colors pb-20 md:pb-0">
+            <main className="flex-1 flex flex-col min-h-0 bg-bg-app overflow-y-auto custom-scrollbar transition-colors pb-24 lg:pb-0">
                 {/* Mobile Header */}
-                <div className="md:hidden sticky top-0 z-30 bg-surface/90 backdrop-blur-md border-b border-border-main px-4 py-3 flex items-center justify-between">
+                <div className="lg:hidden sticky top-0 z-30 bg-surface/90 backdrop-blur-md border-b border-border-main px-4 py-3 flex items-center justify-between">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
-                        className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-bg-dark transition"
+                        className="rounded-full hover:opacity-80 transition active:scale-95"
                     >
-                        <Menu size={24} className="text-zinc-700 dark:text-white" />
+                        {user ? (
+                            <div className="w-8 h-8 rounded-full bg-primary-main flex items-center justify-center text-white font-black text-xs uppercase shadow-sm">
+                                {user.name.charAt(0)}
+                            </div>
+                        ) : (
+                            <div className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-bg-dark transition">
+                                <Menu size={24} className="text-zinc-700 dark:text-white" />
+                            </div>
+                        )}
                     </button>
                     <span className="text-lg font-black italic text-primary-main tracking-tighter">COBRALO</span>
                     <button
@@ -205,15 +217,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </button>
                 </div>
 
-                <div className="p-4 md:p-10 flex-1">
-                    <div className="max-w-7xl mx-auto">
+                <div className="px-3 py-4 md:p-10 flex-1 overflow-x-hidden">
+                    <div className="max-w-[1600px] mx-auto w-full">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={location.pathname}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ ...GENTLE_SPRING, duration: 0.2 }}
                             >
                                 {children}
                             </motion.div>
@@ -231,7 +243,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="md:hidden"
+                        className="lg:hidden"
                     >
                         <BottomNav pendingCount={pendingCount} />
                     </motion.div>

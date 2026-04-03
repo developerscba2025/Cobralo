@@ -2,13 +2,17 @@ import { Router } from 'express';
 import { 
     getStudentAttendance, 
     recordAttendance, 
-    updateAttendance 
+    updateAttendance,
+    recordBulkAttendance
 } from '../controllers/attendanceController';
 
 const router = Router();
 
 // POST /api/attendance - Mark attendance
 router.post('/', recordAttendance);
+
+// POST /api/attendance/bulk - Mark bulk attendance
+router.post('/bulk', recordBulkAttendance);
 
 // GET /api/attendance/student/:id - Get history
 router.get('/student/:id', getStudentAttendance);

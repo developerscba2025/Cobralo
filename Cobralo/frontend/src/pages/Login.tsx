@@ -3,7 +3,7 @@ import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { showToast } from '../components/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, Loader2, Building2, Briefcase, ChevronLeft, CheckCircle2, Sparkles, Smartphone, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, Building2, Briefcase, ChevronLeft, CheckCircle2, Sparkles, Smartphone, Eye, EyeOff, Check } from 'lucide-react';
 
 const Login = () => {
 
@@ -50,8 +50,10 @@ const Login = () => {
             showToast.error('Las contraseñas no coinciden');
             return false;
         }
-        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password)) {
-            showToast.error('La contraseña debe tener al menos 8 caracteres, una mayúscula y un número');
+        
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            showToast.error('La contraseña no cumple con los requisitos de seguridad');
             return false;
         }
         return true;
@@ -144,6 +146,30 @@ const Login = () => {
             x: direction < 0 ? 50 : -50,
             opacity: 0
         })
+    };
+
+    const PasswordRequirements = ({ password }: { password: string }) => {
+        const requirements = [
+            { label: '8+ caracteres', met: password.length >= 8 },
+            { label: 'Mayúscula y Minúscula', met: /[A-Z]/.test(password) && /[a-z]/.test(password) },
+            { label: 'Un número', met: /\d/.test(password) },
+            { label: 'Carácter especial (@$!%*?&)', met: /[@$!%*?&]/.test(password) }
+        ];
+
+        return (
+            <div className="grid grid-cols-2 gap-2 mt-3 ml-1">
+                {requirements.map((req, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                        <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${req.met ? 'bg-green-500/20 text-green-500' : 'bg-slate-700 text-slate-500'}`}>
+                            <Check size={8} strokeWidth={4} className={req.met ? 'opacity-100' : 'opacity-0'} />
+                        </div>
+                        <span className={`text-[10px] font-medium transition-colors ${req.met ? 'text-green-400' : 'text-slate-500'}`}>
+                            {req.label}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        );
     };
 
     return (
@@ -274,7 +300,6 @@ const Login = () => {
                                                     type={showPassword ? "text" : "password"}
                                                     placeholder="••••••••"
                                                     required
-                                                    minLength={8}
                                                     value={formData.password}
                                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                                                     className="w-full pl-11 pr-12 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
@@ -287,6 +312,7 @@ const Login = () => {
                                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                                 </button>
                                             </div>
+                                            {isRegister && <PasswordRequirements password={formData.password} />}
                                         </div>
 
                                         {isRegister && (

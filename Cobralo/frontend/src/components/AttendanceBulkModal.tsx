@@ -1,0 +1,172 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { api, UnifiedSchedule } from '../services/api';
+import { showToast } from './Toast';
+
+interface AttendanceBulkModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    schedule: UnifiedSchedule | null;
+    onSuccess: () => void;
+}
+
+const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: AttendanceBulkModalProps) => {
+    const [attRecords, setAttRecords] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
+    const [isSaving, setIsSaving] = useState(false);
+
+    if (!schedule) return null;
+
+    // The schedule now has 'students' which is an array
+    const participants = schedule.students || (schedule.student ? [schedule.student] : []);
+
+    const toggleStatus = (studentId: number) => {
+        setAttRecords(prev => ({
+            ...prev,
+            [studentId]: prev[studentId] === 'PRESENT' ? 'ABSENT' : 'PRESENT'
+        }));
+    };
+
+    const markAll = (status: 'PRESENT' | 'ABSENT') => {
+        const newRecords: Record<number, 'PRESENT' | 'ABSENT'> = {};
+        participants.forEach(p => {
+            newRecords[p.id] = status;
+        });
+        setAttRecords(newRecords);
+    };
+
+    const handleSave = async () => {
+        const records = participants.map(p => ({
+            studentId: p.id,
+            status: attRecords[p.id] || 'PRESENT' // Default to present if not touched
+        }));
+
+        setIsSaving(true);
+        try {
+            await api.recordBulkAttendance({
+                scheduleId: schedule.id,
+                records
+            });
+            showToast.success('Asistencias registradas correctamente');
+            onSuccess();
+            onClose();
+        } catch (error) {
+            console.error('Error saving bulk attendance:', error);
+            showToast.error('Error al registrar las asistencias');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        className="relative bg-white dark:bg-bg-soft w-full max-w-lg rounded-[40px] p-8 shadow-2xl border border-zinc-100 dark:border-border-main overflow-hidden"
+                    >
+                        <button
+                            onClick={onClose}
+                            className="absolute right-6 top-6 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white transition"
+                        >
+                            <X size={24} />
+                        </button>
+
+                        <div className="mb-6">
+                            <h2 className="text-3xl font-black text-text-main tracking-tighter uppercase italic">Control de Asistencia</h2>
+                            <p className="text-text-muted mt-2 font-medium tracking-tight">
+                                {schedule.startTime} - {schedule.endTime} | {participants.length} alumnos
+                            </p>
+                        </div>
+
+                        <div className="flex gap-2 mb-6">
+                            <button
+                                onClick={() => markAll('PRESENT')}
+                                className="flex-1 py-3 bg-primary-main/10 text-primary-main hover:bg-primary-main/20 rounded-2xl font-black uppercase text-[9px] tracking-widest transition-all"
+                            >
+                                Todos Presentes
+                            </button>
+                            <button
+                                onClick={() => markAll('ABSENT')}
+                                className="flex-1 py-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-2xl font-black uppercase text-[9px] tracking-widest transition-all"
+                            >
+                                Todos Ausentes
+                            </button>
+                        </div>
+
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            {participants.map(student => {
+                                const status = attRecords[student.id] || 'PRESENT';
+                                return (
+                                    <div 
+                                        key={student.id}
+                                        className={`flex items-center justify-between p-4 rounded-3xl border transition-all ${
+                                            status === 'PRESENT' 
+                                                ? 'bg-primary-main/5 border-primary-main/20' 
+                                                : 'bg-red-500/5 border-red-500/20'
+                                        }`}
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold text-text-main truncate">{student.name}</div>
+                                            <div className="text-[10px] font-black uppercase text-text-muted tracking-widest opacity-80 truncate">
+                                                {student.service_name || 'Servicio General'}
+                                            </div>
+                                        </div>
+                                        
+                                        <button
+                                            onClick={() => toggleStatus(student.id)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                                                status === 'PRESENT'
+                                                    ? 'bg-primary-main text-white shadow-lg shadow-primary-glow'
+                                                    : 'bg-red-500 text-white shadow-lg shadow-red-500/20'
+                                            }`}
+                                        >
+                                            {status === 'PRESENT' ? (
+                                                <><CheckCircle2 size={16} /> Presente</>
+                                            ) : (
+                                                <><XCircle size={16} /> Ausente</>
+                                            )}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-8 space-y-4">
+                            <div className="flex items-center gap-3 p-4 bg-bg-app rounded-2xl border border-border-main/50">
+                                <AlertCircle size={20} className="text-primary-main shrink-0" />
+                                <p className="text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tight">
+                                    Al guardar, se descontarán créditos de los alumnos con planes de PACK que estén marcados como Presente.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="w-full bg-primary-main hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest text-xs py-5 rounded-3xl shadow-xl shadow-primary-glow transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                            >
+                                {isSaving ? (
+                                    <><Loader2 className="animate-spin" size={20} /> Guardando...</>
+                                ) : (
+                                    'GUARDAR ASISTENCIAS'
+                                )}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
+export default AttendanceBulkModal;

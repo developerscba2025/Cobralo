@@ -8,6 +8,7 @@ import Settings from './pages/Settings';
 import History from './pages/History';
 import Receipts from './pages/Receipts';
 import Calendar from './pages/Calendar';
+import Classes from './pages/Classes';
 import RateTeacher from './pages/RateTeacher';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -62,6 +63,11 @@ function App() {
             <Route path="/app/calendar" element={
               <PrivateRoute>
                 <Calendar />
+              </PrivateRoute>
+            } />
+            <Route path="/app/classes" element={
+              <PrivateRoute>
+                <Classes />
               </PrivateRoute>
             } />
             <Route path="/app/settings" element={

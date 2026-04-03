@@ -5,6 +5,7 @@ import type { ReceiptData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { Share2, Receipt as ReceiptIcon, Search, Calendar, DollarSign, Download } from 'lucide-react';
+import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 import { showToast } from '../components/Toast';
 
 const Receipts: React.FC = () => {
@@ -100,12 +101,12 @@ const Receipts: React.FC = () => {
                 <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 bg-green-600/10 text-green-600 rounded-2xl flex items-center justify-center">
-                                <ReceiptIcon size={24} />
+                            <div className="w-12 h-12 bg-green-600/10 text-green-600 rounded-2xl flex items-center justify-center">
+                                <ReceiptIcon size={28} />
                             </div>
-                            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Recibos</h1>
+                            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic font-accent">Recibos</h1>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium ml-1">Historial de pagos y comprobantes emitidos</p>
+                        <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[11px] ml-1">Historial de pagos y comprobantes emitidos</p>
                     </div>
 
                     <div className="relative group w-full md:w-80">
@@ -122,44 +123,48 @@ const Receipts: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-4">
                     {filteredReceipts.length === 0 ? (
-                        <div className="text-center py-20 bg-white dark:bg-slate-800/50 rounded-[40px] border-2 border-dashed border-slate-100 dark:border-slate-800">
-                            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
-                                <ReceiptIcon size={40} />
+                        <div className="text-center py-24 bg-white dark:bg-slate-800/50 rounded-[40px] border-2 border-dashed border-slate-100 dark:border-slate-800">
+                            <div className="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+                                <ReceiptIcon size={48} />
                             </div>
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase italic tracking-tighter">No hay recibos registrados</h3>
-                            <p className="text-slate-400 text-sm font-medium">Los recibos se generan automáticamente cuando marcas un pago como cobrado.</p>
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase italic tracking-tighter font-accent">No hay recibos registrados</h3>
+                            <p className="text-slate-400 text-sm font-bold uppercase tracking-widest opacity-60">Los recibos se generan automáticamente al cobrar.</p>
                         </div>
                     ) : (
-                        filteredReceipts.map((r, index) => (
-                            <motion.div
-                                key={r.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="group card-premium p-6 hover:shadow-xl hover:scale-[1.01] flex flex-col md:flex-row items-center gap-6"
-                            >
+                        <motion.div 
+                            variants={staggerContainerVariants}
+                            initial="initial"
+                            animate="animate"
+                            className="grid grid-cols-1 gap-4 whitespace-nowrap"
+                        >
+                            {filteredReceipts.map((r) => (
+                                <motion.div
+                                    key={r.id}
+                                    variants={listItemVariants}
+                                    className="group card-premium p-6 hover:shadow-xl hover:scale-[1.01] flex flex-col md:flex-row items-center gap-6"
+                                >
                                 <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center justify-center shrink-0 border border-slate-100 dark:border-white/5">
                                     <span className="label-premium !tracking-widest mb-1">MES</span>
                                     <span className="text-xl font-black text-slate-900 dark:text-white leading-none">{r.month}</span>
                                 </div>
 
                                 <div className="flex-1 text-center md:text-left">
-                                    <div className="flex flex-col md:flex-row md:items-center gap-2 mb-1">
-                                        <h3 className="font-extrabold text-slate-900 dark:text-white text-lg">{r.studentName}</h3>
-                                        <span className="hidden md:block text-slate-300 px-1">•</span>
-                                        <span className="label-premium !tracking-widest">{r.receiptNumber}</span>
+                                    <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+                                        <h3 className="font-black text-slate-900 dark:text-white text-xl">{r.studentName}</h3>
+                                        <span className="hidden md:block text-slate-300 px-1 font-bold">•</span>
+                                        <span className="label-premium !text-[11px]">{r.receiptNumber}</span>
                                     </div>
-                                    <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-slate-500 font-medium">
+                                    <div className="flex flex-wrap justify-center md:justify-start gap-5 text-[13px] text-slate-500 font-bold uppercase tracking-widest opacity-80">
                                         <div className="flex items-center gap-1.5">
-                                            <Calendar size={14} className="text-green-600" />
+                                            <Calendar size={16} className="text-green-600" />
                                             {new Date(r.paidAt).toLocaleDateString()}
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <DollarSign size={14} className="text-green-600" />
+                                            <DollarSign size={16} className="text-green-600" />
                                             ${r.amount.toLocaleString()}
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <ReceiptIcon size={14} className="text-green-600" />
+                                            <ReceiptIcon size={16} className="text-green-600" />
                                             {r.service}
                                         </div>
                                     </div>
@@ -175,7 +180,7 @@ const Receipts: React.FC = () => {
                                     >
                                         <Download size={18} />
                                         <span className="hidden md:inline">PDF</span>
-                                        {!isPro && <span className="text-[8px] bg-amber-400 text-slate-900 px-1.5 py-0.5 rounded-full ml-1">PRO</span>}
+                                        {!isPro && <span className="text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full ml-1 font-black">PRO</span>}
                                     </button>
                                     <button
                                         onClick={() => handleWhatsApp(r.id)}
@@ -186,7 +191,8 @@ const Receipts: React.FC = () => {
                                     </button>
                                 </div>
                             </motion.div>
-                        ))
+                        ))}
+                    </motion.div>
                     )}
                 </div>
 

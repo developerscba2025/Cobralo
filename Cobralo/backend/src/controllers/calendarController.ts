@@ -19,6 +19,9 @@ export const getAllSchedules = async (req: AuthRequest, res: Response) => {
             include: {
                 student: {
                     select: { id: true, name: true, service_name: true, phone: true }
+                },
+                students: {
+                    select: { id: true, name: true, service_name: true, phone: true }
                 }
             },
             orderBy: [
@@ -62,6 +65,9 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response) => {
             include: {
                 student: {
                     select: { id: true, name: true, service_name: true }
+                },
+                students: {
+                    select: { id: true, name: true, service_name: true }
                 }
             },
             orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }]
@@ -85,9 +91,9 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response) => {
  */
 export const createSchedule = async (req: AuthRequest, res: Response) => {
     try {
-        const { studentId, dayOfWeek, startTime, endTime } = req.body;
+        const { studentId, studentIds, dayOfWeek, startTime, endTime } = req.body;
 
-        if (studentId === undefined || dayOfWeek === undefined || !startTime || !endTime) {
+        if ((studentId === undefined && (!studentIds || studentIds.length === 0)) || dayOfWeek === undefined || !startTime || !endTime) {
             res.status(400).json({ error: 'Todos los campos son requeridos' });
             return;
         }
@@ -109,20 +115,28 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
                 ]
             },
             include: {
-                student: { select: { name: true } }
+                student: { select: { name: true } },
+                students: { select: { name: true } }
             }
         });
+
+        const connectIds = studentIds ? studentIds.map((id: number) => ({ id: Number(id) })) : [{ id: Number(studentId) }];
 
         const schedule = await prisma.classSchedule.create({
             data: {
                 ownerId: req.userId,
-                studentId: Number(studentId),
+                studentId: studentIds ? null : Number(studentId), // Keep individual link if single
                 dayOfWeek: Number(dayOfWeek),
                 startTime,
-                endTime
+                endTime,
+                capacity: req.body.capacity ? Number(req.body.capacity) : null,
+                students: {
+                    connect: connectIds
+                }
             },
             include: {
-                student: { select: { id: true, name: true } }
+                student: { select: { id: true, name: true } },
+                students: { select: { id: true, name: true } }
             }
         });
 
@@ -149,7 +163,8 @@ export const updateSchedule = async (req: AuthRequest, res: Response) => {
             data: {
                 dayOfWeek: Number(dayOfWeek),
                 startTime,
-                endTime
+                endTime,
+                capacity: req.body.capacity ? Number(req.body.capacity) : undefined
             }
         });
         res.json(schedule);

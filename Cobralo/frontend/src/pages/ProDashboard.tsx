@@ -8,6 +8,7 @@ import { ArrowRight, MessageCircle, TrendingUp, Users, DollarSign, Zap, Activity
 import { Link } from 'react-router-dom';
 import type { Student } from '../services/api';
 import EmptyState from '../components/EmptyState';
+import { staggerContainerVariants, listItemVariants, fadeInUpVariants } from '../utils/motion';
 
 interface ProDashboardProps {
     stats: {
@@ -48,7 +49,12 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     };
 
     return (
-        <div className="space-y-8 pb-20">
+        <motion.div 
+            variants={staggerContainerVariants}
+            initial="initial"
+            animate="animate"
+            className="space-y-8 pb-20"
+        >
             {/* IPC Notice Banner */}
             {pendingAdjustment && (
                 <motion.div 
@@ -77,45 +83,40 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             {/* Top Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    variants={listItemVariants}
                     className="card-premium p-6 md:p-8"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <p className="label-premium">Ingresos Mes</p>
                         <TrendingUp size={16} className="text-primary-main" />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-primary-main dark:text-primary-main">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-primary-main dark:text-primary-main">
                         {user?.currency || '$'}{stats.paid.toLocaleString('es-AR')}
                     </h2>
                 </motion.div>
 
                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
+                    variants={listItemVariants}
                     className="card-premium p-6 md:p-8"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <p className="label-premium">Pagos Pendientes</p>
                         <DollarSign size={16} className="text-amber-500" />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-text-main">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-text-main">
                         {user?.currency || '$'}{stats.pending.toLocaleString('es-AR')}
                     </h2>
                 </motion.div>
 
                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
+                    variants={listItemVariants}
                     className="card-premium p-6 md:p-8 sm:col-span-2 lg:col-span-1"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <p className="label-premium">Total Alumnos</p>
                         <Users size={16} className="text-primary-main" />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-text-main">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-text-main">
                         {stats.totalStudents}
                     </h2>
                 </motion.div>
@@ -123,7 +124,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="card-premium p-6 md:p-8">
+                <motion.div variants={fadeInUpVariants} className="card-premium p-6 md:p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h3 className="text-lg font-black text-text-main tracking-tight uppercase">Flujo de Ingresos</h3>
@@ -183,9 +184,9 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="card-premium p-6 md:p-8">
+                <motion.div variants={fadeInUpVariants} className="card-premium p-6 md:p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h3 className="text-lg font-black text-text-main tracking-tight uppercase">Volumen de Pagos</h3>
@@ -234,12 +235,12 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             {/* Schedule & Pending Students */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="card-premium p-6 md:p-8">
+                <motion.div variants={fadeInUpVariants} className="card-premium p-6 md:p-8">
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-lg font-black text-text-main tracking-tight uppercase">Agenda de Hoy</h3>
                         <Link to="/app/calendar" className="text-primary-main bg-primary-main/5 dark:bg-primary-main/10 px-4 py-2 rounded-xl label-premium !tracking-widest hover:bg-primary-main/10 transition">
@@ -265,9 +266,9 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             ))
                         )}
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="lg:col-span-2 card-premium p-6 md:p-8">
+                <motion.div variants={fadeInUpVariants} className="lg:col-span-2 card-premium p-6 md:p-8">
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-lg font-black text-text-main tracking-tight uppercase">Cobros Pendientes</h3>
                         <Link to="/app/students" className="text-text-muted hover:text-primary-main label-premium !tracking-widest flex items-center gap-2 transition-colors">
@@ -343,11 +344,11 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                             <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">{student.service_name}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2 shrink-0">
                                         <p className="font-black text-text-main text-sm whitespace-nowrap">{user?.currency || '$'}{Number(student.amount).toLocaleString('es-AR')}</p>
                                         {student.phone && (
-                                            <a href={generateWaLink(student)} target="_blank" rel="noreferrer" className="p-3 bg-primary-main text-white rounded-xl shadow-lg shadow-primary-glow flex items-center justify-center">
-                                                <MessageCircle size={18} />
+                                            <a href={generateWaLink(student)} target="_blank" rel="noreferrer" className="p-2.5 bg-primary-main text-white rounded-xl shadow-lg shadow-primary-glow flex items-center justify-center">
+                                                <MessageCircle size={16} />
                                             </a>
                                         )}
                                     </div>
@@ -355,9 +356,9 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                             ))
                         )}
                     </div>
-                </div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

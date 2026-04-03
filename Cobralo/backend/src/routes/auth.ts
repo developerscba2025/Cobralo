@@ -9,7 +9,7 @@ import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
 import { encrypt } from '../utils/crypto';
 
 const router = Router();
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -32,7 +32,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
         // Complejidad de Contraseña
         if (!PASSWORD_REGEX.test(password)) {
-            res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, una mayúscula y un número' });
+            res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&)' });
             return;
         }
 
@@ -182,7 +182,7 @@ router.post('/reset-password', authLimiter, async (req: Request, res: Response) 
         }
 
         if (!PASSWORD_REGEX.test(password)) {
-            res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, una mayúscula y un número' });
+            res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&)' });
             return;
         }
 
@@ -397,7 +397,7 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
         }
 
         if (!PASSWORD_REGEX.test(newPassword)) {
-            res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres, una mayúscula y un número' });
+            res.status(400).json({ error: 'La nueva contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&)' });
             return;
         }
 

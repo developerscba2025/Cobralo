@@ -9,13 +9,14 @@ import ConfirmModal from '../components/ConfirmModal';
 import QRPayment from '../components/QRPayment';
 import { 
     Search, Plus, Check, Trash2, Edit3, MessageCircle, Download, 
-    Filter, X, StickyNote, Send, Clock, Calendar as CalendarIcon, Users, Star
+    Filter, X, StickyNote, Send, Clock, Calendar as CalendarIcon, Users, Star, MoreHorizontal
 } from 'lucide-react';
 import StudentNotes from '../components/StudentNotes';
 import ScheduleModal from '../components/ScheduleModal';
 import AttendanceModal from '../components/AttendanceModal';
 import SkeletonCard from '../components/SkeletonCard';
 import EmptyState from '../components/EmptyState';
+import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 
 const Students = () => {
     const { user, isPro } = useAuth();
@@ -483,7 +484,7 @@ const Students = () => {
                         {students.length} alumnos · {paidCount} cobrados · {pendingCount} pendientes
                     </p>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 md:pb-0 md:overflow-visible">
                     <button
                         onClick={() => setMassWaModal(true)}
                         disabled={pendingCount === 0}
@@ -493,13 +494,13 @@ const Students = () => {
                     </button>
                     <button
                         onClick={exportToCSV}
-                        className="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white px-4 py-3 rounded-xl font-bold transition flex items-center gap-2 group relative"
+                        className="hidden lg:flex bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white px-4 py-3 rounded-xl font-bold transition items-center gap-2 group relative"
                     >
                         <Download size={18} /> CSV
                     </button>
                     <button
                         onClick={handleOpenCreate}
-                        className="bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary-glow transition flex items-center gap-2"
+                        className="hidden lg:flex bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary-glow transition items-center gap-2"
                     >
                         <Plus size={18} /> Nuevo
                     </button>
@@ -519,8 +520,8 @@ const Students = () => {
                     />
                 </div>
 
-                <div className="flex flex-wrap gap-2 items-center">
-                    <Filter size={18} className="text-zinc-400" />
+                <div className="flex gap-2 items-center overflow-x-auto hide-scrollbar pb-2 md:pb-0 md:flex-wrap md:overflow-visible">
+                    <Filter size={18} className="text-zinc-400 shrink-0" />
 
                     <select
                         value={filterService}
@@ -577,7 +578,11 @@ const Students = () => {
                                     <th className="p-4 label-premium text-right pr-8">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <motion.tbody
+                                variants={staggerContainerVariants}
+                                initial="initial"
+                                animate="animate"
+                            >
                                 {loading ? (
                                     <SkeletonCard variant="row" count={5} />
                                 ) : filteredStudents.length === 0 ? (
@@ -588,8 +593,12 @@ const Students = () => {
                                             description="No se encontraron alumnos con los filtros actuales o aún no has cargado ninguno."
                                         />
                                     </td></tr>
-                                ) : filteredStudents.map(student => (
-                                    <tr key={student.id} className="border-b border-border-main/40 hover:bg-bg-app transition transition-colors">
+                                ) : filteredStudents.map((student, index) => (
+                                    <motion.tr 
+                                        key={student.id} 
+                                        variants={listItemVariants}
+                                        className="border-b border-border-main/40 hover:bg-bg-app transition transition-colors"
+                                    >
                                         <td className="p-4">
                                             <div className="flex flex-col">
                                                 <p className="font-bold text-text-main leading-tight">{student.name}</p>
@@ -616,42 +625,55 @@ const Students = () => {
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex justify-end gap-1">
-                                                <button onClick={() => handleToggle(student)} className={`p-2 rounded-lg transition ${student.status === 'paid' ? 'text-primary-main bg-primary-main/10 transition-colors shadow-sm' : 'text-zinc-400 hover:text-primary-main hover:bg-primary-main/10'}`} title="Marcar pago">
+                                            <div className="flex justify-end gap-1.5 relative group/menu">
+                                                <button onClick={() => handleToggle(student)} className={`p-2 rounded-xl transition-all shadow-sm flex items-center justify-center ${student.status === 'paid' ? 'text-primary-main bg-primary-main/10 hover:bg-primary-main/20' : 'text-zinc-400 bg-zinc-50 dark:bg-bg-dark hover:text-primary-main hover:bg-primary-main/10 border border-zinc-100 dark:border-border-emerald'}`} title="Marcar pago">
                                                     <Check size={16} />
                                                 </button>
-                                                <button onClick={() => setNotesPanel({ isOpen: true, studentId: student.id, studentName: student.name })} className="p-2 rounded-lg text-zinc-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10 transition" title="Notas">
-                                                    <StickyNote size={16} />
-                                                </button>
-                                                <button onClick={() => setScheduleModal({ isOpen: true, studentId: student.id, studentName: student.name })} className="p-2 rounded-lg text-zinc-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-500/10 transition" title="Horarios">
-                                                    <Clock size={16} />
-                                                </button>
-                                                <button onClick={() => setAttendanceModal({ isOpen: true, student })} className="p-2 rounded-lg text-zinc-400 hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition" title="Asistencia">
-                                                    <CalendarIcon size={16} />
-                                                </button>
-                                                <button onClick={() => handleOpenEdit(student)} className="p-3 bg-zinc-50 dark:bg-bg-dark rounded-xl text-zinc-400 hover:text-primary-main hover:bg-primary-main/10 transition shadow-sm border border-zinc-100 dark:border-border-emerald" title="Editar">
-                                                    <Edit3 size={16} />
-                                                </button>
-                                                <a href={generateWaLink(student)} target="_blank" rel="noreferrer" className="p-3 bg-primary-main text-white rounded-xl hover:bg-green-600 transition shadow-lg shadow-primary-glow active:scale-95" title="WhatsApp">
+                                                <a href={generateWaLink(student)} target="_blank" rel="noreferrer" className="p-2 bg-primary-main text-white rounded-xl hover:bg-green-600 transition-all shadow-md shadow-primary-glow/50 active:scale-95 flex items-center justify-center shrink-0" title="WhatsApp">
                                                     <MessageCircle size={16} />
                                                 </a>
-                                                <button onClick={() => setDeleteModal({ isOpen: true, studentId: student.id })} className="p-3 bg-zinc-50 dark:bg-bg-dark rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition border border-zinc-100 dark:border-border-emerald" title="Eliminar">
-                                                    <Trash2 size={16} />
+                                                
+                                                <button className="p-2 text-zinc-400 bg-zinc-50 dark:bg-bg-dark border border-zinc-100 dark:border-border-emerald rounded-xl hover:text-primary-main hover:bg-primary-main/10 transition-all ml-1 group-focus-within/menu:bg-primary-main/10 group-focus-within/menu:text-primary-main group-focus-within/menu:border-primary-main/20">
+                                                    <MoreHorizontal size={16} />
                                                 </button>
-                                                <button onClick={() => handleRequestTestimonial(student)} className="p-3 bg-zinc-50 dark:bg-bg-dark rounded-xl text-zinc-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-500/10 transition border border-zinc-100 dark:border-border-emerald" title="Solicitar Testimonio">
-                                                    <Star size={16} />
-                                                </button>
+
+                                                {/* Dropdown Menu */}
+                                                <div className={`absolute right-0 ${filteredStudents.length > 2 && index >= filteredStudents.length - 2 ? 'bottom-full mb-2' : 'top-full mt-2'} w-44 bg-surface dark:bg-bg-soft rounded-2xl shadow-xl border border-zinc-100 dark:border-border-emerald z-50 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all origin-top-right transform scale-95 group-hover/menu:scale-100 flex flex-col overflow-hidden`}>
+                                                    <button onClick={() => handleOpenEdit(student)} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-primary-main/10 hover:text-primary-main transition-colors border-b border-border-main/50">
+                                                        <Edit3 size={14} /> Editar Perfil
+                                                    </button>
+                                                    <button onClick={() => setNotesPanel({ isOpen: true, studentId: student.id, studentName: student.name })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-yellow-500/10 hover:text-yellow-600 transition-colors">
+                                                        <StickyNote size={14} /> Notas
+                                                    </button>
+                                                    <button onClick={() => setScheduleModal({ isOpen: true, studentId: student.id, studentName: student.name })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-cyan-500/10 hover:text-cyan-600 transition-colors">
+                                                        <Clock size={14} /> Horarios
+                                                    </button>
+                                                    <button onClick={() => setAttendanceModal({ isOpen: true, student })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-violet-500/10 hover:text-violet-600 transition-colors">
+                                                        <CalendarIcon size={14} /> Asistencia
+                                                    </button>
+                                                    <button onClick={() => handleRequestTestimonial(student)} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-amber-500/10 hover:text-amber-600 transition-colors border-b border-border-main/50">
+                                                        <Star size={14} /> Testimonio
+                                                    </button>
+                                                    <button onClick={() => setDeleteModal({ isOpen: true, studentId: student.id })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-red-500 hover:bg-red-500/10 transition-colors">
+                                                        <Trash2 size={14} /> Eliminar
+                                                    </button>
+                                                </div>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </motion.tr>
                                 ))}
-                            </tbody>
+                            </motion.tbody>
                         </table>
                     </div>
                 </div>
 
                 {/* Mobile view */}
-                <div className="md:hidden space-y-4">
+                <motion.div 
+                    variants={staggerContainerVariants}
+                    initial="initial"
+                    animate="animate"
+                    className="md:hidden space-y-4"
+                >
                     {loading ? (
                         <div className="pt-2">
                             <SkeletonCard variant="card" count={3} />
@@ -663,30 +685,34 @@ const Students = () => {
                             description="No se encontraron alumnos."
                         />
                     ) : filteredStudents.map(student => (
-                        <div key={student.id} className="card-premium p-6 flex flex-col gap-5 relative overflow-hidden group">
+                        <motion.div 
+                            key={student.id} 
+                            variants={listItemVariants}
+                            className="card-premium p-6 flex flex-col gap-5 relative overflow-hidden group"
+                        >
                             {/* Status indicator bar (Subtle) */}
                             <div className={`absolute top-0 left-0 w-1.5 h-full ${student.status === 'paid' ? 'bg-primary-main shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'}`} />
                             
                             <div className="flex justify-between items-start gap-4">
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-black text-xl text-text-main truncate mb-1">{student.name}</h3>
+                                    <h3 className="font-black text-2xl text-text-main truncate mb-1">{student.name}</h3>
                                     <div className="flex items-center flex-wrap gap-2">
-                                        <span className="text-[10px] font-black uppercase text-primary-main tracking-widest bg-primary-main/5 px-2 py-0.5 rounded-md">
+                                        <span className="text-[12px] font-black uppercase text-primary-main tracking-widest bg-primary-main/5 px-2 py-0.5 rounded-md">
                                             {student.service_name}
                                         </span>
                                         {student.sub_category && (
-                                            <span className="text-[10px] text-text-muted font-black uppercase tracking-tight opacity-70">
+                                            <span className="text-[11px] text-text-muted font-black uppercase tracking-tight opacity-70">
                                                 {student.sub_category}
                                             </span>
                                         )}
                                     </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <p className="font-black text-2xl text-primary-main leading-none">
+                                    <p className="font-black text-3xl text-primary-main leading-none">
                                         {user?.currency || '$'}{Number(student.amount).toLocaleString('es-AR')}
                                     </p>
                                     <div className="mt-2 flex justify-end">
-                                        <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${student.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-600/10 dark:text-green-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'}`}>
+                                        <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${student.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-600/10 dark:text-green-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'}`}>
                                             {student.status === 'paid' ? 'Cobrado' : 'Pendi'}
                                         </span>
                                     </div>
@@ -703,15 +729,15 @@ const Students = () => {
                                     <div className="flex flex-wrap gap-1">
                                         {student.schedules?.length ? (
                                             student.schedules.slice(0, 1).map((s: any, idx: number) => (
-                                                <span key={idx} className="text-[10px] font-bold text-text-muted">
+                                                <span key={idx} className="text-[12px] font-bold text-text-main">
                                                     {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][s.dayOfWeek]} {s.startTime}
                                                 </span>
                                             ))
                                         ) : (
-                                            <span className="text-[10px] text-text-muted italic opacity-50">Sin definir</span>
+                                            <span className="text-[11px] text-text-muted italic opacity-50">Sin definir</span>
                                         )}
                                         {student.schedules && student.schedules.length > 1 && (
-                                            <span className="text-[9px] font-black text-primary-main">+{student.schedules.length - 1} más</span>
+                                            <span className="text-[10px] font-black text-primary-main">+{student.schedules.length - 1} más</span>
                                         )}
                                     </div>
                                 </div>
@@ -756,10 +782,18 @@ const Students = () => {
                                     </a>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
+
+            {/* Mobile FAB */}
+            <button
+                onClick={handleOpenCreate}
+                className="lg:hidden fixed bottom-[90px] right-4 w-14 h-14 bg-primary-main text-white rounded-full flex items-center justify-center shadow-lg shadow-primary-glow z-40 active:scale-95 transition-transform"
+            >
+                <Plus size={24} strokeWidth={2.5} />
+            </button>
 
             {/* Create/Edit Modal */}
             {isModalOpen && (

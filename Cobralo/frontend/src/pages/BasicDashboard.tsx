@@ -3,6 +3,7 @@ import { Zap, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Student } from '../services/api';
 import EmptyState from '../components/EmptyState';
+import { staggerContainerVariants, listItemVariants, fadeInUpVariants } from '../utils/motion';
 
 interface BasicDashboardProps {
     stats: {
@@ -20,7 +21,12 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, 
     const recentActivity = [...students].sort((a, b) => (Number(b.id) - Number(a.id))).slice(0, 15);
 
     return (
-        <div className="space-y-8 pb-20 bg-transparent">
+        <motion.div 
+            variants={staggerContainerVariants}
+            initial="initial"
+            animate="animate"
+            className="space-y-8 pb-20 bg-transparent"
+        >
             {/* IPC Notice Banner */}
             {pendingAdjustment && (
                 <motion.div 
@@ -49,31 +55,28 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, 
             {/* Header / Top Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    variants={listItemVariants}
                     className="card-premium p-8"
                 >
                     <p className="label-premium mb-4">Ingresos Mes</p>
-                    <h2 className="text-4xl font-black text-primary-main">
+                    <h2 className="text-4xl md:text-5xl font-black text-primary-main">
                         {user?.currency || '$'}{stats.paid.toLocaleString('es-AR')}
                     </h2>
                 </motion.div>
 
                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
+                    variants={listItemVariants}
                     className="card-premium p-8"
                 >
                     <p className="label-premium mb-4">Alumnos Activos</p>
-                    <h2 className="text-4xl font-black text-text-main">
+                    <h2 className="text-4xl md:text-5xl font-black text-text-main">
                         {stats.totalStudents}
                     </h2>
                 </motion.div>
             </div>
 
             {/* List Section */}
-            <div className="space-y-4">
+            <motion.div variants={fadeInUpVariants} className="space-y-4">
                 <h3 className="label-premium mb-6 ml-2 uppercase">Actividad Reciente</h3>
                 
                 {recentActivity.length === 0 ? (
@@ -165,9 +168,8 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, 
                         </div>
                     </>
                 )}
-            </div>
-
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };
 
