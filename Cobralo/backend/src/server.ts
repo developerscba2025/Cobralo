@@ -65,6 +65,10 @@ app.use(express.json());
 app.use('/api', apiLimiter);
 
 // Public Routes
+app.get('/', (req, res) => {
+    res.send('Cobralo API is running');
+});
+
 app.get('/health', async (req, res) => {
     try {
         await prisma.$queryRaw`SELECT 1`;
@@ -105,6 +109,6 @@ initReminderCron();
 initClassReminderCron();
 initPriceAdjustmentCron();
 
-app.listen(PORT as number, '0.0.0.0', () => {
+app.listen(PORT as number, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
