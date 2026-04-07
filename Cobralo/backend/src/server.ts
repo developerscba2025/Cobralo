@@ -109,6 +109,6 @@ initReminderCron();
 initClassReminderCron();
 initPriceAdjustmentCron();
 
-app.listen(PORT as number, () => {
+app.listen(PORT as number, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
