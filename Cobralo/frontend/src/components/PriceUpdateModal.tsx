@@ -40,7 +40,7 @@ const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
             .replace('{servicio}', serviceName)
             .replace('{alias}', student.billing_alias || bizAlias || 'mi-alias');
 
-        return `https://wa.me/${student.phone}?text=${encodeURIComponent(message)}`;
+        return `https://wa.me/${(student.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     };
 
     return (

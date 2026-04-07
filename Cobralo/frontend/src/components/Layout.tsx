@@ -52,11 +52,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Poll unread notifications every 60 seconds
     useEffect(() => {
         if (!user) return;
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+        const token = localStorage.getItem('token');
         const fetchUnread = async () => {
             try {
-                const res = await fetch('/api/notifications/unread-count', { credentials: 'include' });
-                const data = await res.json();
-                setUnreadNotifCount(data.count ?? 0);
+                const res = await fetch(`${API_URL}/notifications/unread-count`, { 
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setUnreadNotifCount(data.count ?? 0);
+                }
             } catch { /* silent */ }
         };
         fetchUnread();

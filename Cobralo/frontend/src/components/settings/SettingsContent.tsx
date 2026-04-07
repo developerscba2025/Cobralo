@@ -8,6 +8,7 @@ import RatingsTab from './RatingsTab';
 import SubscriptionTab from './SubscriptionTab';
 import SupportTab from './SupportTab';
 import LegalTab from './LegalTab';
+import PaymentAccountsTab from './PaymentAccountsTab';
 import type { User } from '../../services/api';
 
 interface SettingsContentProps {
@@ -100,6 +101,8 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
             );
         case 'automation':
             return <AutomationTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} isPro={props.isPro} />;
+        case 'payment-accounts':
+            return <PaymentAccountsTab />;
         case 'ratings':
             return (
                 <RatingsTab

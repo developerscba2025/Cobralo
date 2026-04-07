@@ -81,6 +81,7 @@ const Settings = () => {
         ]},
         { id: 'automation', label: 'Gestión', icon: MessageSquare, tabs: [
             { id: 'automation', label: 'Pagos y Mensajes', icon: CreditCard, description: 'Cobros y recordatorios.' },
+            { id: 'payment-accounts', label: 'Cuentas de Pago', icon: Building2, description: 'CBU / CVU / Alias.' },
             { id: 'subscription', label: 'Plan', icon: Zap, description: 'Tu suscripción activa.' }
         ]},
         { id: 'support', label: 'Ayuda', icon: HelpCircle, tabs: [
@@ -162,16 +163,40 @@ const Settings = () => {
         } catch { showToast.error('Error al actualizar testimonio'); }
     };
 
-    const handleSave = async () => {
+    const [autoSaveEnabled, setAutoSaveEnabled] = useState(localStorage.getItem('cobralo_autosave') === 'true');
+
+    useEffect(() => {
+        if (!autoSaveEnabled || loading) return;
+        const timer = setTimeout(() => {
+            handleSave(true);
+        }, 1500);
+        return () => clearTimeout(timer);
+    }, [user, autoSaveEnabled]);
+
+    const toggleAutoSave = () => {
+        const newValue = !autoSaveEnabled;
+        setAutoSaveEnabled(newValue);
+        localStorage.setItem('cobralo_autosave', String(newValue));
+        if (newValue) {
+            showToast.success('Auto-guardado activado');
+            handleSave(true);
+        } else {
+            showToast.success('Auto-guardado desactivado');
+        }
+    };
+
+    const handleSave = async (isAuto = false) => {
         try {
-            setSaving(true);
+            if (!isAuto) setSaving(true);
             const updated = await api.updateProfile(user);
             setUser(updated);
             updateAuthUser(updated);
-            showToast.success('¡Cambios guardados!');
+            if (!isAuto) showToast.success('¡Cambios guardados!');
         } catch (err: any) {
-            showToast.error(err.message || 'Error al guardar');
-        } finally { setSaving(false); }
+            if (!isAuto) showToast.error(err.message || 'Error al guardar');
+        } finally {
+            if (!isAuto) setSaving(false);
+        }
     };
 
     const handleChangePassword = async (e: React.FormEvent) => {
@@ -256,9 +281,24 @@ const Settings = () => {
                                     </div>
                                     <span>Ajustes</span>
                                 </button>
-                                <div className="px-4 py-2 rounded-full bg-bg-app border border-border-main text-[10px] font-black text-zinc-400 uppercase tracking-tighter">
-                                    {tab.label}
-                                </div>
+                                <label className="flex items-center gap-2 cursor-pointer group px-4 py-2 rounded-full bg-bg-app border border-border-main">
+                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">Auto-Guardar</span>
+                                    <div className={`relative w-8 h-4 rounded-full transition-colors ${autoSaveEnabled ? 'bg-primary-main' : 'bg-zinc-300 dark:bg-zinc-700'}`}>
+                                        <div className={`absolute top-[2px] left-[2px] w-3 h-3 bg-white rounded-full transition-transform ${autoSaveEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                                    </div>
+                                    <input type="checkbox" checked={autoSaveEnabled} onChange={toggleAutoSave} className="sr-only" />
+                                </label>
+                            </div>
+
+                            {/* Desktop Auto-save Toggle */}
+                            <div className="hidden lg:flex items-center justify-end mb-6">
+                                <label className="flex items-center gap-3 cursor-pointer group">
+                                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest group-hover:text-primary-main transition-colors">Guardado Automático</span>
+                                    <div className={`relative w-10 h-5 rounded-full transition-colors ${autoSaveEnabled ? 'bg-primary-main' : 'bg-zinc-200 dark:bg-zinc-800'}`}>
+                                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${autoSaveEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                    </div>
+                                    <input type="checkbox" checked={autoSaveEnabled} onChange={toggleAutoSave} className="sr-only" />
+                                </label>
                             </div>
 
                             <SettingsContent

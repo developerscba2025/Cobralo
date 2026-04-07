@@ -59,8 +59,8 @@ const StatsBar = () => (
       </div>
     </div>
 
-    <div className="container py-10 relative z-10">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0">
+    <div className="container py-10 sm:py-14 relative z-10 px-4">
+      <div className="grid grid-cols-2 gap-y-10 sm:gap-y-12 md:grid-cols-4 md:gap-y-0 gap-x-2 md:gap-x-0">
         {STATS.map((s, i) => (
           <motion.div
             key={i}
@@ -68,7 +68,7 @@ const StatsBar = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] as any }}
-            className="flex flex-col items-center text-center md:border-r last:border-r-0"
+            className={`flex flex-col items-center text-center ${i % 2 === 0 ? 'border-r md:border-r' : 'md:border-r'} last:border-r-0`}
             style={{ borderColor: 'rgba(255,255,255,0.08)' }}
           >
             <div
@@ -81,7 +81,7 @@ const StatsBar = () => (
               <s.icon size={18} style={{ color: s.color }} />
             </div>
             <RollingNumber value={s.value} prefix={s.prefix} suffix={s.suffix} />
-            <p className="text-[11px] font-bold uppercase tracking-[0.1em] mt-1.5 opacity-40" style={{ color: '#a1a1aa' }}>
+            <p className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] mt-2 opacity-60 px-1 sm:px-4 leading-snug min-h-[30px] flex items-center justify-center" style={{ color: '#a1a1aa' }}>
               {s.label}
             </p>
           </motion.div>

@@ -2,6 +2,12 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Bell, CheckCheck, Calendar, DollarSign, Star, Zap, RefreshCw, X } from 'lucide-react';
 import Layout from '../components/Layout';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const getAuthHeader = (): Record<string, string> => {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
 interface AppNotification {
     id: number;
     type: string;
@@ -56,7 +62,7 @@ const NotificationsPage: React.FC = () => {
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/notifications', { credentials: 'include' });
+            const res = await fetch(`${API_URL}/notifications`, { headers: { ...getAuthHeader() } });
             const data = await res.json();
             setNotifications(Array.isArray(data) ? data : []);
         } catch (e) { /* ignore */ }
@@ -64,12 +70,12 @@ const NotificationsPage: React.FC = () => {
     }, []);
 
     const markAllRead = async () => {
-        await fetch('/api/notifications/read-all', { method: 'PATCH', credentials: 'include' });
+        await fetch(`${API_URL}/notifications/read-all`, { method: 'PATCH', headers: { ...getAuthHeader() } });
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     };
 
     const markRead = async (id: number) => {
-        await fetch(`/api/notifications/${id}/read`, { method: 'PATCH', credentials: 'include' });
+        await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PATCH', headers: { ...getAuthHeader() } });
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     };
 

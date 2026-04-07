@@ -490,6 +490,16 @@ export const api = {
         return res.json();
     },
 
+    // ============ PAYMENT ACCOUNTS ============
+
+    // GET /api/payment-accounts
+    async getPaymentAccounts(): Promise<BusinessPaymentAccount[]> {
+        const res = await fetchWithTimeout(`${API_URL}/payment-accounts`, {
+            headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
     // PUT /api/auth/profile
     async updateProfile(data: Partial<User>): Promise<User> {
         const res = await fetchWithTimeout(`${API_URL}/auth/profile`, {

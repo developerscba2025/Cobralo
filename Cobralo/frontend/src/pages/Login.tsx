@@ -81,7 +81,7 @@ const Login = () => {
                 if (result.success) {
                     showToast.success('¡Bienvenido!');
                     if (planParam) {
-                        navigate(`/settings?checkout=${planParam}`);
+                        navigate(`/app/settings?checkout=${planParam}`);
                     } else {
                         navigate('/app/dashboard');
                     }
@@ -105,7 +105,7 @@ const Login = () => {
             if (result.success) {
                 showToast.success('¡Cuenta creada exitosamente!');
                 if (planParam) {
-                    navigate(`/settings?checkout=${planParam}`);
+                    navigate(`/app/settings?checkout=${planParam}`);
                 } else {
                     navigate('/app/dashboard');
                 }
@@ -427,9 +427,9 @@ const Login = () => {
                                                     className="mt-0.5 w-4 h-4 rounded appearance-none border border-white/20 checked:bg-primary-main checked:border-primary-main flex items-center justify-center relative after:content-[''] after:absolute after:w-1.5 after:h-2.5 after:border-r-2 after:border-b-2 after:border-black after:rotate-45 after:-translate-y-0.5 checked:after:block after:hidden transition-colors" />
                                                 <span className="text-xs text-zinc-500 leading-relaxed max-w-[280px]">
                                                     Acepto los{' '}
-                                                    <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Términos de uso</a>
+                                                    <a href="/app/settings?tab=legal" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Términos de uso</a>
                                                     {' '}y{' '}
-                                                    <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Privacidad</a>.
+                                                    <a href="/app/settings?tab=legal" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Privacidad</a>.
                                                 </span>
                                             </label>
                                         </motion.div>

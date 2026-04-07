@@ -40,7 +40,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
             await api.deleteAccount();
             localStorage.removeItem('token');
             showToast.success('Cuenta eliminada permanentemente');
-            navigate('/login');
+            navigate('/app/login');
         } catch (err: any) {
             showToast.error(err.message || 'Error al eliminar la cuenta');
         } finally {

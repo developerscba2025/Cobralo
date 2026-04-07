@@ -332,7 +332,7 @@ const Hero = () => {
 
           {/* Device Chassis - Responsive: phone-style on mobile, laptop on desktop */}
           <div
-            className="relative w-full rounded-[24px] sm:rounded-[44px] p-1.5 sm:p-2 overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] sm:shadow-[0_100px_200px_-20px_rgba(0,0,0,1)] aspect-[4/3] sm:aspect-[16/10]"
+            className="relative w-full rounded-[24px] sm:rounded-[44px] p-1.5 sm:p-2 overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] sm:shadow-[0_100px_200px_-20px_rgba(0,0,0,1)] aspect-[4/5] sm:aspect-[16/10]"
             style={{ 
               background: 'linear-gradient(135deg, #32393F 0%, #171A1D 45%, #0E1113 55%, #2A2F34 100%)',
               boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), 0 20px 40px rgba(0,0,0,0.4)'

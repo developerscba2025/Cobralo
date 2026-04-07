@@ -147,7 +147,19 @@ const Students = () => {
     useEffect(() => {
         loadStudents();
         loadUserServices();
+        loadPaymentAccounts();
     }, []);
+
+    const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
+
+    const loadPaymentAccounts = async () => {
+        try {
+            const accs = await api.getPaymentAccounts();
+            setPaymentAccounts(accs);
+        } catch (error) {
+            console.error("Error loading payment accounts", error);
+        }
+    };
 
     const loadUserServices = async () => {
         try {
@@ -394,7 +406,8 @@ const Students = () => {
                     .replace('{alias}', s.billing_alias || alias);
 
                 setTimeout(() => {
-                    window.open(`https://wa.me/${s.phone}?text=${encodeURIComponent(message)}`, '_blank');
+                    const cleanPhone = (s.phone || '').replace(/\D/g, '');
+                    if (cleanPhone) window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
                 }, i * 500);
             });
 
@@ -417,11 +430,11 @@ const Students = () => {
         const expires = user?.ratingTokenExpires ? new Date(user.ratingTokenExpires) : new Date(0);
 
         if (user?.ratingToken && expires > now) {
-            link = `${window.location.origin}/rating/teacher/${user.ratingToken}`;
+            link = `${window.location.origin}/rate/${user.ratingToken}`;
         } else {
             try {
                 const data = await api.generateRatingLink();
-                link = `${window.location.origin}/rating/teacher/${data.token}`;
+                link = `${window.location.origin}/rate/${data.token}`;
             } catch (error) {
                 showToast.error('Error al generar el link de testimonio');
                 return;
@@ -568,7 +581,7 @@ const Students = () => {
             .replace(/{moneda}/g, user?.currency || '$')
             .replace(/{link}/g, paymentLink);
 
-        return `https://wa.me/${student.phone}?text=${encodeURIComponent(message)}`;
+        return `https://wa.me/${(student.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     };
 
     const formatSchedules = (schedules?: any[]) => {
@@ -1206,13 +1219,47 @@ const Students = () => {
                                                 </div>
                                                 <div>
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-1 block">Método</label>
-                                                    <select className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none font-bold text-sm outline-none shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all appearance-none" value={formData.payment_method} onChange={e => setFormData({ ...formData, payment_method: e.target.value })}>
+                                                    <select className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none font-bold text-sm outline-none shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all appearance-none" value={formData.payment_method} onChange={e => {
+                                                        const method = e.target.value;
+                                                        const newAlias = method === 'Transferencia' && paymentAccounts.length > 0 ? paymentAccounts[0].alias : formData.billing_alias;
+                                                        setFormData({ ...formData, payment_method: method, billing_alias: newAlias });
+                                                    }}>
                                                         <option value="Efectivo">Efectivo 💵</option>
                                                         <option value="Transferencia">Transferencia 🏦</option>
                                                         <option value="Otro">Otro 💳</option>
                                                     </select>
                                                 </div>
                                             </div>
+                                            
+                                            {formData.payment_method === 'Transferencia' && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                                    {paymentAccounts.length > 0 && (
+                                                        <div>
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-1 block">Cuenta Guardada</label>
+                                                            <select 
+                                                                className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none font-bold text-sm outline-none shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all appearance-none" 
+                                                                onChange={e => setFormData({ ...formData, billing_alias: e.target.value })}
+                                                                value={formData.billing_alias || ''}
+                                                            >
+                                                                {paymentAccounts.map((acc: any) => (
+                                                                    <option key={acc.id} value={acc.alias}>{acc.name} ({acc.alias})</option>
+                                                                ))}
+                                                                <option value="">-- Alias Personalizado --</option>
+                                                            </select>
+                                                        </div>
+                                                    )}
+                                                    <div className={paymentAccounts.length === 0 ? "md:col-span-2" : ""}>
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-1 block">Alias o CBU</label>
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder="Ej: mi.alias.mp" 
+                                                            className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all" 
+                                                            value={formData.billing_alias || ''} 
+                                                            onChange={e => setFormData({ ...formData, billing_alias: e.target.value })} 
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </section>
 
@@ -1277,7 +1324,7 @@ const Students = () => {
                     onClose={() => setQrModal({ isOpen: false, student: null })}
                     studentName={qrModal.student.name}
                     amount={Number(qrModal.student.amount)}
-                    alias={user?.bizAlias || 'tu-alias'}
+                    alias={qrModal.student.billing_alias || user?.bizAlias || 'Sin alias'}
                     paymentMethod={qrModal.student.payment_method}
                 />
             )}

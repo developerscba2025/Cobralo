@@ -227,18 +227,11 @@ const Calendar = () => {
             setSyncDropdown(false);
             return;
         }
-        const feedPath = `/api/calendar-feed/feed/${user?.calendarToken}`;
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (isLocalhost) {
-            showToast.error('En modo local, copíalo manualmente desde Ajustes > iCal.');
-            navigator.clipboard.writeText(`${window.location.origin}${feedPath}`);
-            setSyncDropdown(false);
-            return;
-        }
-        const publicFeedUrl = `${window.location.origin}${feedPath}`;
-        const googleCalendarUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(publicFeedUrl)}`;
+        const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
+        const feedUrl = `${API_BASE}/api/calendar-feed/feed/${user?.calendarToken}`;
+        navigator.clipboard.writeText(feedUrl);
+        const googleCalendarUrl = `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feedUrl)}`;
         showToast.success('Redirigiendo a Google Calendar...');
-        navigator.clipboard.writeText(publicFeedUrl);
         window.open(googleCalendarUrl, '_blank');
         setSyncDropdown(false);
     };
@@ -249,18 +242,11 @@ const Calendar = () => {
             setSyncDropdown(false);
             return;
         }
-        const feedPath = `/api/calendar-feed/feed/${user?.calendarToken}`;
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (isLocalhost) {
-            showToast.error('En modo local, copíalo manualmente desde Ajustes > iCal.');
-            navigator.clipboard.writeText(`${window.location.origin}${feedPath}`);
-            setSyncDropdown(false);
-            return;
-        }
-        const publicFeedUrl = `${window.location.origin}${feedPath}`;
-        const webcalUrl = publicFeedUrl.replace(/^https?:\/\//, 'webcal://');
+        const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
+        const feedUrl = `${API_BASE}/api/calendar-feed/feed/${user?.calendarToken}`;
+        const webcalUrl = feedUrl.replace(/^https?:\/\//, 'webcal://');
         showToast.success('¡Abriendo Apple/iCloud Calendar!');
-        navigator.clipboard.writeText(publicFeedUrl);
+        navigator.clipboard.writeText(feedUrl);
         window.location.href = webcalUrl;
         setSyncDropdown(false);
     };
@@ -271,23 +257,12 @@ const Calendar = () => {
             return;
         }
 
-        const feedPath = `/api/calendar-feed/feed/${user?.calendarToken}`;
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-        if (isLocalhost) {
-            showToast.error('En modo local, copíalo manualmente desde Ajustes > iCal.');
-            navigator.clipboard.writeText(`${window.location.origin}${feedPath}`);
-            return;
-        }
-
         const ua = navigator.userAgent;
         const isApple = /iPhone|iPad|iPod|Macintosh/i.test(ua) && !(/Windows/i.test(ua));
 
         if (isApple) {
             handleSyncApple();
         } else {
-            // Android/Samsung: direct Google redirect
-            // Windows: show dropdown with both options
             const isWindows = /Windows/i.test(ua);
             if (isWindows) {
                 setSyncDropdown(prev => !prev);

@@ -43,9 +43,12 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
                 .replace(/{vencimiento}/g, (s.deadline_day || '').toString())
                 .replace(/{alias}/g, alias)
                 .replace(/{moneda}/g, user?.currency || '$');
-
             setTimeout(() => {
-                window.open(`https://wa.me/${s.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+                const cleanPhone = s.phone ? s.phone.replace(/\D/g, '') : '';
+                const url = cleanPhone 
+                    ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+                    : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+                window.open(url, '_blank');
             }, i * 800);
         });
 
