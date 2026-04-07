@@ -114,24 +114,24 @@ const LegalModal = ({ isOpen, onClose, type }: LegalModalProps) => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl bg-zinc-900 dark:bg-bg-dark border border-zinc-100 dark:border-border-emerald rounded-3xl p-8 max-h-[80vh] overflow-y-auto shadow-2xl"
+            className="relative w-full max-w-2xl bg-surface border border-border-main rounded-3xl p-8 max-h-[80vh] overflow-y-auto hide-scrollbar shadow-2xl"
           >
             <button 
               onClick={onClose}
-              className="absolute top-6 right-6 p-2 rounded-full bg-zinc-100 dark:bg-bg-soft hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 transition-colors"
+              className="absolute top-6 right-6 p-2 rounded-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-400 hover:text-zinc-800 dark:hover:text-white transition-all cursor-pointer z-10"
             >
               <X size={20} />
             </button>
 
             <h2 className="text-2xl font-black mb-6 text-zinc-900 dark:text-emerald-50 uppercase tracking-tight font-accent">{current.title}</h2>
             <div className="prose prose-zinc dark:prose-invert prose-sm max-w-none">
-              <div className="space-y-6 text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+              <div className="space-y-6 text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
                 {current.body.split('\n\n').map((block, i) => (
                   <div key={i}>
                     {block.trim().startsWith('###') ? (
                       <h4 className="text-zinc-900 dark:text-emerald-400 font-black uppercase tracking-widest text-[10px] mb-3 mt-8">{block.replace('###', '').trim()}</h4>
                     ) : (
-                      <p>{block.trim()}</p>
+                      <p className="text-sm">{block.trim()}</p>
                     )}
                   </div>
                 ))}

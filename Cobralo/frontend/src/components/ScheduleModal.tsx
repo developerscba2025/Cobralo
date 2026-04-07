@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trash2, Clock, Calendar, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
@@ -56,7 +56,8 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                 studentId,
                 dayOfWeek: Number(newDay),
                 startTime: newStart,
-                endTime: newEnd
+                endTime: newEnd,
+                isRecurring: true
             });
             showToast.success('Horario agregado');
             loadSchedules();
@@ -86,7 +87,7 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                     className="card-premium w-full max-w-lg relative overflow-hidden flex flex-col max-h-[90vh] shadow-2xl border-white/10"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                     {/* Header */}
                     <div className="p-8 border-b border-zinc-100 dark:border-border-emerald flex justify-between items-start bg-zinc-50/50 dark:bg-bg-soft/50">

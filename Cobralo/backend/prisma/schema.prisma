@@ -20,6 +20,7 @@ model User {
   taxId                 String?
   billingAddress        String?
   reminderTemplate      String?
+  classReminderTemplate String?
   ratingToken           String?
   ratingTokenExpires    DateTime?
   defaultPrice          Float                    @default(0)
@@ -36,6 +37,8 @@ model User {
   city                  String?                  @default("CABA")
   tags                  String?                  @default("Profesional")
   notificationsEnabled  Boolean                  @default(true)
+  classRemindersEnabled Boolean                  @default(false)
+  classReminderMinutes  Int                      @default(120)
   isPublicProfileVisible Boolean                 @default(true)
   subscriptionExpiry    DateTime?
   mercadoPagoCustomerId String?
@@ -57,6 +60,8 @@ model User {
   subscriptions         Subscription?
   userServices          UserService[]
 
+  notifications         Notification[]
+
   @@map("users")
 }
 
@@ -77,6 +82,7 @@ model Student {
   status               String?          @default("pending")
   planType             String?          @default("MONTHLY")
   credits              Int?             @default(0)
+  makeup_classes       Int?             @default(0)
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   sub_category         String?
@@ -101,8 +107,10 @@ model Attendance {
   createdAt DateTime @default(now())
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  scheduleId Int?
-  schedule   ClassSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  scheduleId    Int?
+  confirmToken  String?  @unique
+  confirmedAt   DateTime?
+  schedule      ClassSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
 
   @@index([ownerId])
   @@index([studentId])
@@ -141,14 +149,16 @@ model StudentNote {
 }
 
 model ClassSchedule {
-  id        Int      @id @default(autoincrement())
-  ownerId   Int
-  studentId Int?
-  dayOfWeek Int
-  startTime String
-  endTime   String
-  capacity  Int?
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  ownerId     Int
+  studentId   Int?
+  dayOfWeek   Int      @default(0)
+  date        String?
+  isRecurring Boolean  @default(true)
+  startTime   String
+  endTime     String
+  capacity    Int?
+  createdAt   DateTime @default(now())
   student   Student?  @relation("IndividualStudent", fields: [studentId], references: [id], onDelete: Cascade)
   students  Student[]  @relation("ClassParticipants")
   attendance Attendance[]
@@ -241,4 +251,19 @@ model SystemSetting {
   updatedAt DateTime @updatedAt
 
   @@map("system_settings")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  ownerId   Int
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  metadata  String?
+  createdAt DateTime @default(now())
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@map("notifications")
 }

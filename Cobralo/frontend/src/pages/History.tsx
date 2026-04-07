@@ -7,7 +7,7 @@ import { Calendar, DollarSign, User, Trash2, Filter, Download } from 'lucide-rea
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { ProFeature } from '../components/ProGuard';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 
 const MONTHS = [
@@ -86,7 +86,7 @@ const History = () => {
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="px-4 py-3 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-xl border-none font-black text-xs uppercase tracking-widest outline-none focus:ring-2 focus:ring-primary-main/20 transition-all"
+                            className="w-full sm:w-auto px-4 py-3 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-xl border-none font-black text-xs uppercase tracking-widest outline-none focus:ring-2 focus:ring-primary-main/20 transition-all"
                         >
                             {years.map(year => (
                                 <option key={year} value={year}>{year}</option>
@@ -96,7 +96,7 @@ const History = () => {
                         <select
                             value={selectedMonth || ''}
                             onChange={(e) => setSelectedMonth(e.target.value ? Number(e.target.value) : null)}
-                            className="px-4 py-3 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-xl border-none font-black text-xs uppercase tracking-widest outline-none focus:ring-2 focus:ring-primary-main/20 transition-all"
+                            className="w-full sm:w-auto px-4 py-3 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-xl border-none font-black text-xs uppercase tracking-widest outline-none focus:ring-2 focus:ring-primary-main/20 transition-all"
                         >
                             <option value="">Todos los meses</option>
                             {MONTHS.map((month, i) => (
@@ -104,7 +104,7 @@ const History = () => {
                             ))}
                         </select>
 
-                        <div className="md:ml-auto flex items-center gap-2 bg-primary-main/5 dark:bg-primary-main/10 px-6 py-3 rounded-2xl border border-primary-main/10">
+                        <div className="w-full md:w-auto md:ml-auto flex items-center justify-center md:justify-start gap-2 bg-primary-main/5 dark:bg-primary-main/10 px-6 py-3 rounded-2xl border border-primary-main/10">
                             <DollarSign size={18} className="text-primary-main" />
                             <span className="font-black text-primary-main uppercase tracking-widest text-sm">
                                 Total: {user?.currency || '$'}{totalAmount.toLocaleString('es-AR')}

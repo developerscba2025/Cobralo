@@ -96,8 +96,12 @@ const Directory = () => {
                   className="glass-card p-8 border-white/5 group hover:border-primary/30 transition-all flex flex-col h-full"
                 >
                   <div className="flex items-center justify-between mb-8">
-                    <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center font-black text-primary-light border border-primary/20 text-2xl uppercase">
-                      {(t.bizName || t.name || '?')[0]}
+                    <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center font-black text-primary-light border border-primary/20 text-2xl uppercase overflow-hidden">
+                      {t.photoUrl ? (
+                        <img src={t.photoUrl} alt={t.bizName || t.name} className="w-full h-full object-cover" />
+                      ) : (
+                        (t.bizName || t.name || '?')[0]
+                      )}
                     </div>
                     <div className="flex flex-col items-end">
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400 mb-1">

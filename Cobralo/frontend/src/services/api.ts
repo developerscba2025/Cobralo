@@ -50,13 +50,14 @@ export interface Student {
     surcharge_percentage: number;
     deadline_day: number;
     due_day: number;
-    status: 'paid' | 'pending';
+    status: 'paid' | 'pending' | 'paused';
     schedules?: ClassSchedule[];
     // Phase 4
     planType?: 'MONTHLY' | 'PACK' | 'PER_CLASS';
     credits?: number;
     sub_category?: string | null;
     billing_alias?: string | null;
+    makeup_classes?: number;
 }
 
 export interface ClassSchedule {
@@ -67,6 +68,9 @@ export interface ClassSchedule {
     startTime: string;
     endTime: string;
     capacity?: number;
+    isRecurring: boolean;
+    date?: string;
+    dayName?: string;
     student?: { id: number; name: string; service_name: string; phone: string };
     students?: Array<{ id: number; name: string; service_name: string; phone: string }>;
 }
@@ -92,12 +96,16 @@ export interface UnifiedSchedule extends ClassSchedule {
         id: number;
         name: string;
         service_name: string;
+        phone: string;
     };
     students: Array<{
         id: number;
         name: string;
         service_name: string;
+        phone: string;
     }>;
+    isRecurring: boolean;
+    date?: string;
 }
 
 export interface Expense {
@@ -142,6 +150,9 @@ export interface User {
     photoUrl?: string;
     instagramUrl?: string;
     facebookUrl?: string;
+    classReminderTemplate?: string;
+    classRemindersEnabled?: boolean;
+    classReminderMinutes?: number;
 }
 
 
@@ -373,10 +384,31 @@ export const api = {
         studentIds?: number[]; 
         dayOfWeek: number; 
         startTime: string; 
-        endTime: string 
+        endTime: string;
+        capacity?: number;
+        isRecurring: boolean;
+        date?: string;
     }): Promise<ClassSchedule> {
         const res = await fetchWithTimeout(`${API_URL}/calendar`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify(data)
+        });
+        return res.json();
+    },
+
+    // PUT /api/calendar/:id
+    async updateSchedule(id: number, data: {
+        studentIds?: number[];
+        dayOfWeek?: number;
+        startTime?: string;
+        endTime?: string;
+        capacity?: number | null;
+        isRecurring?: boolean;
+        date?: string;
+    }): Promise<ClassSchedule> {
+        const res = await fetchWithTimeout(`${API_URL}/calendar/${id}`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
@@ -479,6 +511,14 @@ export const api = {
             const err = await res.json();
             throw new Error(err.error || 'Error al cambiar contraseña');
         }
+        return res.json();
+    },
+
+    async deleteAccount(): Promise<{ message: string }> {
+        const res = await fetchWithTimeout(`${API_URL}/auth/me`, {
+            method: 'DELETE',
+            headers: { ...getAuthHeader() }
+        });
         return res.json();
     },
 

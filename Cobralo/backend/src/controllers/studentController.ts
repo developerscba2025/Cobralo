@@ -153,6 +153,8 @@ export const updateStudent = async (req: AuthRequest, res: Response) => {
                 credits: req.body.credits ? parseInt(String(req.body.credits)) : undefined,
                 sub_category: req.body.sub_category !== undefined ? req.body.sub_category : undefined,
                 billing_alias: req.body.billing_alias !== undefined ? req.body.billing_alias : undefined,
+                status: req.body.status !== undefined ? req.body.status : undefined,
+                makeup_classes: req.body.makeup_classes !== undefined ? parseInt(String(req.body.makeup_classes)) : undefined,
                 schedules: req.body.schedules ? {
                     deleteMany: {},
                     create: req.body.schedules.map((s: any) => ({

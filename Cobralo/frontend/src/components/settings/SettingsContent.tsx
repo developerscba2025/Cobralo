@@ -2,9 +2,12 @@ import React from 'react';
 import ProfileTab from './ProfileTab';
 import SecurityTab from './SecurityTab';
 import AcademyTab from './AcademyTab';
+import ServicesTab from './ServicesTab';
 import AutomationTab from './AutomationTab';
 import RatingsTab from './RatingsTab';
 import SubscriptionTab from './SubscriptionTab';
+import SupportTab from './SupportTab';
+import LegalTab from './LegalTab';
 import type { User } from '../../services/api';
 
 interface SettingsContentProps {
@@ -31,7 +34,7 @@ interface SettingsContentProps {
     handleDeleteService: (id: number) => void;
     isPro: boolean;
     pendingAdjustment: any;
-    setLegalModal: (m: any) => void;
+    setActiveTab: (tab: any) => void;
     studentCount: number;
     scheduleCount: number;
     hasRecentPayments: boolean;
@@ -74,21 +77,29 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     setUser={props.setUser}
                     handleSave={props.handleSave}
                     saving={props.saving}
-                    userServices={props.userServices}
-                    newService={props.newService}
-                    setNewService={props.setNewService}
-                    handleAddService={props.handleAddService}
-                    handleDeleteService={props.handleDeleteService}
                     isPro={props.isPro}
                     pendingAdjustment={props.pendingAdjustment}
-                    setLegalModal={props.setLegalModal}
+                    setActiveTab={props.setActiveTab}
                     studentCount={props.studentCount}
                     scheduleCount={props.scheduleCount}
                     hasRecentPayments={props.hasRecentPayments}
                 />
             );
+        case 'services':
+            return (
+                <ServicesTab
+                    user={props.user}
+                    userServices={props.userServices}
+                    newService={props.newService}
+                    setNewService={props.setNewService}
+                    handleAddService={props.handleAddService}
+                    handleDeleteService={props.handleDeleteService}
+                    handleSave={props.handleSave}
+                    saving={props.saving}
+                />
+            );
         case 'automation':
-            return <AutomationTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} />;
+            return <AutomationTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} isPro={props.isPro} />;
         case 'ratings':
             return (
                 <RatingsTab
@@ -97,6 +108,7 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     ratingExpires={props.ratingExpires}
                     handleGenerateLink={props.handleGenerateLink}
                     handleToggleRatingVisibility={props.handleToggleRatingVisibility}
+                    isPro={props.isPro}
                 />
             );
         case 'subscription':
@@ -111,6 +123,10 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     handleUpgrade={props.handleUpgrade}
                 />
             );
+        case 'support':
+            return <SupportTab />;
+        case 'legal':
+            return <LegalTab />;
         default:
             return null;
     }

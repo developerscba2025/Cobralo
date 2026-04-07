@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { api, UnifiedSchedule } from '../services/api';
+import { X, AlertCircle, Loader2 } from 'lucide-react';
+import { api } from '../services/api';
+import type { UnifiedSchedule } from '../services/api';
 import { showToast } from './Toast';
 
 interface AttendanceBulkModalProps {
@@ -12,7 +13,7 @@ interface AttendanceBulkModalProps {
 }
 
 const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: AttendanceBulkModalProps) => {
-    const [attRecords, setAttRecords] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
+    const [attRecords, setAttRecords] = useState<Record<number, 'PRESENT' | 'ABSENT' | 'CANCELLED'>>({});
     const [isSaving, setIsSaving] = useState(false);
 
     if (!schedule) return null;
@@ -20,15 +21,12 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
     // The schedule now has 'students' which is an array
     const participants = schedule.students || (schedule.student ? [schedule.student] : []);
 
-    const toggleStatus = (studentId: number) => {
-        setAttRecords(prev => ({
-            ...prev,
-            [studentId]: prev[studentId] === 'PRESENT' ? 'ABSENT' : 'PRESENT'
-        }));
+    const setStatus = (studentId: number, status: 'PRESENT' | 'ABSENT' | 'CANCELLED') => {
+        setAttRecords(prev => ({ ...prev, [studentId]: status }));
     };
 
-    const markAll = (status: 'PRESENT' | 'ABSENT') => {
-        const newRecords: Record<number, 'PRESENT' | 'ABSENT'> = {};
+    const markAll = (status: 'PRESENT' | 'ABSENT' | 'CANCELLED') => {
+        const newRecords: Record<number, 'PRESENT' | 'ABSENT' | 'CANCELLED'> = {};
         participants.forEach(p => {
             newRecords[p.id] = status;
         });
@@ -89,18 +87,24 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
                             </p>
                         </div>
 
-                        <div className="flex gap-2 mb-6">
+                        <div className="flex gap-2 mb-6 text-[9px]">
                             <button
                                 onClick={() => markAll('PRESENT')}
-                                className="flex-1 py-3 bg-primary-main/10 text-primary-main hover:bg-primary-main/20 rounded-2xl font-black uppercase text-[9px] tracking-widest transition-all"
+                                className="flex-1 py-3 bg-primary-main/10 text-primary-main hover:bg-primary-main/20 rounded-2xl font-black uppercase tracking-widest transition-all"
                             >
-                                Todos Presentes
+                                Todas P.
+                            </button>
+                            <button
+                                onClick={() => markAll('CANCELLED')}
+                                className="flex-1 py-3 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 rounded-2xl font-black uppercase tracking-widest transition-all"
+                            >
+                                Todas C.A.
                             </button>
                             <button
                                 onClick={() => markAll('ABSENT')}
-                                className="flex-1 py-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-2xl font-black uppercase text-[9px] tracking-widest transition-all"
+                                className="flex-1 py-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-2xl font-black uppercase tracking-widest transition-all"
                             >
-                                Todos Ausentes
+                                Todas F.
                             </button>
                         </div>
 
@@ -113,30 +117,41 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
                                         className={`flex items-center justify-between p-4 rounded-3xl border transition-all ${
                                             status === 'PRESENT' 
                                                 ? 'bg-primary-main/5 border-primary-main/20' 
+                                                : status === 'CANCELLED'
+                                                ? 'bg-amber-500/5 border-amber-500/20'
                                                 : 'bg-red-500/5 border-red-500/20'
                                         }`}
                                     >
-                                        <div className="flex-1 min-w-0">
+                                        <div className="flex-1 min-w-0 pr-2">
                                             <div className="font-bold text-text-main truncate">{student.name}</div>
                                             <div className="text-[10px] font-black uppercase text-text-muted tracking-widest opacity-80 truncate">
                                                 {student.service_name || 'Servicio General'}
                                             </div>
                                         </div>
                                         
-                                        <button
-                                            onClick={() => toggleStatus(student.id)}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                                                status === 'PRESENT'
-                                                    ? 'bg-primary-main text-white shadow-lg shadow-primary-glow'
-                                                    : 'bg-red-500 text-white shadow-lg shadow-red-500/20'
-                                            }`}
-                                        >
-                                            {status === 'PRESENT' ? (
-                                                <><CheckCircle2 size={16} /> Presente</>
-                                            ) : (
-                                                <><XCircle size={16} /> Ausente</>
-                                            )}
-                                        </button>
+                                        <div className="flex gap-1 bg-zinc-100 dark:bg-bg-dark rounded-2xl p-1 shrink-0">
+                                            <button
+                                                onClick={() => setStatus(student.id, 'PRESENT')}
+                                                className={`px-3 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase transition-all ${
+                                                    status === 'PRESENT' ? 'bg-primary-main text-white shadow-md' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
+                                                }`}
+                                                title="Presente"
+                                            >P</button>
+                                            <button
+                                                onClick={() => setStatus(student.id, 'CANCELLED')}
+                                                className={`px-3 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase transition-all ${
+                                                    status === 'CANCELLED' ? 'bg-amber-500 text-white shadow-md' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
+                                                }`}
+                                                title="Con Aviso"
+                                            >C.A.</button>
+                                            <button
+                                                onClick={() => setStatus(student.id, 'ABSENT')}
+                                                className={`px-3 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase transition-all ${
+                                                    status === 'ABSENT' ? 'bg-red-500 text-white shadow-md' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
+                                                }`}
+                                                title="Falta Ausente"
+                                            >F</button>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -146,7 +161,7 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
                             <div className="flex items-center gap-3 p-4 bg-bg-app rounded-2xl border border-border-main/50">
                                 <AlertCircle size={20} className="text-primary-main shrink-0" />
                                 <p className="text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tight">
-                                    Al guardar, se descontarán créditos de los alumnos con planes de PACK que estén marcados como Presente.
+                                    Al marcar Presente, se descuentan créditos de Packs. Al marcar C.A. (Con Aviso), se sumará 1 Clase por Recuperar.
                                 </p>
                             </div>
 

@@ -1,35 +1,158 @@
 import { motion } from 'framer-motion';
-import { Star } from 'lucide-react';
+import { Star, Quote, MessageSquare, CreditCard, Calendar } from 'lucide-react';
+
+const TESTIMONIALS = [
+  {
+    name: 'Martina',
+    initials: 'M',
+    role: 'Clases de Yoga · Palermo',
+    text: 'Antes perdía horas con Excel y me daba vergüenza cobrar. Ahora mis alumnos ya saben que el recordatorio les llega por WhatsApp y me pagan sin que yo diga nada.',
+    rating: 5,
+    gradient: 'linear-gradient(135deg, #065f46, #059669)',
+  },
+  {
+    name: 'Julián',
+    initials: 'J',
+    role: 'Entrenador Personal · CABA',
+    text: 'Envié 15 cobros en un clic y liquidé la semana en 5 minutos. Cobralo es el asistente que no puedo pagar pero que ahora tengo.',
+    rating: 5,
+    gradient: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+  },
+  {
+    name: 'Carla',
+    initials: 'C',
+    role: 'Profe de Inglés · Rosario',
+    text: 'Para los que trabajamos por hora, el tiempo es plata. Me ahorré literalmente una tarde entera de mandar mensajes por mes.',
+    rating: 5,
+    gradient: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+  },
+];
+
+const INTEGRATIONS = [
+  { icon: MessageSquare, label: 'WhatsApp', color: '#25D366' },
+  { icon: CreditCard, label: 'Mercado Pago', color: '#009EE3' },
+  { icon: Calendar, label: 'Google Calendar', color: '#4285F4' },
+];
 
 const Testimonials = () => (
-  <section id="testimonios" className="section-padding overflow-hidden">
-    <div className="container">
-      <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-5xl font-black mb-4">Lo que dicen <span className="text-primary-light">nuestros profes.</span></h2>
-        <p className="text-text-muted text-sm">Convertite en el próximo profesional que automatiza su academia.</p>
+  <section id="testimonios" className="section-padding relative overflow-hidden" style={{ background: '#0E1113' }}>
+    {/* Top accent line */}
+    <div
+      className="absolute top-0 inset-x-0 h-px"
+      style={{ background: 'linear-gradient(90deg, transparent, rgba(34,197,94,0.15), transparent)' }}
+    />
+    
+    {/* Left glow */}
+    <div
+      className="absolute top-1/2 -left-60 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none opacity-40 blur-[100px]"
+      style={{ background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.15) 0%, transparent 65%)' }}
+    />
+
+    <div className="container relative z-10 pt-10">
+      
+      {/* ── Integrations Row ── */}
+      <div className="flex flex-col items-center mb-24">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-8">
+          Sincroniza con tus herramientas favoritas
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
+          {INTEGRATIONS.map((app, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 0.5 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 1 }}
+              whileHover={{ opacity: 1, scale: 1.05 }}
+              className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all cursor-default"
+            >
+              <app.icon size={20} style={{ color: app.color }} />
+              <span className="text-sm font-bold text-white tracking-tight">{app.label}</span>
+            </motion.div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { name: 'Sofía', role: 'Estudio Contable', text: 'Antes perdía horas con Excel. Ahora veo todo en un lugar con Cobralo y cobro mucho más rápido. Es un antes y un después.' },
-          { name: 'Lucas', role: 'Electricista', text: 'Envié 15 recordatorios en un clic y cobré 9 en menos de 24 horas. Para los que trabajamos solos, esto es una locura.' },
-          { name: 'Valentina', role: 'Coach de Fitness', text: 'Me ahorré más de 10 horas semanales de mensajes por WhatsApp. Mis alumnos ya saben que el link les llega automático.' }
-        ].map((t, i) => (
+
+      {/* ── Section Header ── */}
+      <div className="text-center mb-16">
+        <div
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.25em] mb-6 border"
+          style={{ 
+            background: 'rgba(34,197,94,0.06)', 
+            borderColor: 'rgba(34,197,94,0.2)', 
+            color: '#4ade80',
+            boxShadow: '0 0 20px rgba(34,197,94,0.1)'
+          }}
+        >
+          TESTIMONIOS
+        </div>
+        <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-[1.1]" style={{ color: '#fafafa' }}>
+          Lo que dicen <br />
+          <span
+            style={{
+              background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 50%, rgba(255,255,255,0.8) 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            nuestros profes.
+          </span>
+        </h2>
+        <p className="text-base font-medium max-w-lg mx-auto opacity-60" style={{ color: '#a1a1aa' }}>
+          Basta de planillas Excel, listas de difusión manuales y mensajes olvidados.
+        </p>
+      </div>
+
+      {/* ── Grid ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        {TESTIMONIALS.map((t, i) => (
           <motion.div
             key={i}
-            whileHover={{ y: -5 }}
-            className="p-8 glass-card border-white/5 relative"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] as any }}
+            whileHover={{ y: -8 }}
+            className="group relative p-10 rounded-[32px] flex flex-col transition-all duration-500 overflow-hidden"
+            style={{
+              background: '#171A1D',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
           >
-            <div className="flex gap-1 mb-4 text-amber-400">
-              {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+            {/* ── Background decoration ── */}
+            <div className="absolute top-6 right-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700 pointer-events-none">
+              <Quote size={120} fill="currentColor" className="text-primary" />
             </div>
-            <p className="text-sm italic text-text-muted mb-6">"{t.text}"</p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-black text-primary-light">
-                {t.name[0]}
+
+            {/* Stars */}
+            <div className="flex gap-1 mb-8 relative z-10">
+              {[...Array(t.rating)].map((_, j) => (
+                <Star key={j} size={14} style={{ color: '#fbbf24' }} fill="#fbbf24" strokeWidth={0} />
+              ))}
+            </div>
+
+            {/* Quote Text */}
+            <p className="text-[17px] font-medium leading-[1.65] flex-1 mb-10 relative z-10 italic opacity-90" style={{ color: '#d1d1d6' }}>
+              "{t.text}"
+            </p>
+
+            {/* Divider */}
+            <div className="w-12 h-px bg-white/10 mb-8" />
+
+            {/* Author */}
+            <div className="flex items-center gap-4 relative z-10">
+              <div
+                className="w-12 h-12 rounded-[18px] overflow-hidden flex items-center justify-center text-sm font-black text-white flex-shrink-0 transition-all duration-500 group-hover:rounded-2xl group-hover:rotate-6 shadow-xl"
+                style={{ background: t.gradient }}
+              >
+                {t.initials}
               </div>
-              <div>
-                <div className="font-bold text-white text-xs">{t.name}</div>
-                <div className="text-[10px] text-text-dim uppercase tracking-widest font-black">{t.role}</div>
+              <div className="flex flex-col">
+                <p className="text-sm font-bold tracking-tight" style={{ color: '#fafafa' }}>{t.name}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.1em] opacity-40" style={{ color: '#a1a1aa' }}>
+                  {t.role}
+                </p>
               </div>
             </div>
           </motion.div>

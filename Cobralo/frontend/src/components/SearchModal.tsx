@@ -134,7 +134,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -20 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                         className="card-premium w-full max-w-xl overflow-hidden shadow-2xl border-white/5"
                     >
                         {/* Search Input */}

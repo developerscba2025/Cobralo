@@ -91,9 +91,9 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response) => {
  */
 export const createSchedule = async (req: AuthRequest, res: Response) => {
     try {
-        const { studentId, studentIds, dayOfWeek, startTime, endTime } = req.body;
+        const { studentId, studentIds, dayOfWeek, startTime, endTime, date, isRecurring } = req.body;
 
-        if ((studentId === undefined && (!studentIds || studentIds.length === 0)) || dayOfWeek === undefined || !startTime || !endTime) {
+        if ((studentId === undefined && (!studentIds || studentIds.length === 0)) || !startTime || !endTime) {
             res.status(400).json({ error: 'Todos los campos son requeridos' });
             return;
         }
@@ -103,17 +103,49 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        // Check for conflicts
-        const conflicts = await prisma.classSchedule.findMany({
+        // Verificar que los estudiantes pertenezcan al usuario
+        const idsToVerify = studentIds ? studentIds.map(Number) : [Number(studentId)];
+        const validCount = await prisma.student.count({
             where: {
-                ownerId: req.userId,
-                dayOfWeek: Number(dayOfWeek),
-                OR: [
-                    { AND: [{ startTime: { lte: startTime } }, { endTime: { gt: startTime } }] },
-                    { AND: [{ startTime: { lt: endTime } }, { endTime: { gte: endTime } }] },
-                    { AND: [{ startTime: { gte: startTime } }, { endTime: { lte: endTime } }] }
-                ]
-            },
+                id: { in: idsToVerify },
+                ownerId: req.userId
+            }
+        });
+
+        if (validCount !== idsToVerify.length) {
+            res.status(403).json({ error: 'Uno o más alumnos especificados no te pertenecen' });
+            return;
+        }
+
+        // For dated classes, derive dayOfWeek from the date (0=Sun, 1=Mon...)
+        let resolvedDayOfWeek: number;
+        if (date) {
+            // Append time to prevent UTC timezone parsing issues with 'YYYY-MM-DD'
+            const safeDate = date.includes('T') ? date : `${date}T12:00:00`;
+            resolvedDayOfWeek = new Date(safeDate).getDay();
+        } else if (dayOfWeek !== undefined) {
+            resolvedDayOfWeek = Number(dayOfWeek);
+        } else {
+            res.status(400).json({ error: 'Se requiere dayOfWeek o date' });
+            return;
+        }
+
+        const recurring = isRecurring !== undefined ? Boolean(isRecurring) : !date;
+
+        // Check for conflicts only on same dayOfWeek and same date (if provided)
+        const conflictWhere: any = {
+            ownerId: req.userId,
+            dayOfWeek: resolvedDayOfWeek,
+            OR: [
+                { AND: [{ startTime: { lte: startTime } }, { endTime: { gt: startTime } }] },
+                { AND: [{ startTime: { lt: endTime } }, { endTime: { gte: endTime } }] },
+                { AND: [{ startTime: { gte: startTime } }, { endTime: { lte: endTime } }] }
+            ]
+        };
+        if (date) conflictWhere.date = date;
+
+        const conflicts = await prisma.classSchedule.findMany({
+            where: conflictWhere,
             include: {
                 student: { select: { name: true } },
                 students: { select: { name: true } }
@@ -122,11 +154,18 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
 
         const connectIds = studentIds ? studentIds.map((id: number) => ({ id: Number(id) })) : [{ id: Number(studentId) }];
 
+        const requestedCapacity = req.body.capacity ? Number(req.body.capacity) : null;
+        if (requestedCapacity !== null && connectIds.length > requestedCapacity) {
+            return res.status(400).json({ error: `La capacidad máxima es de ${requestedCapacity} alumnos.` });
+        }
+
         const schedule = await prisma.classSchedule.create({
             data: {
                 ownerId: req.userId,
-                studentId: studentIds ? null : Number(studentId), // Keep individual link if single
-                dayOfWeek: Number(dayOfWeek),
+                studentId: studentIds ? null : Number(studentId),
+                dayOfWeek: resolvedDayOfWeek,
+                date: date || null,
+                isRecurring: recurring,
                 startTime,
                 endTime,
                 capacity: req.body.capacity ? Number(req.body.capacity) : null,
@@ -153,22 +192,79 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
 export const updateSchedule = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { dayOfWeek, startTime, endTime } = req.body;
+        const { dayOfWeek, startTime, endTime, studentIds, capacity } = req.body;
 
-        const schedule = await prisma.classSchedule.update({
-            where: { 
-                id: Number(id),
-                ownerId: req.userId
-            },
-            data: {
-                dayOfWeek: Number(dayOfWeek),
-                startTime,
-                endTime,
-                capacity: req.body.capacity ? Number(req.body.capacity) : undefined
+        const scheduleId = Number(id);
+
+        if (studentIds !== undefined) {
+            const idsToVerify = studentIds.map(Number);
+            const validCount = await prisma.student.count({
+                where: {
+                    id: { in: idsToVerify },
+                    ownerId: req.userId
+                }
+            });
+
+            if (validCount !== idsToVerify.length) {
+                res.status(403).json({ error: 'Uno o más alumnos especificados no te pertenecen' });
+                return;
+            }
+
+            // Check capacity before proceeding
+            const existingSchedule = await prisma.classSchedule.findUnique({
+                where: { id: scheduleId, ownerId: req.userId },
+                select: { capacity: true }
+            });
+
+            if (!existingSchedule) {
+                return res.status(404).json({ error: 'Clase no encontrada' });
+            }
+
+            const currentCapacity = capacity !== undefined ? (capacity === null ? null : Number(capacity)) : existingSchedule.capacity;
+
+            if (currentCapacity !== null && idsToVerify.length > currentCapacity) {
+                return res.status(400).json({ error: `La capacidad máxima de la clase es de ${currentCapacity} alumnos.` });
+            }
+        }
+
+        // Step 1: If studentIds provided, update the many-to-many relation separately
+        if (studentIds !== undefined) {
+            await prisma.classSchedule.update({
+                where: { id: scheduleId, ownerId: req.userId },
+                data: {
+                    students: {
+                        set: studentIds.map((sid: number) => ({ id: Number(sid) }))
+                    }
+                }
+            });
+        }
+
+        // Step 2: Build update for scalar fields only (skip if nothing to update)
+        const scalarData: any = {};
+        if (dayOfWeek !== undefined) scalarData.dayOfWeek = Number(dayOfWeek);
+        if (startTime !== undefined) scalarData.startTime = startTime;
+        if (endTime !== undefined) scalarData.endTime = endTime;
+        if (capacity !== undefined) scalarData.capacity = capacity === null ? null : Number(capacity);
+
+        if (Object.keys(scalarData).length > 0) {
+            await prisma.classSchedule.update({
+                where: { id: scheduleId, ownerId: req.userId },
+                data: scalarData
+            });
+        }
+
+        // Step 3: Return the updated schedule with all relations
+        const schedule = await prisma.classSchedule.findFirst({
+            where: { id: scheduleId, ownerId: req.userId },
+            include: {
+                student: { select: { id: true, name: true } },
+                students: { select: { id: true, name: true } }
             }
         });
+
         res.json(schedule);
     } catch (error) {
+        console.error('Error updating schedule:', error);
         res.status(500).json({ error: 'Error updating schedule' });
     }
 };

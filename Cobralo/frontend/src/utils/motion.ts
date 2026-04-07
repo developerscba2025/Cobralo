@@ -5,14 +5,14 @@
 
 export const SPRING_PHYSICS = {
   type: "spring",
-  stiffness: 260,
-  damping: 20
+  stiffness: 400,
+  damping: 30
 } as const;
 
 export const GENTLE_SPRING = {
   type: "spring",
-  stiffness: 100,
-  damping: 15,
+  stiffness: 500,
+  damping: 40,
   mass: 1
 } as const;
 
@@ -29,13 +29,13 @@ export const floatVariants = {
         transition: {
             duration: 5,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut" as const
         }
     }
-} as const;
+};
 
 export const fadeInUpVariants = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 10 },
   animate: { 
     opacity: 1, 
     y: 0,
@@ -44,13 +44,13 @@ export const fadeInUpVariants = {
 } as const;
 
 export const slideInRightVariants = {
-  initial: { opacity: 0, x: 30 },
+  initial: { opacity: 0, x: 15 },
   animate: { 
     opacity: 1, 
     x: 0,
     transition: { ...SPRING_PHYSICS }
   },
-  exit: { opacity: 0, x: -30 }
+  exit: { opacity: 0, x: -15 }
 } as const;
 
 export const staggerContainerVariants = {
@@ -58,14 +58,14 @@ export const staggerContainerVariants = {
   animate: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1
+      staggerChildren: 0.03,
+      delayChildren: 0.05
     }
   }
 } as const;
 
 export const listItemVariants = {
-  initial: { opacity: 0, y: 15 },
+  initial: { opacity: 0, y: 10 },
   animate: { 
     opacity: 1, 
     y: 0,
@@ -74,13 +74,13 @@ export const listItemVariants = {
 } as const;
 
 export const modalVariants = {
-  initial: { opacity: 0, scale: 0.95 },
+  initial: { opacity: 0, scale: 0.98 },
   animate: { 
     opacity: 1, 
     scale: 1,
     transition: { ...SPRING_PHYSICS }
   },
-  exit: { opacity: 0, scale: 0.95 }
+  exit: { opacity: 0, scale: 0.98 }
 } as const;
 
 export const tabVariants = {

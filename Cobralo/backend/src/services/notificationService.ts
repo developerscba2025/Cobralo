@@ -1,7 +1,7 @@
 import { Student, User } from '@prisma/client';
 import axios from 'axios';
 
-export type NotificationType = 'UPCOMING' | 'OVERDUE';
+export type NotificationType = 'UPCOMING' | 'OVERDUE' | 'CLASS_REMINDER' | 'PAYMENT_RECEIVED' | 'PRO_REMINDER_SENT';
 
 /**
  * Service to handle notification logic
@@ -10,22 +10,38 @@ export const notificationService = {
     /**
      * Formats a message based on a template and student/user data
      */
-    formatMessage(template: string | null, student: Student, user: User, type: NotificationType): string {
+    formatMessage(template: string | null, student: Student, user: any, type: NotificationType, extraData?: any): string {
         const defaultTemplates = {
-            UPCOMING: "Hola {student_name}, te recordamos que tu cuota de {service} vence en {days} días. El monto es {amount}. ¡Saludos!",
-            OVERDUE: "Hola {student_name}, tu pago de {service} por {amount} está vencido. Por favor, regulariza tu situación. ¡Gracias!"
+            UPCOMING: "Hola {alumno}, te recordamos que tu cuota de {servicio} vence en {dias} días. El monto es {monto}. ¡Saludos!",
+            OVERDUE: "Hola {alumno}, te escribo para recordarte que tenés pendiente el pago de {servicio} por {monto}. Avisame cualquier cosa. ¡Gracias!",
+            CLASS_REMINDER: "Hola {alumno}, te recuerdo que tenemos clase a las {hora_inicio}. Por favor, confirmame acá si venís: {url_confirmar}\n\nSi se te complica y necesitás cancelar, usá este enlace: {url_cancelar}. ¡Nos vemos!",
+            PRO_REMINDER_SENT: "✅ Recordatorio PRO enviado a {alumno}. Vence en 2 días ({monto}).",
+            PAYMENT_RECEIVED: "✅ ¡Pago recibido! Hola {alumno}, recibimos tu pago de {monto}. ¡Gracias!"
         };
 
         let message = template || defaultTemplates[type];
         
-        // Basic variable replacement
-        message = message.replace(/{student_name}/g, student.name);
-        message = message.replace(/{service}/g, student.service_name || "clases");
-        message = message.replace(/{amount}/g, `${user.currency || '$'}${student.amount?.toString() || '0'}`);
+        // Basic variable replacement (Supporting both EN and ES tags for backwards compatibility initially, but replacing ES)
+        message = message.replace(/{student_name}/g, student.name).replace(/{alumno}/g, student.name);
+        message = message.replace(/{service}/g, student.service_name || "clases").replace(/{servicio}/g, student.service_name || "clases");
+        message = message.replace(/{amount}/g, `${user.currency || '$'}${student.amount?.toString() || '0'}`).replace(/{monto}/g, `${user.currency || '$'}${student.amount?.toString() || '0'}`);
         
+        if (extraData?.start_time) {
+            message = message.replace(/{start_time}/g, extraData.start_time).replace(/{hora_inicio}/g, extraData.start_time);
+        }
+        
+        if (extraData?.confirmUrl) {
+            message = message.replace(/{confirm_url}/g, extraData.confirmUrl).replace(/{url_confirmar}/g, extraData.confirmUrl);
+            message = message.replace(/{cancel_url}/g, extraData.cancelUrl || '').replace(/{url_cancelar}/g, extraData.cancelUrl || '');
+            // Auto-append confirmation links if they're not already in the template
+            if (!message.includes(extraData.confirmUrl)) {
+                message += `\n\n✅ Confirmar asistencia: ${extraData.confirmUrl}\n❌ No voy a poder ir: ${extraData.cancelUrl}`;
+            }
+        }
+
         if (type === 'UPCOMING') {
             const daysRemaining = student.deadline_day ? (student.deadline_day - new Date().getDate()) : 3;
-            message = message.replace(/{days}/g, Math.max(0, daysRemaining).toString());
+            message = message.replace(/{days}/g, Math.max(0, daysRemaining).toString()).replace(/{dias}/g, Math.max(0, daysRemaining).toString());
         }
 
         return message;

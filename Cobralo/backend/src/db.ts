@@ -15,4 +15,4 @@ export const prisma = new PrismaClient({
 // Optional: Ensure connection is valid on startup
 prisma.$connect()
     .then(() => console.log('✅ Database connected successfully'))
-    .catch((err) => console.error('❌ Database connection failed:', err));
+    .catch((err: any) => console.error('❌ Database connection failed:', err));

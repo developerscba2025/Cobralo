@@ -1,6 +1,8 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { AuthRequest } from '../middleware/authMiddleware';
+import { getMercadoPagoPayment } from '../services/mercadoPagoService';
+import { decrypt } from '../utils/crypto';
 
 /**
  * GET /api/payments - Get all payments for the authenticated user
@@ -331,5 +333,82 @@ export const deletePayment = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Error al eliminar pago:', error);
         res.status(500).json({ error: 'Error al eliminar pago' });
+    }
+};
+
+/**
+ * POST /api/payments/webhook/:userId - Handler for student Mercado Pago payments
+ */
+export const handleStudentPaymentWebhook = async (req: Request, res: Response) => {
+    try {
+        const { userId } = req.params;
+        const { type, data } = req.body;
+
+        // MP sends type "payment" and data.id
+        if (type !== 'payment' || !data?.id) {
+            res.status(200).send('OK'); 
+            return;
+        }
+
+        const paymentId = data.id;
+
+        // Fetch user to get their custom MP Token
+        const user = await prisma.user.findUnique({
+            where: { id: Number(userId) },
+            select: { mpAccessToken: true }
+        });
+
+        if (!user || !user.mpAccessToken) {
+            res.status(404).send('User or Token not found');
+            return;
+        }
+
+        const decryptedToken = decrypt(user.mpAccessToken);
+        const payment = await getMercadoPagoPayment(paymentId, decryptedToken);
+
+        const { status, external_reference } = payment;
+
+        if (status === 'approved' && external_reference?.startsWith('student-')) {
+            // external_reference format: `student-${studentId}-user-${userId}`
+            const match = external_reference.match(/student-(\d+)-user-\d+/);
+            if (match) {
+                const studentId = Number(match[1]);
+
+                // Mover a pagado
+                await prisma.student.update({
+                    where: { id: studentId },
+                    data: { status: 'paid' }
+                });
+
+                // Evitar duplicados (MercadoPago puede enviar el webhook más de una vez)
+                const existingPayment = await prisma.paymentHistory.findFirst({
+                    where: {
+                        studentId: studentId,
+                        ownerId: Number(userId),
+                        amount: payment.transaction_amount,
+                        month: new Date().getMonth() + 1,
+                        year: new Date().getFullYear()
+                    }
+                });
+
+                if (!existingPayment) {
+                    await prisma.paymentHistory.create({
+                        data: {
+                            ownerId: Number(userId),
+                            studentId: studentId,
+                            amount: payment.transaction_amount,
+                            paidAt: new Date(payment.date_approved || payment.date_created),
+                            month: new Date().getMonth() + 1,
+                            year: new Date().getFullYear()
+                        }
+                    });
+                }
+            }
+        }
+
+        res.status(200).send('Webhook Processed');
+    } catch (error) {
+        console.error('Error procesando webhook de alumno:', error);
+        res.status(500).send('Error');
     }
 };

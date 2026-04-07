@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
 import { api } from '../services/api';
 import type { User } from '../services/api';
@@ -10,10 +9,7 @@ import {
     MessageSquare, Star, Zap, HelpCircle, FileText,
     ChevronLeft
 } from 'lucide-react';
-import SupportModal from '../components/SupportModal';
-import LegalModal from '../components/LegalModal';
 import { showToast } from '../components/Toast';
-import { SPRING_PHYSICS } from '../utils/motion';
 
 // Settings sub-components
 import SettingsNav from '../components/settings/SettingsNav';
@@ -37,13 +33,10 @@ interface Category {
 
 const Settings = () => {
     const { updateUser: updateAuthUser, isPro } = useAuth();
-    const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'academy' | 'automation' | 'subscription' | 'ratings'>('profile');
-    const [isSupportOpen, setIsSupportOpen] = useState(false);
-    const [legalModal, setLegalModal] = useState<{ isOpen: boolean; type: 'terms' | 'privacy' }>({ isOpen: false, type: 'terms' });
-    
+    const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'academy' | 'services' | 'automation' | 'subscription' | 'ratings' | 'support' | 'legal'>('profile');
+
     // Mobile toggle logic
     const [isNavOpen, setIsNavOpen] = useState(true);
-    const [isCollapsed, setIsCollapsed] = useState(false);
     const [searchParams] = useSearchParams();
 
     // Form state
@@ -60,7 +53,7 @@ const Settings = () => {
         name: '', email: '', bizName: '', businessCategory: '', phoneNumber: '', taxId: '',
         billingAddress: '', bizAlias: '', reminderTemplate: 'Hola {alumno}! Te escribo de {negocio} para recordarte tu clase de {servicio}. El monto es de ${monto}. Saludos!',
         defaultPrice: 0, defaultService: 'General', defaultSurcharge: 10, currency: '$', receiptFooter: '',
-        mpAccessToken: '', mpPublicKey: '', notificationsEnabled: true, isPublicProfileVisible: true,
+        mpAccessToken: '', mpPublicKey: '', notificationsEnabled: true, classRemindersEnabled: false, classReminderMinutes: 120, isPublicProfileVisible: true,
         biography: '', photoUrl: '', instagramUrl: '', facebookUrl: ''
     });
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -78,22 +71,21 @@ const Settings = () => {
 
     const categories: Category[] = [
         { id: 'general', label: 'Mi Perfil', icon: UserIcon, tabs: [
-            { id: 'profile', label: 'Datos Personales', icon: UserIcon, description: 'Información básica de tu cuenta.' },
-            { id: 'security', label: 'Seguridad', icon: Shield, description: 'Actualizá tu contraseña y protegé tu cuenta.' }
+            { id: 'profile', label: 'Datos Personales', icon: UserIcon, description: 'Nombre, email y tema visual.' },
+            { id: 'security', label: 'Seguridad', icon: Shield, description: 'Contraseña y privacidad.' }
         ]},
         { id: 'academy', label: 'Mi Academia', icon: Building2, tabs: [
-            { id: 'academy', label: 'Servicios y Marca', icon: Zap, description: 'Gestioná tu academia y perfil público.' },
-            { id: 'ratings', label: 'Testimonios', icon: Star, description: 'Lo que tus alumnos dicen de vos.' }
+            { id: 'academy', label: 'Mi Marca', icon: Building2, description: 'Nombre, logo y perfil público.' },
+            { id: 'services', label: 'Servicios', icon: Zap, description: 'Clases y aranceles.' },
+            { id: 'ratings', label: 'Testimonios', icon: Star, description: 'Lo que dicen tus alumnos.' }
         ]},
-        { id: 'automation', label: 'Automatización', icon: MessageSquare, tabs: [
-            { id: 'automation', label: 'Pagos y Mensajes', icon: CreditCard, description: 'Automatizá tus cobros y recordatorios.' }
-        ]},
-        { id: 'subscription', label: 'Mi Suscripción', icon: CreditCard, tabs: [
-            { id: 'subscription', label: 'Plan Actual', icon: Zap, description: 'Gestioná tu plan y facturación.' }
+        { id: 'automation', label: 'Gestión', icon: MessageSquare, tabs: [
+            { id: 'automation', label: 'Pagos y Mensajes', icon: CreditCard, description: 'Cobros y recordatorios.' },
+            { id: 'subscription', label: 'Plan', icon: Zap, description: 'Tu suscripción activa.' }
         ]},
         { id: 'support', label: 'Ayuda', icon: HelpCircle, tabs: [
-            { id: 'support-trigger', label: 'Soporte Técnico', icon: HelpCircle, isAction: true, onClick: () => setIsSupportOpen(true), description: 'Contactá con nuestro equipo.' },
-            { id: 'terms-trigger', label: 'Legales', icon: FileText, isAction: true, onClick: () => setLegalModal({ isOpen: true, type: 'terms' }), description: 'Términos y condiciones.' }
+            { id: 'support', label: 'Soporte Técnico', icon: HelpCircle, description: 'Contactar al equipo.' },
+            { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos y condiciones.' }
         ]},
     ];
 
@@ -102,19 +94,27 @@ const Settings = () => {
     const tab = activeTabInfo || { label: 'Ajustes', description: 'Personalizá tu experiencia.' };
 
     useEffect(() => {
-        const hasParam = searchParams.get('checkout') || searchParams.get('tab');
+        const tabParam = searchParams.get('tab');
+        const hasParam = searchParams.get('checkout') || tabParam;
+        if (tabParam) setActiveTab(tabParam as any);
         if (hasParam && window.innerWidth < 1024) setIsNavOpen(false);
-    }, [searchParams]);
-
-    useEffect(() => {
-        fetchProfile();
-        fetchUserServices();
-        fetchRatings();
-        fetchSubscriptionPlans();
-        fetchMetrics();
     }, []);
 
-    const autoCheckoutDone = React.useRef(false);
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const [u, services] = await Promise.all([api.getProfile(), api.getServices()]);
+                setUser(u);
+                setUserServices(services);
+            } catch { } finally { setLoading(false); }
+        };
+        load();
+        fetchMetrics();
+        fetchSubscriptionPlans();
+        fetchRatings();
+    }, []);
+
+    const autoCheckoutDone = useRef(false);
     useEffect(() => {
         const checkoutPlan = searchParams.get('checkout');
         if (checkoutPlan && !loading && !autoCheckoutDone.current) {
@@ -155,76 +155,64 @@ const Settings = () => {
         } catch { showToast.error('Error al generar el link'); }
     };
 
-    const fetchUserServices = async () => {
-        try { setUserServices(await api.getServices()); } catch (e) { console.error(e); }
-    };
-
-    const handleAddService = async () => {
-        if (!newService.name || !newService.defaultPrice) return;
+    const handleToggleRatingVisibility = async (ratingId: number) => {
         try {
-            const added = await api.createService({ name: newService.name, defaultPrice: Number(newService.defaultPrice) });
-            setUserServices([...userServices, added]);
-            setNewService({ name: '', defaultPrice: '' });
-            showToast.success('Servicio agregado');
-        } catch { showToast.error('Error al agregar servicio'); }
-    };
-
-    const handleDeleteService = async (id: number) => {
-        try {
-            await api.deleteService(id);
-            setUserServices(userServices.filter(s => s.id !== id));
-            showToast.success('Servicio eliminado');
-        } catch { showToast.error('Error al eliminar servicio'); }
-    };
-
-    const fetchProfile = async () => {
-        try {
-            const data = await api.getProfile();
-            setUser({ ...data, notificationsEnabled: data.notificationsEnabled ?? true, isPublicProfileVisible: data.isPublicProfileVisible ?? true });
-            setRatingToken(data.ratingToken || null);
-            setRatingExpires(data.ratingTokenExpires || null);
-        } catch { showToast.error('Error al cargar perfil'); }
-        finally { setLoading(false); }
-    };
-
-    const handleToggleRatingVisibility = async (id: number) => {
-        try {
-            await api.toggleRatingComment(id);
-            setRatings(ratings.map(r => r.id === id ? { ...r, showComment: !r.showComment } : r));
-            showToast.success('Visibilidad actualizada');
-        } catch { showToast.error('Error al actualizar visibilidad'); }
+            await api.toggleRatingComment(ratingId);
+            setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, isVisible: !r.isVisible } : r));
+        } catch { showToast.error('Error al actualizar testimonio'); }
     };
 
     const handleSave = async () => {
-        setSaving(true);
         try {
+            setSaving(true);
             const updated = await api.updateProfile(user);
-            showToast.success('¡Configuración guardada!');
+            setUser(updated);
             updateAuthUser(updated);
-        } catch { showToast.error('Error al guardar cambios'); }
-        finally { setSaving(false); }
+            showToast.success('¡Cambios guardados!');
+        } catch (err: any) {
+            showToast.error(err.message || 'Error al guardar');
+        } finally { setSaving(false); }
     };
 
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmPassword) { showToast.error('Las contraseñas no coinciden'); return; }
-        setChangingPassword(true);
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            showToast.error('Las contraseñas no coinciden'); return;
+        }
         try {
+            setChangingPassword(true);
             await api.changePassword({ currentPassword: passwordData.currentPassword, newPassword: passwordData.newPassword });
-            showToast.success('Contraseña actualizada correctamente');
+            showToast.success('Contraseña actualizada');
             setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        } catch (error: any) { showToast.error(error.message || 'Error al cambiar contraseña'); }
-        finally { setChangingPassword(false); }
+        } catch (err: any) {
+            showToast.error(err.message || 'Error al cambiar contraseña');
+        } finally { setChangingPassword(false); }
     };
 
     const handleUpgrade = async (planId: string) => {
         try {
             setLoadingCheckout(planId);
             const { checkoutUrl } = await api.createCheckoutSession(planId);
-            if (checkoutUrl) window.location.href = checkoutUrl;
-            else showToast.error('Error al iniciar pago');
-        } catch { showToast.error('Error al generar el link de pago'); }
-        finally { setLoadingCheckout(null); }
+            window.location.href = checkoutUrl;
+        } catch (err: any) {
+            showToast.error(err.message || 'Error al procesar el pago');
+        } finally { setLoadingCheckout(null); }
+    };
+
+    const handleAddService = async () => {
+        if (!newService.name) return;
+        try {
+            const created = await api.createService({ name: newService.name, defaultPrice: parseFloat(newService.defaultPrice) || 0 });
+            setUserServices(prev => [...prev, created]);
+            setNewService({ name: '', defaultPrice: '' });
+        } catch { showToast.error('Error al crear el servicio'); }
+    };
+
+    const handleDeleteService = async (id: number) => {
+        try {
+            await api.deleteService(id);
+            setUserServices(prev => prev.filter(s => s.id !== id));
+        } catch { showToast.error('Error al eliminar'); }
     };
 
     if (loading) return (
@@ -237,49 +225,39 @@ const Settings = () => {
 
     return (
         <Layout>
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-16 items-start relative min-h-[calc(100vh-200px)]">
+            {/* ═══ UNIFIED CONTAINER ═══ */}
+            <div className="bg-surface rounded-[32px] min-h-[calc(100vh-200px)] lg:h-[calc(100vh-80px)] lg:min-h-0 overflow-hidden border border-border-main shadow-xl">
+                <div className="flex flex-col lg:flex-row h-full">
 
-                {/* SIDEBAR BLOCK - ISOLATED FLEX */}
-                <div 
-                    className={`transition-all duration-500 ease-in-out shrink-0 ${
+                    {/* ── SIDEBAR (Accordion Nav) ── */}
+                    <div className={`shrink-0 transition-all duration-500 ease-in-out lg:h-full lg:overflow-y-auto hide-scrollbar border-b lg:border-b-0 lg:border-r border-border-main lg:w-[30%] xl:w-[25%] min-w-[260px] max-w-[400px] ${
                         isNavOpen ? 'block' : 'hidden lg:block'
-                    } ${
-                        isCollapsed ? 'lg:w-[100px]' : 'lg:w-[320px] xl:w-[380px]'
-                    }`}
-                >
-                    <div className="lg:sticky lg:top-24 w-full">
-                        <SettingsNav
-                            categories={categories}
-                            activeTab={activeTab}
-                            isCollapsed={isCollapsed}
-                            setIsCollapsed={setIsCollapsed}
-                            setActiveTab={id => { setActiveTab(id); if(window.innerWidth < 1024) setIsNavOpen(false); }}
-                            setIsNavOpen={setIsNavOpen}
-                        />
+                    }`}>
+                        <div className="w-full p-4 md:p-6 lg:p-8 min-h-full">
+                            <SettingsNav
+                                categories={categories}
+                                activeTab={activeTab}
+                                setActiveTab={id => { setActiveTab(id); if (window.innerWidth < 1024) setIsNavOpen(false); }}
+                                setIsNavOpen={setIsNavOpen}
+                                isPro={isPro}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {/* CONTENT BLOCK - ISOLATED FLEX */}
-                <div className={`flex-1 w-full min-w-0 ${isNavOpen ? 'hidden lg:block' : 'block'}`}>
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={activeTab + (isNavOpen ? 'nav' : 'content')}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={SPRING_PHYSICS}
-                            className="bg-white dark:bg-bg-dark/40 rounded-[32px] lg:rounded-[40px] p-4 md:p-8 lg:p-12 shadow-inner-white dark:shadow-none border border-zinc-100 dark:border-emerald-500/10 min-h-0 lg:min-h-[600px] w-full overflow-hidden"
-                        >
+                    {/* ── CONTENT ── */}
+                    <div className={`flex-1 min-w-0 lg:h-full lg:overflow-y-auto hide-scrollbar ${isNavOpen ? 'hidden lg:block' : 'block'}`}>
+                        <div className="p-4 md:p-6 lg:p-8 xl:p-10 min-h-full">
+
                             {/* Mobile back header */}
-                            <div className="lg:hidden flex items-center justify-between mb-10 pb-6 border-b border-zinc-100 dark:border-white/5">
-                                <button onClick={() => setIsNavOpen(true)} className="group flex items-center gap-4 text-primary-main font-black uppercase tracking-widest text-[14px]">
-                                    <div className="w-10 h-10 rounded-full bg-primary-main/10 dark:bg-emerald-500/10 flex items-center justify-center group-active:scale-90 transition-all border border-transparent group-hover:border-primary-main/20 shadow-sm">
+                            <div className="lg:hidden flex items-center justify-between mb-10 pb-6 border-b border-border-main">
+                                <button onClick={() => setIsNavOpen(true)} className="group flex items-center gap-4 text-primary-main font-black uppercase tracking-widest text-[14px] touch-target">
+                                    <div className="w-10 h-10 rounded-full bg-primary-main/10 dark:bg-emerald-500/10 flex items-center justify-center group-active:scale-90 transition-all">
                                         <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
                                     </div>
                                     <span>Ajustes</span>
                                 </button>
-                                <div className="px-4 py-2 rounded-full bg-zinc-50 dark:bg-bg-dark border border-zinc-100 dark:border-white/5 text-[10px] font-black text-zinc-400 uppercase tracking-tighter shadow-sm">
-                                    {categories.find(c => c.tabs.some(t => t.id === activeTab))?.label}
+                                <div className="px-4 py-2 rounded-full bg-bg-app border border-border-main text-[10px] font-black text-zinc-400 uppercase tracking-tighter">
+                                    {tab.label}
                                 </div>
                             </div>
 
@@ -293,21 +271,19 @@ const Settings = () => {
                                 showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword}
                                 userServices={userServices} newService={newService} setNewService={setNewService}
                                 handleAddService={handleAddService} handleDeleteService={handleDeleteService}
-                                isPro={isPro} pendingAdjustment={pendingAdjustment} setLegalModal={setLegalModal}
+                                isPro={isPro} pendingAdjustment={pendingAdjustment} setActiveTab={setActiveTab}
                                 studentCount={studentCount} scheduleCount={scheduleCount} hasRecentPayments={hasRecentPayments}
                                 subscriptionPlans={subscriptionPlans} priceLastUpdate={priceLastUpdate}
                                 loadingCheckout={loadingCheckout} handleUpgrade={handleUpgrade}
                                 ratings={ratings} ratingToken={ratingToken} ratingExpires={ratingExpires}
                                 handleGenerateLink={handleGenerateLink} handleToggleRatingVisibility={handleToggleRatingVisibility}
                             />
-                        </motion.div>
-                    </AnimatePresence>
-                </div>
+                        </div>
+                    </div>
 
+                </div>
             </div>
 
-            <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} onSent={() => showToast.success('Mensaje enviado')} />
-            <LegalModal isOpen={legalModal.isOpen} type={legalModal.type} onClose={() => setLegalModal({ ...legalModal, isOpen: false })} />
         </Layout>
     );
 };

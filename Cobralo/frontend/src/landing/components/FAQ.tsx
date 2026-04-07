@@ -4,73 +4,139 @@ import { Plus, Minus } from 'lucide-react';
 
 const faqs = [
   {
-    q: "¿Para quién es Cobralo?",
-    a: "Cobralo está diseñado para cualquier profesional independiente, docente, o prestador de servicios que hoy gestione sus alumnos y pagos de manera manual o con planillas Excel y busque profesionalizar su negocio."
+    q: '¿Para quién es Cobralo?',
+    a: 'Para cualquier profesional independiente que hoy gestiona sus alumnos o clientes con Excel, cuadernos o mensajes de WhatsApp sueltos. Profesores de yoga, inglés, piano, entrenadores personales, nutricionistas… si tenés alumnos y cobrás por clase o mensualmente, Cobralo es para vos.',
   },
   {
-    q: "¿Cómo recibo los pagos de mis alumnos?",
-    a: "Cobralo no retiene tu dinero. Los pagos van directo a tu cuenta bancaria (CBU/Alias) o Mercado Pago a través de los links que generás automáticamente. Nosotros simplemente te ayudamos a trackear quién pagó y quién no."
+    q: '¿Tienen plan gratuito?',
+    a: 'Sí. Al registrarte accedés a 14 días de prueba con todas las funciones PRO activadas, sin necesidad de tarjeta de crédito. Luego podés quedarte con el Plan Básico a $5.242/mes (con 25% OFF de lanzamiento) o pasarte a Pro.',
   },
   {
-    q: "¿Tienen algún plan de prueba?",
-    a: "¡Sí! Al registrarte obtenés el Plan Básico con 14 días de prueba GRATIS y acceso total a todas las funciones PRO. Después de ese período, el costo del Plan Básico es de solo $5.242/mes (Aprovechando el 25% OFF de lanzamiento)."
+    q: '¿Cómo recibo los pagos de mis alumnos?',
+    a: 'Cobralo no retiene tu dinero. Los pagos van directo a tu CBU, alias o cuenta de Mercado Pago. Nosotros generamos el link de pago automáticamente y vos trackeás quién pagó y quién no, todo en un solo lugar.',
   },
   {
-    q: "¿Cobran comisión por mis ventas?",
-    a: "No. Cobralo no cobra ninguna comisión por tus transacciones. Mercado Pago aplica su propia tarifa estándar (que varía entre 0.99% y 6.39% + IVA dependiendo del medio de pago y el plazo de acreditación que elijas en tu cuenta de MP)."
+    q: '¿Cobran comisión por mis ventas?',
+    a: 'No, cero comisiones de nuestra parte. Mercado Pago aplica su tarifa estándar (entre 0.99% y 6.39% + IVA según el medio de pago). Nosotros sólo cobramos la suscripción mensual fija.',
   },
   {
-    q: "¿Es difícil de configurar?",
-    a: "Para nada. Buscamos que las personas puedan crecer y agilizar sus servicios, por lo que la configuración toma menos de 2 minutos. Solo registrás tus servicios, cargás tus alumnos y ya podés empezar a cobrar."
+    q: '¿Cómo funciona el WhatsApp automático?',
+    a: 'Configurás tu plantilla de mensaje con variables como {alumno}, {monto} y {servicio}. Con un clic enviás recordatorios de cobro a todos los que tienen pagos pendientes. En el plan Pro también podés automatizar el aviso de clases con confirmación de asistencia.',
   },
   {
-    q: "¿Mis alumnos necesitan bajarse una app?",
-    a: "No. Tus alumnos reciben links o notificaciones por WhatsApp o Email que pueden abrir en cualquier navegador para ver su estado de cuenta o pagar. Simple para vos, simple para ellos."
-  }
+    q: '¿Qué pasa si mis alumnos no tienen la app?',
+    a: 'No necesitan nada. Tus alumnos reciben un link por WhatsApp o email que abren desde el navegador para ver su estado de cuenta o pagar. Todo sin descargas ni registros.',
+  },
+  {
+    q: '¿Los precios suben sin aviso?',
+    a: 'Nunca. Nuestros precios se actualizan mensualmente al 50% de la inflación (IPC), siempre por debajo de la inflación real. Y te avisamos con anticipación en tu dashboard antes de cualquier ajuste.',
+  },
+  {
+    q: '¿Puedo importar mis alumnos existentes?',
+    a: 'Sí. Podés cargar tus alumnos manualmente, uno a uno, o importarlos desde un CSV. La configuración completa lleva menos de 2 minutos.',
+  },
 ];
 
 const FAQ = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="section-padding bg-bg-soft/30 relative">
-      <div className="container max-w-3xl">
+    <section id="faq" className="section-padding relative overflow-hidden" style={{ background: '#0E1113' }}>
+      {/* Top accent */}
+      <div
+        className="absolute top-0 inset-x-0 h-px"
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(34,197,94,0.15), transparent)' }}
+      />
+      {/* Glow */}
+      <div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center bottom, rgba(34,197,94,0.07) 0%, transparent 70%)' }}
+      />
+
+      <div className="container max-w-3xl relative z-10">
         <div className="text-center mb-16">
-          <div className="text-[11px] font-black uppercase tracking-[0.2em] text-primary-light mb-4 text-center">Despejá tus dudas</div>
-          <h2 className="text-3xl md:text-5xl font-black mb-4 text-white text-center">Preguntas Frecuentes</h2>
-          <p className="text-text-muted text-sm text-center">Todo lo que necesitás saber para empezar a agilizar tu negocio hoy mismo.</p>
+          <div
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] mb-5 border"
+            style={{ background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)', color: '#4ade80' }}
+          >
+            FAQ
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold mb-5 tracking-tight" style={{ color: '#fafafa' }}>
+            Preguntas{' '}
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 50%, rgba(255,255,255,0.8) 100%)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              frecuentes.
+            </span>
+          </h2>
+          <p className="text-base font-medium" style={{ color: '#a1a1aa' }}>
+            Todo lo que necesitás saber para empezar hoy mismo.
+          </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {faqs.map((faq, i) => (
-            <div key={i} className="border border-white/5 rounded-2xl overflow-hidden glass-card">
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ delay: i * 0.04, duration: 0.4 }}
+              className="rounded-2xl overflow-hidden transition-colors duration-200 h-fit"
+              style={{
+                background: '#171A1D',
+                border: openIndex === i
+                  ? '1px solid rgba(34,197,94,0.25)'
+                  : '1px solid rgba(255,255,255,0.07)',
+              }}
+            >
               <button
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
               >
-                <span className="font-bold text-white pr-8">{faq.q}</span>
-                <div className={`transition-transform duration-300 ${openIndex === i ? 'rotate-180' : ''}`}>
-                  {openIndex === i ? <Minus size={18} className="text-primary-light" /> : <Plus size={18} className="text-text-dim" />}
+                <span
+                  className="font-bold text-[14px] leading-snug"
+                  style={{ color: openIndex === i ? '#4ade80' : '#fafafa' }}
+                >
+                  {faq.q}
+                </span>
+                <div
+                  className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
+                  style={{
+                    background: openIndex === i ? '#22c55e' : 'rgba(255,255,255,0.06)',
+                  }}
+                >
+                  {openIndex === i
+                    ? <Minus size={14} style={{ color: '#0E1113' }} />
+                    : <Plus size={14} style={{ color: '#a1a1aa' }} />
+                  }
                 </div>
               </button>
-              
+
               <AnimatePresence>
                 {openIndex === i && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
                   >
-                    <div className="px-6 pb-6 text-sm leading-relaxed text-text-muted">
+                    <div className="px-6 pb-5 text-[13px] leading-relaxed font-medium" style={{ color: '#a1a1aa' }}>
                       {faq.a}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           ))}
         </div>
+
+        {/* CTA removed for cleaner layout */}
       </div>
     </section>
   );

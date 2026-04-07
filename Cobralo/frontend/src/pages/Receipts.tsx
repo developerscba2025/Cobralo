@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import type { ReceiptData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { Share2, Receipt as ReceiptIcon, Search, Calendar, DollarSign, Download } from 'lucide-react';
+import { Share2, Receipt as ReceiptIcon, Search, Calendar, DollarSign, Download, Lock } from 'lucide-react';
 import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 import { showToast } from '../components/Toast';
 
@@ -176,11 +176,11 @@ const Receipts: React.FC = () => {
                                         className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold transition-all active:scale-90
                                             ${isPro 
                                                 ? 'bg-slate-900 dark:bg-green-700 text-white hover:bg-slate-800 dark:hover:bg-green-600' 
-                                                : 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'}`}
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70'}`}
                                     >
                                         <Download size={18} />
                                         <span className="hidden md:inline">PDF</span>
-                                        {!isPro && <span className="text-[10px] bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full ml-1 font-black">PRO</span>}
+                                        {!isPro && <Lock size={14} className="text-primary-main ml-1" />}
                                     </button>
                                     <button
                                         onClick={() => handleWhatsApp(r.id)}

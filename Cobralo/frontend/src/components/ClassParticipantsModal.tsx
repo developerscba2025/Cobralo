@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, Search, Loader2, Plus, Trash2, Check, UserPlus } from 'lucide-react';
-import { api, Student, UnifiedSchedule } from '../services/api';
+import { X, Users, Search, Loader2, Check, AlertCircle } from 'lucide-react';
+import { api } from '../services/api';
+import type { Student, UnifiedSchedule } from '../services/api';
 import { showToast } from './Toast';
 
 interface ClassParticipantsModalProps {

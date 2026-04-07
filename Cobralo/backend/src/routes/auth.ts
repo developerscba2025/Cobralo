@@ -431,4 +431,17 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
     }
 });
 
+// DELETE /api/auth/me - Delete current account
+router.delete('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
+    try {
+        await prisma.user.delete({
+            where: { id: req.userId }
+        });
+        res.json({ message: 'Cuenta eliminada exitosamente' });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ error: 'Error al eliminar la cuenta' });
+    }
+});
+
 export default router;

@@ -23,45 +23,46 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const studentsData = await api.getStudents();
-                setStudents(studentsData);
+    const fetchData = async () => {
+        try {
+            const studentsData = await api.getStudents();
+            setStudents(studentsData);
 
-                const paid = studentsData
-                    .filter(s => s.status === 'paid')
-                    .reduce((acc, s) => acc + Number(s.amount || 0), 0);
+            const paid = studentsData
+                .filter(s => s.status === 'paid')
+                .reduce((acc, s) => acc + Number(s.amount || 0), 0);
 
-                const pending = studentsData
-                    .filter(s => s.status === 'pending')
-                    .reduce((acc, s) => acc + Number(s.amount || 0), 0);
+            const pending = studentsData
+                .filter(s => s.status === 'pending')
+                .reduce((acc, s) => acc + Number(s.amount || 0), 0);
 
-                setStats({
-                    paid,
-                    pending,
-                    totalStudents: studentsData.length
-                });
+            setStats({
+                paid,
+                pending,
+                totalStudents: studentsData.length
+            });
 
-                const pStats = await api.getPaymentStats();
-                setPaymentStats(pStats);
+            const pStats = await api.getPaymentStats();
+            setPaymentStats(pStats);
 
-                const schedules = await api.getSchedules();
-                const today = new Date().getDay();
-                setTodaysSchedules(schedules.filter((s: any) => s.dayOfWeek === today));
+            const schedules = await api.getSchedules();
+            const today = new Date().getDay();
+            setTodaysSchedules(schedules.filter((s: any) => s.dayOfWeek === today));
 
-                const subData = await api.getSubscriptionPlans();
-                if (subData.pendingAdjustment) {
-                    setPendingAdjustment(subData.pendingAdjustment);
-                }
-
-
-            } catch (error) {
-                console.error("Error loading stats:", error);
-            } finally {
-                setLoading(false);
+            const subData = await api.getSubscriptionPlans();
+            if (subData.pendingAdjustment) {
+                setPendingAdjustment(subData.pendingAdjustment);
             }
-        };
+
+
+        } catch (error) {
+            console.error("Error loading stats:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, []);
 
@@ -106,6 +107,7 @@ const Dashboard = () => {
                     monthChange={monthChange}
                     chartData={chartData}
                     pendingAdjustment={pendingAdjustment}
+                    onAction={fetchData}
                 />
             ) : (
                 <BasicDashboard 
@@ -113,6 +115,7 @@ const Dashboard = () => {
                     students={students}
                     user={user}
                     pendingAdjustment={pendingAdjustment}
+                    onAction={fetchData}
                 />
             )}
         </Layout>

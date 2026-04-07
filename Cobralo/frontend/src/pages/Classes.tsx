@@ -1,23 +1,24 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
     BookOpen, Users, Clock, Send, CheckCircle2, 
-    MoreHorizontal, Search, Trash2, Plus, Calendar as CalendarIcon,
-    AlertCircle, Loader2
+    Search, Trash2, Plus, Calendar as CalendarIcon,
+    Loader2, UserPlus
 } from 'lucide-react';
 import Layout from '../components/Layout';
-import { api, UnifiedSchedule, Student } from '../services/api';
+import { api } from '../services/api';
+import type { UnifiedSchedule } from '../services/api';
 import { showToast } from '../components/Toast';
 import AttendanceBulkModal from '../components/AttendanceBulkModal';
 import ClassParticipantsModal from '../components/ClassParticipantsModal';
-import { staggerContainerVariants, listItemVariants } from '../utils/motion';
+
 import { useAuth } from '../context/AuthContext';
-import { UserPlus } from 'lucide-react';
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 const Classes = () => {
-    const { user } = useAuth();
+    useAuth();
     const [classes, setClasses] = useState<UnifiedSchedule[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -37,8 +38,7 @@ const Classes = () => {
     const loadClasses = async () => {
         setIsLoading(true);
         try {
-            const data = await api.getSchedules(); // Existing method that gets everything
-            // Filter only classes (ones that have students)
+            const data = await api.getAllSchedules();
             setClasses(data);
         } catch (error) {
             console.error('Error loading classes:', error);
@@ -97,6 +97,8 @@ const Classes = () => {
         return a - b;
     });
 
+    const navigate = useNavigate();
+
     return (
         <Layout>
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
@@ -108,7 +110,7 @@ const Classes = () => {
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={() => window.location.href = '/app/calendar'}
+                        onClick={() => navigate('/app/calendar', { state: { openModal: true } })}
                         className="bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition items-center gap-2 flex"
                     >
                         <Plus size={18} /> Nueva Clase en Agenda
@@ -116,7 +118,7 @@ const Classes = () => {
                 </div>
             </header>
 
-            <div className="relative max-w-md mb-8">
+            <div className="relative max-w-full md:max-w-md mb-8">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
                 <input
                     type="text"
@@ -137,7 +139,14 @@ const Classes = () => {
                     <div className="text-center p-20 bg-surface dark:bg-bg-soft rounded-[40px] border-2 border-dashed border-border-main">
                         <BookOpen className="mx-auto mb-4 text-zinc-300 dark:text-emerald-500/20" size={60} />
                         <h3 className="text-xl font-bold text-text-main mb-2">No se encontraron clases</h3>
-                        <p className="text-text-muted max-w-xs mx-auto">Prueba ajustando tu búsqueda o crea una nueva clase desde la Agenda.</p>
+                        <p className="text-text-muted max-w-xs mx-auto mb-8">Prueba ajustando tu búsqueda o crea una nueva clase desde la Agenda.</p>
+                        
+                        <button
+                            onClick={() => navigate('/app/calendar', { state: { openModal: true } })}
+                            className="inline-flex items-center gap-2 bg-primary-main hover:bg-green-600 text-white px-8 py-4 rounded-[20px] font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary-glow/40 transition-all hover:-translate-y-0.5 active:scale-95"
+                        >
+                            <Plus size={20} /> Crear Nueva Clase
+                        </button>
                     </div>
                 ) : (
                     sortedDays.map(dayNum => (
@@ -145,7 +154,7 @@ const Classes = () => {
                             <h2 className="text-[10px] font-black text-primary-main uppercase tracking-[0.3em] ml-4 flex items-center gap-2">
                                 <CalendarIcon size={14} /> {DAYS[dayNum]}
                             </h2>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {groupedByDay[dayNum].sort((a,b) => a.startTime.localeCompare(b.startTime)).map(schedule => {
                                     const participants = schedule.students || (schedule.student ? [schedule.student] : []);
                                     return (

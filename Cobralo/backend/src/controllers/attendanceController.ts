@@ -118,6 +118,19 @@ export const recordAttendance = async (req: AuthRequest, res: Response) => {
             return;
         }
 
+        // Verificar que el estudiante pertenece al usuario
+        const studentExists = await prisma.student.findFirst({
+            where: {
+                id: parseInt(studentId as any),
+                ownerId: req.userId
+            }
+        });
+
+        if (!studentExists) {
+            res.status(404).json({ error: 'Estudiante no encontrado' });
+            return;
+        }
+
         const result = await prisma.$transaction(async (prismaTransaction) => {
             // 1. Create attendance record
             const attendance = await prismaTransaction.attendance.create({
@@ -144,6 +157,14 @@ export const recordAttendance = async (req: AuthRequest, res: Response) => {
                         data: { credits: { decrement: 1 } }
                     });
                 }
+            }
+
+            // 3. If status is CANCELLED (Falta con Aviso), increment makeup_classes
+            if (status === 'CANCELLED') {
+                await prismaTransaction.student.update({
+                    where: { id: parseInt(studentId as any) },
+                    data: { makeup_classes: { increment: 1 } }
+                });
             }
 
             return attendance;
@@ -247,6 +268,20 @@ export const recordBulkAttendance = async (req: AuthRequest, res: Response) => {
             return;
         }
 
+        // Verificar que todos los estudiantes pertenezcan al usuario
+        const uniqueStudentIds = [...new Set(records.map(r => Number(r.studentId)))];
+        const validCount = await prisma.student.count({
+            where: {
+                id: { in: uniqueStudentIds },
+                ownerId: req.userId
+            }
+        });
+
+        if (validCount !== uniqueStudentIds.length) {
+            res.status(403).json({ error: 'Uno o más alumnos especificados no te pertenecen' });
+            return;
+        }
+
         const attendanceDate = date ? new Date(date) : new Date();
 
         const results = await prisma.$transaction(async (tx) => {
@@ -281,6 +316,14 @@ export const recordBulkAttendance = async (req: AuthRequest, res: Response) => {
                             data: { credits: { decrement: 1 } }
                         });
                     }
+                }
+
+                // 3. If status is CANCELLED (Falta con Aviso), increment makeup_classes
+                if (status === 'CANCELLED') {
+                    await tx.student.update({
+                        where: { id: Number(studentId) },
+                        data: { makeup_classes: { increment: 1 } }
+                    });
                 }
 
                 createdRecords.push(att);

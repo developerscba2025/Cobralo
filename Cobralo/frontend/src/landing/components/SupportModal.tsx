@@ -50,29 +50,30 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 bg-black/60 backdrop-blur-xl"
         />
         
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-lg bg-bg-soft border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
+          exit={{ opacity: 0, scale: 0.95, y: 30 }}
+          className="relative w-full max-w-lg bg-[#0E1113]/95 border border-white/10 rounded-[40px] p-10 shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] overflow-hidden backdrop-blur-3xl"
         >
-          {/* Background Glow */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
+          {/* Background Decoration Glows */}
+          <div className="absolute -top-24 -right-24 w-60 h-60 bg-primary/10 blur-[100px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-primary/5 blur-[80px] rounded-full pointer-events-none" />
           
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-10">
               <div>
-                <h3 className="text-2xl font-black text-white">Soporte Cobralo</h3>
-                <p className="text-sm text-text-muted mt-1">Envíanos tu mensaje y te responderemos pronto.</p>
+                <h3 className="text-3xl font-black text-white tracking-tight">Soporte Cobralo</h3>
+                <p className="text-sm text-zinc-500 mt-2 font-medium">Contanos en qué podemos ayudarte hoy.</p>
               </div>
               <button 
                 onClick={onClose}
-                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-text-dim hover:text-white hover:bg-white/10 transition-all"
+                className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all active:scale-90"
               >
-                <X size={20} />
+                <X size={22} />
               </button>
             </div>
 

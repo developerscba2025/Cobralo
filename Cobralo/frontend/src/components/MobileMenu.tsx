@@ -61,7 +61,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport,
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-text-main truncate uppercase tracking-tight">{user.name}</p>
                                             <p className="text-[9px] font-black text-primary-light/80 uppercase tracking-widest mt-0.5">
-                                                {user?.plan === 'PRO' ? 'PLAN PRO' : (user?.plan === 'INITIAL' ? 'PLAN BÁSICO' : 'PLAN FREE')}
+                                                {user?.plan === 'PRO' ? 'PRO' : (user?.plan === 'INITIAL' ? 'BÁSICO' : 'FREE')}
                                             </p>
                                         </div>
                                     </div>

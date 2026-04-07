@@ -39,9 +39,9 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
             </div>
 
             {/* Current plan card */}
-            <div className={`p-6 md:p-10 rounded-[32px] md:rounded-[48px] border-2 shadow-inner transition-all sm:p-12 ${isPro ? 'bg-amber-400/5 border-amber-400/20' : 'bg-zinc-50 dark:bg-bg-dark border-zinc-100 dark:border-border-emerald'}`}>
+            <div className={`p-6 md:p-10 rounded-[32px] md:rounded-[48px] border-2 transition-all sm:p-12 ${isPro ? 'bg-amber-400/5 border-amber-400/20' : 'bg-bg-app border-border-main'}`}>
                 <div className="flex flex-col md:flex-row items-center gap-6 lg:gap-10">
-                    <div className={`w-16 h-16 lg:w-24 lg:h-24 rounded-[24px] lg:rounded-[36px] flex items-center justify-center transition-all ${isPro ? 'bg-amber-400 text-white shadow-xl shadow-amber-400/20' : 'bg-zinc-200 dark:bg-bg-soft text-zinc-400'}`}>
+                    <div className={`w-16 h-16 lg:w-24 lg:h-24 rounded-[24px] lg:rounded-[36px] flex items-center justify-center transition-all ${isPro ? 'bg-amber-400 text-white shadow-xl shadow-amber-400/20' : 'bg-surface text-zinc-400'}`}>
                         <Zap size={32} fill={isPro ? 'currentColor' : 'none'} className="lg:hidden" />
                         <Zap size={48} fill={isPro ? 'currentColor' : 'none'} className="hidden lg:block" />
                     </div>
@@ -62,7 +62,7 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
                     </div>
                     <button
                         onClick={() => user.plan !== 'PRO' && document.getElementById('pricing-grid')?.scrollIntoView({ behavior: 'smooth' })}
-                        className={`w-full lg:w-auto px-6 py-4 lg:px-10 lg:py-5 rounded-2xl lg:rounded-[24px] font-black text-xs uppercase tracking-widest transition-all ${isPro ? 'bg-white dark:bg-bg-soft text-zinc-900 dark:text-emerald-50 shadow-md border border-zinc-100 dark:border-border-emerald hover:bg-zinc-50' : 'bg-primary-main text-white shadow-xl shadow-primary-glow hover:bg-green-600'}`}
+                        className={`w-full lg:w-auto px-6 py-4 lg:px-10 lg:py-5 rounded-2xl lg:rounded-[24px] font-black text-xs uppercase tracking-widest transition-all ${isPro ? 'bg-surface text-zinc-900 dark:text-emerald-50 shadow-md border border-border-main hover:bg-zinc-50' : 'bg-primary-main text-white shadow-xl shadow-primary-glow hover:bg-green-600'}`}
                     >
                         {user.plan === 'PRO' ? 'Suscripción Activa' : (user.plan === 'INITIAL' ? 'Pasar a Pro (25% OFF)' : 'Activar Pro')}
                     </button>
@@ -102,7 +102,7 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
             {/* Pricing grid */}
             <div id="pricing-grid" className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Basic plan */}
-                <div className="p-4 lg:p-10 bg-zinc-50 dark:bg-bg-dark rounded-[24px] lg:rounded-[48px] border border-zinc-100 dark:border-border-emerald flex flex-col justify-between relative overflow-hidden">
+                <div className="p-4 lg:p-10 bg-bg-app rounded-[24px] lg:rounded-[48px] border border-border-main flex flex-col justify-between relative overflow-hidden">
                     <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute top-4 right-4 bg-emerald-600 text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-[0_0_10px_rgba(22,163,74,0.3)]">25% OFF</motion.div>
                     <div>
                         <h4 className="text-[10px] font-black text-zinc-400 dark:text-emerald-500/40 uppercase tracking-[0.2em] mb-8">Plan Básico</h4>
@@ -126,11 +126,11 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
                 </div>
 
                 {/* Pro plan */}
-                <div className="p-4 lg:p-10 bg-zinc-50 dark:bg-bg-dark rounded-[24px] lg:rounded-[48px] border-2 border-emerald-500/20 flex flex-col justify-between relative overflow-hidden shadow-[0_0_20px_rgba(22,163,74,0.05)]">
+                <div className="p-4 lg:p-10 bg-bg-app rounded-[24px] lg:rounded-[48px] border-2 border-emerald-500/20 flex flex-col justify-between relative overflow-hidden shadow-[0_0_20px_rgba(22,163,74,0.05)]">
                     <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute top-4 right-4 bg-emerald-500 text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-[0_0_15px_rgba(22,163,74,0.4)]">25% OFF</motion.div>
                     <div>
                         <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-6">Plan Pro</h4>
-                        <div className="flex bg-white dark:bg-bg-soft p-1 rounded-xl mb-6 border border-zinc-100 dark:border-border-emerald">
+                        <div className="flex bg-surface p-1 rounded-xl mb-6 border border-border-main">
                             <button onClick={() => setIsTrimestral(false)} className={`flex-1 py-2 text-[9px] font-black uppercase tracking-[0.2em] rounded-lg transition-all ${!isTrimestral ? 'bg-primary-main text-white shadow-md' : 'text-zinc-400 hover:text-zinc-600'}`}>Mensual</button>
                             <button onClick={() => setIsTrimestral(true)} className={`flex-1 py-2 text-[9px] font-black uppercase tracking-[0.2em] rounded-lg transition-all ${isTrimestral ? 'bg-primary-main text-white shadow-md' : 'text-zinc-400 hover:text-zinc-600'}`}>Trimestral</button>
                         </div>
@@ -143,7 +143,7 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-6">{isTrimestral ? 'Pago único trimestral' : 'Facturación mensual'}</p>
                         <div className="space-y-3 mb-8">
                             {['Alumnos ilimitados', 'Dashboard PRO & Gráficos', 'Sincronización Google Calendar', 'Mensajes para WhatsApp automatizados', 'Integración experta Mercado Pago', 'Reportes financieros & Recibos', 'Perfil destacado en la página'].map((feature, i) => (
-                                <div key={i} className="flex items-center gap-3 text-[10px] font-black text-zinc-700 dark:text-white uppercase tracking-widest leading-none bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-500/20 shadow-sm transition-all hover:scale-[1.02]">
+                                <div key={i} className="flex items-center gap-3 text-[10px] font-black text-text-main uppercase tracking-widest leading-none bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-100 dark:border-emerald-500/20 shadow-sm transition-all hover:scale-[1.02]">
                                     <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
                                         <Zap size={10} className="fill-current text-primary-main" />
                                     </div>

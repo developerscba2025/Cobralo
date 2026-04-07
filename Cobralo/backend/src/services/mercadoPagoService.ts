@@ -128,7 +128,9 @@ export const createMercadoPagoPreference = async (
             metadata = { user_id: userId, plan_id: planId, type: 'subscription' };
         }
 
-        const preference = {
+        const webhookUrl = process.env.WEBHOOK_BASE_URL || 'https://api.cobralo.app';
+
+        const preference: any = {
             items,
             payer: {
                 email: `user-${userId}@cobralo.app`
@@ -145,6 +147,10 @@ export const createMercadoPagoPreference = async (
             expiration_date_from: new Date().toISOString(),
             expiration_date_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         };
+
+        if (planId === 'CLASS_PAYMENT') {
+            preference.notification_url = `${webhookUrl}/api/payments/webhook/${userId}`;
+        }
 
         const response = await axios.post(
             `${mercadoPagoConfig.apiUrl}/checkout/preferences`, 

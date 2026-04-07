@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Shield, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import ConfirmModal from '../ConfirmModal';
+import { api } from '../../services/api';
+import { showToast } from '../Toast';
+import { useNavigate } from 'react-router-dom';
 
 interface SecurityTabProps {
     passwordData: { currentPassword: string; newPassword: string; confirmPassword: string };
@@ -26,6 +30,25 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
     showConfirmPassword,
     setShowConfirmPassword,
 }) => {
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const navigate = useNavigate();
+
+    const handleDeleteAccount = async () => {
+        try {
+            setDeleting(true);
+            await api.deleteAccount();
+            localStorage.removeItem('token');
+            showToast.success('Cuenta eliminada permanentemente');
+            navigate('/login');
+        } catch (err: any) {
+            showToast.error(err.message || 'Error al eliminar la cuenta');
+        } finally {
+            setDeleting(false);
+            setIsDeleteModalOpen(false);
+        }
+    };
+
     return (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <div>
@@ -35,13 +58,13 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                 <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Protegé tu cuenta y privacidad.</p>
             </div>
 
-            <form onSubmit={handleChangePassword} className="space-y-6 lg:space-y-8 p-4 lg:p-10 bg-zinc-50 dark:bg-bg-dark rounded-[24px] lg:rounded-[48px] border border-zinc-100 dark:border-border-emerald shadow-inner">
+            <form onSubmit={handleChangePassword} className="space-y-6 lg:space-y-8 p-4 lg:p-10 bg-bg-app rounded-[24px] lg:rounded-[48px] border border-border-main">
                 <h3 className="text-[10px] font-black text-zinc-400 dark:text-emerald-400/80 uppercase mb-8 ml-4 tracking-widest">Cambio de Contraseña</h3>
                 <div className="space-y-6">
                     <div className="relative">
                         <input
                             type={showCurrentPassword ? 'text' : 'password'}
-                            className="w-full p-5 bg-white dark:bg-bg-soft dark:text-white rounded-[24px] border-none font-bold text-zinc-700 shadow-sm pr-14"
+                            className="w-full p-5 bg-surface text-text-main rounded-[24px] border-none font-bold text-text-main shadow-sm pr-14"
                             placeholder="Contraseña Actual"
                             value={passwordData.currentPassword}
                             onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
@@ -59,7 +82,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                         <div className="relative">
                             <input
                                 type={showNewPassword ? 'text' : 'password'}
-                                className="w-full p-5 bg-white dark:bg-bg-soft dark:text-white rounded-[24px] border-none font-bold text-zinc-700 shadow-sm pr-14"
+                                className="w-full p-5 bg-surface text-text-main rounded-[24px] border-none font-bold text-text-main shadow-sm pr-14"
                                 placeholder="Nueva Contraseña"
                                 value={passwordData.newPassword}
                                 onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
@@ -76,7 +99,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
                         <div className="relative">
                             <input
                                 type={showConfirmPassword ? 'text' : 'password'}
-                                className="w-full p-5 bg-white dark:bg-bg-soft dark:text-white rounded-[24px] border-none font-bold text-zinc-700 shadow-sm pr-14"
+                                className="w-full p-5 bg-surface text-text-main rounded-[24px] border-none font-bold text-text-main shadow-sm pr-14"
                                 placeholder="Repetir Nueva Contraseña"
                                 value={passwordData.confirmPassword}
                                 onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
@@ -106,10 +129,23 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
             <div className="p-4 lg:p-10 bg-red-500/5 rounded-[24px] lg:rounded-[48px] border border-red-500/10">
                 <h3 className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-4">Zona Crítica</h3>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 font-bold mb-6">Si eliminas tu cuenta, perderás todos tus datos permanentemente.</p>
-                <button className="px-8 py-4 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 active:scale-95 transition-all">
+                <button 
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="px-8 py-4 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-lg shadow-red-500/20 active:scale-95 transition-all"
+                >
                     Eliminar Mi Cuenta
                 </button>
             </div>
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                title="¿Eliminar tu cuenta?"
+                message="Esta acción es irreversible y borrará todos tus alumnos, pagos y configuraciones permanentemente."
+                confirmText={deleting ? "Eliminando..." : "Sí, eliminar cuenta"}
+                cancelText="Cancelar"
+                onConfirm={handleDeleteAccount}
+                onCancel={() => setIsDeleteModalOpen(false)}
+            />
         </div>
     );
 };

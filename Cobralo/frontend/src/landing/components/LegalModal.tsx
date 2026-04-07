@@ -108,13 +108,13 @@ const LegalModal = ({ isOpen, onClose, type }: LegalModalProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-xl"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl bg-[#0a0f0a] border border-white/10 rounded-3xl p-8 max-h-[80vh] overflow-y-auto shadow-2xl"
+            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+            className="relative w-full max-w-2xl bg-[#0E1113]/95 border border-white/10 rounded-[40px] p-10 max-h-[85vh] overflow-y-auto shadow-[0_50px_100px_-20px_rgba(0,0,0,1)] backdrop-blur-3xl custom-scrollbar"
           >
             <button 
               onClick={onClose}

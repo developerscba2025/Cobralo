@@ -40,29 +40,53 @@ router.get('/feed/:token', async (req: Request, res: Response) => {
         const schedules = (user as any).schedules || [];
         const dayMap = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
         
-        let icsContent = "BEGIN:VCALENDAR\n";
-        icsContent += "VERSION:2.0\n";
-        icsContent += "PRODID:-//Cobralo//Calendar Feed//ES\n";
-        icsContent += "CALSCALE:GREGORIAN\n";
-        icsContent += "METHOD:PUBLISH\n";
-        icsContent += `X-WR-CALNAME:Cobralo - ${user.bizName || user.name}\n`;
-        icsContent += "X-WR-TIMEZONE:America/Argentina/Buenos_Aires\n";
+        // Helper to compute the most recent past date for a given day of week
+        const getRecentWeekday = (dayOfWeek: number): Date => {
+            const now = new Date();
+            const currentDay = now.getDay(); // 0=Sun, 1=Mon...
+            let diff = currentDay - dayOfWeek;
+            if (diff < 0) diff += 7;
+            const result = new Date(now);
+            result.setDate(now.getDate() - diff);
+            return result;
+        };
+
+        const formatICSDate = (date: Date, time: string): string => {
+            const [hours, minutes] = time.split(':');
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}${month}${day}T${hours}${minutes}00`;
+        };
+        
+        const nowStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+        let icsContent = "BEGIN:VCALENDAR\r\n";
+        icsContent += "VERSION:2.0\r\n";
+        icsContent += "PRODID:-//Cobralo//Calendar Feed//ES\r\n";
+        icsContent += "CALSCALE:GREGORIAN\r\n";
+        icsContent += "METHOD:PUBLISH\r\n";
+        icsContent += `X-WR-CALNAME:Cobralo - ${user.bizName || user.name}\r\n`;
+        icsContent += "X-WR-TIMEZONE:America/Argentina/Buenos_Aires\r\n";
+        icsContent += "X-APPLE-CALENDAR-COLOR:#10B981\r\n"; // Emerald for Apple Calendar
 
         schedules.forEach((s: any) => {
-            const startStr = (s.startTime || "00:00").replace(":", "") + "00";
-            const endStr = (s.endTime || "00:00").replace(":", "") + "00";
+            const baseDate = getRecentWeekday(s.dayOfWeek);
+            const dtstart = formatICSDate(baseDate, s.startTime || '09:00');
+            const dtend = formatICSDate(baseDate, s.endTime || '10:00');
+            const studentName = s.student?.name || 'Alumno';
+            const serviceName = s.student?.service_name || 'General';
 
-            icsContent += "BEGIN:VEVENT\n";
-            icsContent += `UID:schedule-${s.id}@cobralo.com\n`;
-            icsContent += `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z\n`;
-            icsContent += `SUMMARY:Clase: ${s.student?.name}\n`;
-            icsContent += `DESCRIPTION:Servicio: ${s.student?.service_name || 'General'}\\nAlumno: ${s.student?.name}\n`;
-            icsContent += `RRULE:FREQ=WEEKLY;BYDAY=${dayMap[s.dayOfWeek]}\n`;
-            
-            // Weekly pattern start (Monday Jan 1st 2024 as base for recurrence)
-            icsContent += `DTSTART:20240101T${startStr}\n`;
-            icsContent += `DTEND:20240101T${endStr}\n`;
-            icsContent += "END:VEVENT\n";
+            icsContent += "BEGIN:VEVENT\r\n";
+            icsContent += `UID:cobralo-${s.id}@cobraloapp.com\r\n`;
+            icsContent += `DTSTAMP:${nowStamp}\r\n`;
+            icsContent += `SUMMARY:Clase: ${studentName}\r\n`;
+            icsContent += `DESCRIPTION:Servicio: ${serviceName}\\nAlumno: ${studentName}\r\n`;
+            icsContent += `CATEGORIES:Cobralo,Clases\r\n`;
+            icsContent += `RRULE:FREQ=WEEKLY;BYDAY=${dayMap[s.dayOfWeek]}\r\n`;
+            icsContent += `DTSTART;TZID=America/Argentina/Buenos_Aires:${dtstart}\r\n`;
+            icsContent += `DTEND;TZID=America/Argentina/Buenos_Aires:${dtend}\r\n`;
+            icsContent += "END:VEVENT\r\n";
         });
 
         icsContent += "END:VCALENDAR";

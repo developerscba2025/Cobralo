@@ -57,14 +57,14 @@
   .dark {
     --primary: #22c55e;
     --primary-light: #4ade80;
-    --primary-glow: rgba(34, 197, 94, 0.4);
+    --primary-glow: rgba(34, 197, 94, 0.2);
 
-    --bg-app: hsla(150, 15%, 3%, 1); /* Deep Obsidian */
-    --surface: hsla(150, 15%, 8%, 1); /* Elevated Surface */
-    --text-main: #f0f7f0;
-    --text-muted: #8ba38b;
-    --text-soft: #a1bca1;
-    --border-main: rgba(34, 197, 94, 0.12);
+    --bg-app: #0E1113;   /* Nuevo color oscuro (Cool Obsidian) */
+    --surface: #171A1D;  /* Superficie elevada sutilmente */
+    --text-main: #fafafa;  /* Blanco puro (Zinc 50) */
+    --text-muted: #a1a1aa; /* Gris neutro (Zinc 400) */
+    --text-soft: #d4d4d8;  /* Zinc 300 */
+    --border-main: rgba(255, 255, 255, 0.06); /* Borde neutral muy sutil */
 
     /* Semantic supports for legacy */
     --bg: var(--bg-app);
@@ -74,7 +74,13 @@
 
   html {
     scroll-behavior: smooth;
-    transition: background-color 0.3s ease;
+  }
+
+  /* Smooth Premium Theme Transition - Focuses only on colors to prevent physics jitter */
+  *, *::before, *::after {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 650ms;
+    transition-timing-function: ease-in-out;
   }
 
   body {
@@ -87,6 +93,11 @@
     @apply font-accent;
     letter-spacing: -0.02em;
   }
+
+  h1 { font-size: clamp(1.75rem, 5vw, 3.5rem); }
+  h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); }
+  h3 { font-size: clamp(1.25rem, 3vw, 2rem); }
+  h4 { font-size: clamp(1.15rem, 2.5vw, 1.5rem); }
 
   /* Universal scrollbar fix */
   ::-webkit-scrollbar {
@@ -110,9 +121,17 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
   .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 1rem;
   }
@@ -196,8 +215,9 @@
   }
 
   .card-premium {
-    @apply bg-bg-soft-app rounded-[24px] md:rounded-[32px] border border-border-emerald shadow-sm dark:shadow-none transition-colors duration-300;
+    @apply bg-bg-soft-app rounded-[24px] md:rounded-[32px] border border-border-emerald shadow-sm transition-all duration-300;
   }
+  
 
   .float-anim { animation: float 6s ease-in-out infinite; }
 

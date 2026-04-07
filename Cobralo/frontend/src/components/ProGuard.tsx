@@ -37,10 +37,10 @@ export const ProFeature: React.FC<ProFeatureProps> = ({
             <>
                 <span
                     title={`Pasate a Pro para usar ${featureName}`}
-                    className="cursor-pointer bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 border border-amber-500/20 hover:scale-105 transition-all shadow-lg shadow-amber-500/5"
+                    className="cursor-pointer bg-primary-main/10 dark:bg-primary-main/20 text-primary-main dark:text-primary-main px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 border border-primary-main/20 hover:scale-105 transition-all shadow-lg shadow-primary-glow"
                     onClick={handleClick}
                 >
-                    <Lock size={12} className="fill-amber-500/20" /> PRO
+                    <Lock size={12} className="fill-primary-main/20" /> PRO
                 </span>
                 <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
             </>

@@ -1,20 +1,29 @@
 import { Link, useLocation } from 'react-router-dom';
-import { PieChart, Users, Clock, Settings, BookOpen } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Users2, 
+  Calendar, 
+  Settings, 
+  LibraryBig,
+  Bell
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface BottomNavProps {
     pendingCount: number;
+    unreadNotifCount?: number;
 }
 
-const BottomNav: React.FC<BottomNavProps> = ({ pendingCount }) => {
+const BottomNav: React.FC<BottomNavProps> = ({ pendingCount, unreadNotifCount = 0 }) => {
     const location = useLocation();
 
     const menuItems = [
-        { path: '/app/dashboard', icon: PieChart, label: 'Inicio' },
-        { path: '/app/students', icon: Users, label: 'Alumnos' },
-        { path: '/app/classes', icon: BookOpen, label: 'Clases' },
-        { path: '/app/calendar', icon: Clock, label: 'Agenda' },
-        { path: '/app/settings', icon: Settings, label: 'Más' },
+        { path: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/app/students', icon: Users2, label: 'Alumnos' },
+        { path: '/app/calendar', icon: Calendar, label: 'Calendario' },
+        { path: '/app/classes', icon: LibraryBig, label: 'Clases' },
+        { path: '/app/notifications', icon: Bell, label: 'Avisos' },
+        { path: '/app/settings', icon: Settings, label: 'Ajustes' },
     ];
 
     const isActive = (path: string) => location.pathname === path;
@@ -25,7 +34,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount }) => {
                 <Link
                     key={item.path}
                     to={item.path}
-                    className={`relative flex flex-col items-center gap-0.5 p-2 min-w-[64px] transition-all ${
+                    className={`relative flex flex-col items-center justify-center gap-0.5 p-2 min-w-[64px] min-h-[56px] transition-all ${
                         isActive(item.path)
                             ? 'text-primary-main'
                             : 'text-text-muted hover:text-text-main'
@@ -45,7 +54,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount }) => {
                             strokeWidth={isActive(item.path) ? 2.5 : 2}
                             className="relative z-10"
                         />
-                        {/* Status Badge from Red */}
+                        {/* Pending Students Badge */}
                         {item.path === '/app/students' && pendingCount > 0 && (
                             <motion.div 
                                 initial={{ scale: 0 }}
@@ -55,8 +64,18 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount }) => {
                                 {pendingCount > 9 ? '9+' : pendingCount}
                             </motion.div>
                         )}
+                        {/* Unread Notifications Badge */}
+                        {item.path === '/app/notifications' && unreadNotifCount > 0 && (
+                            <motion.div 
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md shadow-red-500/40 z-20"
+                            >
+                                {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                            </motion.div>
+                        )}
                     </div>
-                    <span className={`text-[11px] font-black uppercase tracking-tighter transition-all ${
+                    <span className={`text-[10px] font-black uppercase tracking-tighter transition-all ${
                         isActive(item.path) ? 'opacity-100 scale-105 font-black text-primary-main' : 'opacity-60 font-bold'
                     }`}>
                         {item.label}

@@ -1,7 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
-import { SPRING_PHYSICS } from '../../utils/motion';
+import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown, ChevronRight, Lock } from 'lucide-react';
 
 interface Tab {
     id: string;
@@ -22,98 +21,151 @@ interface Category {
 interface SettingsNavProps {
     categories: Category[];
     activeTab: string;
-    isCollapsed: boolean;
-    setIsCollapsed: (v: boolean) => void;
     setActiveTab: (id: any) => void;
     setIsNavOpen: (v: boolean) => void;
+    isPro: boolean;
 }
 
 const SettingsNav: React.FC<SettingsNavProps> = ({
     categories,
     activeTab,
-    isCollapsed,
-    setIsCollapsed,
     setActiveTab,
     setIsNavOpen,
+    isPro,
 }) => {
+    // Start all categories open by default
+    const [openCategories, setOpenCategories] = useState<Set<string>>(
+        new Set(categories.map(c => c.id))
+    );
+
+    const toggleCategory = (id: string) => {
+        setOpenCategories(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const handleTabClick = (tab: Tab) => {
+        if (tab.isAction && tab.onClick) {
+            tab.onClick();
+        } else {
+            setActiveTab(tab.id);
+            if (window.innerWidth < 1024) setIsNavOpen(false);
+        }
+    };
+
     return (
-        <motion.div
-            key="settings-nav"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={SPRING_PHYSICS}
-            className={`space-y-6 lg:space-y-8 w-full block transition-all duration-500 relative`}
-        >
-            {/* Desktop Collapse Trigger */}
-            <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="hidden lg:flex absolute -right-4 top-7 w-8 h-8 bg-white/90 dark:bg-bg-soft/90 backdrop-blur-xl border border-zinc-200 dark:border-emerald-500/30 rounded-full shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_30px_-6px_rgba(34,197,94,0.3)] items-center justify-center text-primary-main hover:scale-110 active:scale-95 hover:border-primary-main transition-all z-20 group hover:shadow-primary-glow/60"
-            >
-                {isCollapsed ? <ChevronRight size={15} className="group-hover:translate-x-0.5 transition-transform" /> : <ChevronLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />}
-            </button>
-
-            {/* Mobile Header */}
-            <div className="lg:hidden mb-12 px-4">
-                <h1 className="text-4xl font-black text-zinc-900 dark:text-emerald-50 tracking-tighter uppercase mb-2">Configuración</h1>
-                <p className="text-zinc-500 font-bold text-sm tracking-wide">Gestioná tu cuenta y academia.</p>
+        <div className="space-y-1 w-full">
+            {/* Header */}
+            <div className="mb-8 px-2">
+                <h1 className="text-3xl font-black text-zinc-900 dark:text-emerald-50 tracking-tighter uppercase">
+                    Ajustes
+                </h1>
+                <p className="text-zinc-500 font-bold text-[10px] tracking-widest uppercase opacity-60 mt-1">
+                    Gestioná tu cuenta y academia.
+                </p>
             </div>
 
-            <div className="flex flex-col gap-1">
-                <div className={`hidden lg:flex items-center mb-4 lg:mb-6 ${isCollapsed ? 'lg:justify-center lg:w-full' : 'px-4'}`}>
-                    <h3 className={`text-[10px] font-extrabold text-zinc-400 dark:text-emerald-500/60 uppercase tracking-[0.2em] animate-in fade-in duration-300 ${isCollapsed ? 'lg:hidden' : ''}`}>
-                        Navegación
-                    </h3>
-                </div>
+            {/* Accordion categories */}
+            {categories.map(cat => {
+                const isOpen = openCategories.has(cat.id);
+                return (
+                    <div key={cat.id} className="mb-1">
+                        {/* Category header — clickable to expand/collapse */}
+                        <button
+                            onClick={() => toggleCategory(cat.id)}
+                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl group transition-all"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <cat.icon
+                                    size={13}
+                                    className="text-primary-main opacity-70"
+                                />
+                                <span className="text-[10px] font-extrabold text-zinc-400 dark:text-emerald-500/60 uppercase tracking-[0.2em]">
+                                    {cat.label}
+                                </span>
+                            </div>
+                            <motion.div
+                                animate={{ rotate: isOpen ? 0 : -90 }}
+                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                            >
+                                <ChevronDown size={13} className="text-zinc-400 dark:text-zinc-600" />
+                            </motion.div>
+                        </button>
 
-                {categories.map(cat => (
-                    <div key={cat.id} className="space-y-1 mb-6">
-                        <h4 className={`text-[11px] font-extrabold text-zinc-400/50 dark:text-emerald-500/40 uppercase tracking-[0.2em] px-4 mb-3 ${isCollapsed ? 'lg:hidden' : ''}`}>
-                            {cat.label}
-                        </h4>
-
-                        <div className="flex flex-col gap-1 bg-white lg:bg-transparent dark:bg-bg-soft lg:dark:bg-transparent rounded-3xl lg:rounded-none overflow-hidden lg:overflow-visible border lg:border-none border-zinc-100 dark:border-white/5">
-                            {cat.tabs.map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => {
-                                        if (tab.isAction && tab.onClick) {
-                                            tab.onClick();
-                                        } else {
-                                            setActiveTab(tab.id as any);
-                                            if (window.innerWidth < 1024) {
-                                                setIsNavOpen(false);
-                                            }
-                                        }
-                                    }}
-                                    className={`flex items-center justify-between lg:justify-start gap-4 transition-all font-bold uppercase tracking-normal text-[13px] group px-6 py-8 lg:pl-6 lg:pr-10 lg:py-4 lg:rounded-[24px] border-b last:border-b-0 lg:border-none border-zinc-50 dark:border-white/5 w-full ${
-                                        isCollapsed ? 'lg:justify-center lg:p-0 lg:w-16 lg:h-16 lg:mx-auto' : ''
-                                    } ${
-                                        activeTab === tab.id && !isCollapsed
-                                            ? 'bg-primary-main/10 text-primary-main lg:bg-primary-main lg:text-white lg:shadow-xl lg:shadow-primary-glow/40'
-                                            : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 lg:hover:bg-zinc-100 dark:hover:bg-bg-dark lg:dark:hover:bg-bg-soft hover:text-zinc-800 dark:hover:text-emerald-50'
-                                    }`}
+                        {/* Tabs inside category */}
+                        <AnimatePresence initial={false}>
+                            {isOpen && (
+                                <motion.div
+                                    key={cat.id + '-content'}
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                                    style={{ overflow: 'hidden' }}
                                 >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center lg:bg-transparent lg:w-auto lg:h-auto ${activeTab === tab.id ? (isCollapsed ? 'bg-primary-main text-white' : 'bg-primary-main text-white lg:text-inherit') : 'bg-zinc-50 dark:bg-bg-dark text-zinc-400'}`}>
-                                            <tab.icon size={isCollapsed ? 26 : 22} className={`${activeTab === tab.id ? 'opacity-100' : 'opacity-60 group-hover:opacity-100 transition-opacity'}`} />
-                                        </div>
-                                        <div className="flex flex-col items-start lg:block">
-                                            <span className={`${isCollapsed ? 'lg:hidden' : 'whitespace-nowrap'} transition-all`}>{tab.label}</span>
-                                            <span className="lg:hidden text-[10px] font-bold opacity-40 lowercase tracking-normal flex mt-0.5">{tab.description || 'Configuración'}</span>
-                                        </div>
+                                    <div className="flex flex-col gap-0.5 pl-2 pb-2 pt-0.5">
+                                        {cat.tabs.map(tab => {
+                                            const isActive = activeTab === tab.id && !tab.isAction;
+                                            return (
+                                                <button
+                                                    key={tab.id}
+                                                    onClick={() => handleTabClick(tab)}
+                                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all text-left group border ${
+                                                        isActive
+                                                            ? 'bg-primary-main text-white border-transparent shadow-md'
+                                                            : 'border-transparent text-zinc-500 dark:text-zinc-400'
+                                                    }`}
+                                                >
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                                                        isActive
+                                                            ? 'bg-white/20 text-white'
+                                                            : 'bg-bg-app text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300'
+                                                    }`}>
+                                                        <tab.icon size={16} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 text-left">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`block text-[12px] font-bold uppercase tracking-tight truncate ${
+                                                                isActive ? 'text-white' : ''
+                                                            }`}>
+                                                                {tab.label}
+                                                            </span>
+                                                            {!isPro && (tab.id === 'academy' || tab.id === 'ratings') && (
+                                                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary-main/10 border border-primary-main/20 text-[8px] font-black text-primary-main uppercase tracking-tighter">
+                                                                    <Lock size={8} />
+                                                                    <span>PRO</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {tab.description && (
+                                                            <span className={`block text-[10px] font-bold mt-0.5 truncate ${
+                                                                isActive ? 'text-white/60' : 'text-zinc-400 opacity-70'
+                                                            }`}>
+                                                                {tab.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {tab.isAction ? (
+                                                        <ChevronRight size={14} className="opacity-40 shrink-0" />
+                                                    ) : (
+                                                        !isPro && (tab.id === 'academy' || tab.id === 'ratings') && (
+                                                            <Lock size={12} className="text-primary-main/40 shrink-0" />
+                                                        )
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-
-                                    <div className="lg:hidden text-zinc-300">
-                                        <ChevronRight size={14} className="opacity-40" />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                ))}
-            </div>
-        </motion.div>
+                );
+            })}
+        </div>
     );
 };
 

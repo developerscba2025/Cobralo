@@ -25,7 +25,9 @@ import paymentAccountsRouter from './routes/paymentAccounts';
 import calendarFeedRouter from './routes/calendarFeed';
 import supportRouter from './routes/support';
 import { initReminderCron } from './jobs/reminderJob';
+import { initClassReminderCron } from './jobs/classReminderJob';
 import { initPriceAdjustmentCron } from './jobs/priceAdjustmentJob';
+import notificationsRouter from './routes/notifications';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -81,6 +83,7 @@ app.use('/api/subscription', subscriptionRouter);
 app.use('/api/ratings', ratingRoutes); 
 app.use('/api/calendar-feed', calendarFeedRouter);
 app.use('/api/support', supportRouter);
+// Public attendance confirmation/cancel (no auth needed)
 
 // Protected Routes Middleware
 app.use(authMiddleware, enrichWithFeatures);
@@ -95,9 +98,11 @@ app.use('/api/receipts', receiptsRouter);
 app.use('/api/expenses', expensesRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/services', servicesRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Initialize Automated Reminders
 initReminderCron();
+initClassReminderCron();
 initPriceAdjustmentCron();
 
 app.listen(PORT, () => {

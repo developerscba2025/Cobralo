@@ -3,7 +3,7 @@ import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { showToast } from '../components/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, Loader2, Building2, Briefcase, ChevronLeft, CheckCircle2, Sparkles, Smartphone, Eye, EyeOff, Check } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, Building2, Briefcase, ChevronLeft, Sparkles, Smartphone, Eye, EyeOff, Check } from 'lucide-react';
 
 const Login = () => {
 
@@ -12,7 +12,7 @@ const Login = () => {
 
     const [searchParams] = useSearchParams();
     const [isRegister, setIsRegister] = useState(searchParams.get('tab') === 'register' || searchParams.get('register') === 'true');
-    const planParam = searchParams.get('plan'); // e.g. 'PRO_MONTHLY' or 'PRO_TRIMESTRAL'
+    const planParam = searchParams.get('plan');
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
@@ -31,7 +31,7 @@ const Login = () => {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#051105]">
+            <div className="min-h-screen flex items-center justify-center bg-[#040d04]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
             </div>
         );
@@ -50,7 +50,6 @@ const Login = () => {
             showToast.error('Las contraseñas no coinciden');
             return false;
         }
-        
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!passwordRegex.test(formData.password)) {
             showToast.error('La contraseña no cumple con los requisitos de seguridad');
@@ -71,13 +70,10 @@ const Login = () => {
         }
     };
 
-    const handlePrevStep = () => {
-        setStep(prev => Math.max(1, prev - 1));
-    };
+    const handlePrevStep = () => setStep(prev => Math.max(1, prev - 1));
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
         if (!isRegister) {
             setIsLoading(true);
             try {
@@ -99,26 +95,16 @@ const Login = () => {
             }
             return;
         }
-
-        // Registration final submit (Step 3)
         if (!termsAccepted) {
             showToast.error('Debés aceptar los Términos y Condiciones para continuar');
             return;
         }
         setIsLoading(true);
         try {
-            const result = await register(
-                formData.name, 
-                formData.email, 
-                formData.password, 
-                formData.bizName, 
-                formData.businessCategory,
-                formData.phoneNumber
-            );
+            const result = await register(formData.name, formData.email, formData.password, formData.bizName, formData.businessCategory, formData.phoneNumber);
             if (result.success) {
                 showToast.success('¡Cuenta creada exitosamente!');
                 if (planParam) {
-                    // Redirect to settings with subscription tab so the user can pay
                     navigate(`/settings?checkout=${planParam}`);
                 } else {
                     navigate('/app/dashboard');
@@ -134,18 +120,9 @@ const Login = () => {
     };
 
     const stepVariants = {
-        enter: (direction: number) => ({
-            x: direction > 0 ? 50 : -50,
-            opacity: 0
-        }),
-        center: {
-            x: 0,
-            opacity: 1
-        },
-        exit: (direction: number) => ({
-            x: direction < 0 ? 50 : -50,
-            opacity: 0
-        })
+        enter: (direction: number) => ({ x: direction > 0 ? 50 : -50, opacity: 0 }),
+        center: { x: 0, opacity: 1 },
+        exit: (direction: number) => ({ x: direction < 0 ? 50 : -50, opacity: 0 })
     };
 
     const PasswordRequirements = ({ password }: { password: string }) => {
@@ -155,373 +132,348 @@ const Login = () => {
             { label: 'Un número', met: /\d/.test(password) },
             { label: 'Carácter especial (@$!%*?&)', met: /[@$!%*?&]/.test(password) }
         ];
-
         return (
             <div className="grid grid-cols-2 gap-2 mt-3 ml-1">
                 {requirements.map((req, idx) => (
                     <div key={idx} className="flex items-center gap-2">
-                        <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${req.met ? 'bg-green-500/20 text-green-500' : 'bg-slate-700 text-slate-500'}`}>
+                        <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${req.met ? 'bg-green-500/20 text-green-500' : 'bg-white/5 text-zinc-600'}`}>
                             <Check size={8} strokeWidth={4} className={req.met ? 'opacity-100' : 'opacity-0'} />
                         </div>
-                        <span className={`text-[10px] font-medium transition-colors ${req.met ? 'text-green-400' : 'text-slate-500'}`}>
-                            {req.label}
-                        </span>
+                        <span className={`text-[10px] font-medium transition-colors ${req.met ? 'text-green-400' : 'text-zinc-600'}`}>{req.label}</span>
                     </div>
                 ))}
             </div>
         );
     };
 
+
+
     return (
-        <div className="min-h-screen flex bg-[#051105] text-slate-200 overflow-hidden">
-            {/* Left Side - Visual/Marketing */}
-            <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-center p-20 bg-gradient-to-br from-green-950 via-[#051105] to-black">
-                <div className="absolute inset-0 opacity-20 pointer-events-none">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500 rounded-full blur-[120px]"></div>
-                </div>
+        <div className="min-h-screen flex flex-col lg:flex-row text-zinc-300 relative bg-[#040d04] overflow-x-hidden">
+            
+            {/* ═══════════════════════════════════════════════════
+                GLOBAL BACKGROUND EFFECTS (Unified - Simpler)
+            ═══════════════════════════════════════════════════ */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 bg-[#040d04]" />
                 
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.8 }}
-                    className="relative z-10"
-                >
-                    <h1 className="text-6xl font-black tracking-tighter text-white mb-6">
-                        COBRALO
-                    </h1>
-                    <p className="text-2xl text-slate-300 font-light max-w-lg leading-relaxed">
-                        Gestioná tus clases y alumnos con una herramienta diseñada para <span className="text-green-400 font-medium italic">vos</span>.
-                    </p>
-                    
-                    <div className="mt-12 space-y-6">
-                        {[
-                            'Control total de pagos y deudas',
-                            'Calendario inteligente y asistencias',
-                            'Recordatorios automáticos por WhatsApp',
-                            'Reportes de ingresos por alumno'
-                        ].map((feature, idx) => (
-                            <motion.div 
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.2 + idx * 0.1 }}
-                                className="flex items-center gap-3 text-slate-400"
-                            >
-                                <CheckCircle2 className="text-green-500" size={20} />
-                                <span>{feature}</span>
-                            </motion.div>
-                        ))}
-                    </div>
-                </motion.div>
+                {/* Single Elegant Glow */}
+                <motion.div 
+                    animate={{ 
+                        opacity: [0.1, 0.15, 0.1] 
+                    }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-[-10%] left-[-10%] w-[1000px] h-[1000px] rounded-full"
+                    style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.2) 0%, transparent 70%)', filter: 'blur(100px)' }} 
+                />
+                
+                {/* Subtle Dot Grid */}
+                <div className="absolute inset-0 opacity-30"
+                    style={{ 
+                        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)', 
+                        backgroundSize: '40px 40px',
+                        maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
+                    }} 
+                />
             </div>
 
-            {/* Right Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
-                <div className="w-full max-w-md">
-                    <div className="mb-10 lg:hidden">
-                        <h1 className="text-3xl font-black text-green-500 italic tracking-tight">COBRALO</h1>
+            {/* ═══════════════════════════════════════════════════
+                LEFT PANEL — Visual / Marketing (Simplified)
+            ═══════════════════════════════════════════════════ */}
+            <div className="hidden lg:flex lg:w-[50%] xl:w-[55%] relative flex-col justify-center p-12 xl:p-24 min-h-screen">
+                {/* Top: Logo */}
+                <div className="absolute top-10 xl:top-14 left-12 xl:left-24">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-3"
+                    >
+                        <div className="w-9 h-9 rounded-xl bg-primary-main flex items-center justify-center font-black italic text-lg shrink-0 text-black">C</div>
+                        <span className="text-xl font-black italic tracking-tighter text-white">COBRALO</span>
+                    </motion.div>
+                </div>
+
+                {/* Content */}
+                <div className="relative z-10 max-w-lg">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <div className="inline-flex items-center gap-2 bg-primary-main/10 border border-primary-main/20 rounded-full px-4 py-1.5 mb-6">
+                            <Sparkles size={12} className="text-primary-main" />
+                            <span className="text-[11px] font-black text-primary-main uppercase tracking-widest">Para tu academia</span>
+                        </div>
+                        
+                        <h1 className="text-5xl xl:text-6xl font-black tracking-tighter text-white leading-[1.05] mb-6">
+                            Organizacion,<br />
+                            <span className="text-primary-main">sin limites.</span>
+                        </h1>
+                        
+                        <p className="text-lg text-zinc-400 font-medium mb-12 leading-relaxed">
+                            Olvidate de las planillas. Automatizá tus cobros, asistencias y recordatorios en un solo lugar, diseñado para <span className="text-white italic">vos</span>.
+                        </p>
+
+                        <div className="space-y-6">
+                            {[
+                                'Control total de pagos y deudas en vivo.',
+                                'Sincronización con Google & Apple Calendar.',
+                                'Recordatorios automáticos por WhatsApp.',
+                                'Reportes de ingresos claros y en tiempo real.'
+                            ].map((feature, idx) => (
+                                <motion.div 
+                                    key={idx}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 + idx * 0.1 }}
+                                    className="flex items-center gap-4 text-zinc-300 group"
+                                >
+                                    <div className="w-6 h-6 rounded-full bg-primary-main/10 flex items-center justify-center shrink-0 group-hover:bg-primary-main/20 transition-colors">
+                                        <Check size={14} className="text-primary-main" />
+                                    </div>
+                                    <span className="font-bold text-sm tracking-tight">{feature}</span>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════
+                RIGHT PANEL — Auth Form (Simplified)
+            ═══════════════════════════════════════════════════ */}
+            <div className="w-full lg:w-[50%] xl:w-[45%] flex flex-col justify-center p-6 py-12 sm:py-20 lg:p-10 relative z-10 min-h-screen">
+
+                <div className="w-full max-w-[400px] mx-auto">
+                    
+                    {/* Mobile logo */}
+                    <div className="mb-8 lg:hidden flex items-center gap-3 justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-primary-main flex items-center justify-center font-black italic text-lg text-black">C</div>
+                        <span className="text-xl font-black italic tracking-tighter text-white">COBRALO</span>
                     </div>
 
-                    <div className="bg-slate-800/50 backdrop-blur-xl p-8 rounded-[32px] border border-slate-700 shadow-2xl relative overflow-hidden">
-                        {/* Progress Bar (Registration only) */}
+                    <div className="mb-8 text-center">
+                        <h2 className="text-2xl font-black text-white tracking-tight">
+                            {isRegister ? (
+                                step === 1 ? 'Crear cuenta' : step === 2 ? 'Tu academia' : 'Personalización'
+                            ) : 'Bienvenido de vuelta'}
+                        </h2>
+                        <p className="text-zinc-500 font-medium mt-1 text-sm">
+                            {isRegister ? `Paso ${step} de 3 — casi listo` : 'Ingresá a tu panel de control'}
+                        </p>
+                    </div>
+
+                    <div className="rounded-[28px] border border-white/[0.08] relative overflow-hidden bg-black/40 backdrop-blur-3xl shadow-2xl">
+
+                        {/* Progress bar */}
                         {isRegister && (
-                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-700/50">
-                                <motion.div 
-                                    className="h-full bg-green-500"
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/5">
+                                <motion.div
+                                    className="h-full bg-gradient-to-r from-primary-main to-emerald-500"
                                     animate={{ width: `${(step / 3) * 100}%` }}
-                                    transition={{ duration: 0.3 }}
+                                    transition={{ duration: 0.4 }}
                                 />
                             </div>
                         )}
 
-                        <div className="mb-8">
-                            <h2 className="text-2xl font-bold text-white">
-                                {isRegister ? (
-                                    step === 1 ? '¡Comencemos!' :
-                                    step === 2 ? 'Sobre tu negocio' : 'Personalización'
-                                ) : 'Bienvenido de nuevo'}
-                            </h2>
-                            <p className="text-slate-400 text-sm mt-1">
-                                {isRegister ? `Paso ${step} de 3` : 'Ingresá tus credenciales para continuar'}
-                            </p>
-                        </div>
+                        <div className="p-7 sm:p-8">
+                            <form onSubmit={(e) => {
+                                if (isRegister && step < 3) { e.preventDefault(); handleNextStep(); }
+                                else { handleSubmit(e); }
+                            }} className="space-y-4 pt-1">
 
-                        <form onSubmit={(e) => {
-                            if (isRegister && step < 3) {
-                                e.preventDefault();
-                                handleNextStep();
-                            } else {
-                                handleSubmit(e);
-                            }
-                        }} className="space-y-4">
-                            <AnimatePresence mode="wait" custom={step}>
-                                {step === 1 && (
-                                    <motion.div
-                                        key="step1"
-                                        variants={stepVariants}
-                                        initial="enter"
-                                        animate="center"
-                                        exit="exit"
-                                        transition={{ duration: 0.2 }}
-                                        className="space-y-4"
-                                    >
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-slate-400 ml-1">EMAIL</label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                                                <input
-                                                    type="email"
-                                                    placeholder="ejemplo@correo.com"
-                                                    required
-                                                    value={formData.email}
-                                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <div className="flex justify-between items-center ml-1">
-                                                <label className="text-xs font-semibold text-slate-400">CONTRASEÑA</label>
-                                                {!isRegister && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => navigate('/app/forgot-password')}
-                                                        className="text-xs text-green-500 hover:text-green-400 font-medium hover:underline underline-offset-2 transition-colors"
-                                                    >
-                                                        ¿Olvidaste tu contraseña?
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <div className="relative">
-                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                                                <input
-                                                    type={showPassword ? "text" : "password"}
-                                                    placeholder="••••••••"
-                                                    required
-                                                    value={formData.password}
-                                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                                    className="w-full pl-11 pr-12 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                                                >
-                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </button>
-                                            </div>
-                                            {isRegister && <PasswordRequirements password={formData.password} />}
-                                        </div>
-
-                                        {isRegister && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, y: -10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="space-y-1.5"
-                                            >
-                                                <label className="text-xs font-semibold text-slate-400 ml-1">CONFIRMAR CONTRASEÑA</label>
+                                <AnimatePresence mode="wait" custom={step}>
+                                    {/* ── STEP 1: Email + Password ── */}
+                                    {step === 1 && (
+                                        <motion.div key="step1" variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Email</label>
                                                 <div className="relative">
-                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
                                                     <input
-                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        type="email"
+                                                        placeholder="ejemplo@correo.com"
+                                                        required
+                                                        value={formData.email}
+                                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                        className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Contraseña</label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
+                                                    <input
+                                                        type={showPassword ? 'text' : 'password'}
                                                         placeholder="••••••••"
                                                         required
-                                                        value={formData.confirmPassword}
-                                                        onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                                        className={`w-full pl-11 pr-12 py-3.5 bg-slate-900/50 border rounded-xl text-white placeholder:text-slate-600 focus:ring-2 outline-none transition ${
-                                                            formData.confirmPassword && formData.password !== formData.confirmPassword 
-                                                            ? 'border-red-500 focus:ring-red-500' 
-                                                            : 'border-slate-700 focus:ring-green-500'
-                                                        }`}
+                                                        value={formData.password}
+                                                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                                        className="w-full pl-10 pr-12 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium"
                                                     />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                                                    >
-                                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
+                                                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                                                     </button>
                                                 </div>
-                                            </motion.div>
-                                        )}
-                                    </motion.div>
-                                )}
-
-                                {step === 2 && isRegister && (
-                                    <motion.div
-                                        key="step2"
-                                        variants={stepVariants}
-                                        initial="enter"
-                                        animate="center"
-                                        exit="exit"
-                                        transition={{ duration: 0.2 }}
-                                        className="space-y-4"
-                                    >
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-slate-400 ml-1">TU NOMBRE</label>
-                                            <div className="relative">
-                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Juan Pérez"
-                                                    required
-                                                    value={formData.name}
-                                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                                                />
+                                                {isRegister && <PasswordRequirements password={formData.password} />}
+                                                {!isRegister && (
+                                                    <div className="text-right mt-1">
+                                                        <button type="button" onClick={() => navigate('/app/forgot-password')}
+                                                            className="text-[11px] font-bold text-primary-main hover:text-green-400 transition-colors">
+                                                            ¿Olvidaste tu contraseña?
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
 
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-slate-400 ml-1">NOMBRE DE TU NEGOCIO</label>
-                                            <div className="relative">
-                                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Academia de Música X"
-                                                    required
-                                                    value={formData.bizName}
-                                                    onChange={e => setFormData({ ...formData, bizName: e.target.value })}
-                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-slate-400 ml-1">TELÉFONO (WhatsApp)</label>
-                                            <div className="relative">
-                                                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                                                <input
-                                                    type="text"
-                                                    placeholder="+54 9 1234 5678"
-                                                    value={formData.phoneNumber}
-                                                    onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
-                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                                                />
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {step === 3 && isRegister && (
-                                    <motion.div
-                                        key="step3"
-                                        variants={stepVariants}
-                                        initial="enter"
-                                        animate="center"
-                                        exit="exit"
-                                        transition={{ duration: 0.2 }}
-                                        className="space-y-4"
-                                    >
-                                        <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl flex items-start gap-3 mb-2">
-                                            <Sparkles className="text-green-400 shrink-0" size={20} />
-                                            <p className="text-xs text-slate-300 leading-tight">
-                                                Cuentanos qué hacés para que podamos personalizar tu experiencia.
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-slate-400 ml-1">¿QUÉ CATEGORÍA DESCRIBE MEJOR LO QUE HACÉS?</label>
-                                            <div className="relative">
-                                                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Ej: Música, Yoga, Idiomas..."
-                                                    value={formData.businessCategory}
-                                                    onChange={e => setFormData({ ...formData, businessCategory: e.target.value })}
-                                                    className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                                                />
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {['Música', 'Yoga', 'Idiomas', 'Deportes'].map(cat => (
-                                                    <button
-                                                        key={cat}
-                                                        type="button"
-                                                        onClick={() => setFormData({...formData, businessCategory: cat})}
-                                                        className={`text-[10px] px-2.5 py-1 rounded-full border transition ${
-                                                            formData.businessCategory === cat 
-                                                            ? 'bg-green-500 border-green-500 text-white' 
-                                                            : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:border-slate-500'
-                                                        }`}
-                                                    >
-                                                        {cat}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Terms & Conditions checkbox */}
-                                        <label className="flex items-start gap-3 cursor-pointer mt-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={termsAccepted}
-                                                onChange={e => setTermsAccepted(e.target.checked)}
-                                                className="mt-0.5 w-4 h-4 rounded accent-green-500 shrink-0"
-                                            />
-                                            <span className="text-xs text-slate-400 leading-relaxed">
-                                                Acepto los{' '}
-                                                <a href="/terminos" target="_blank" rel="noopener noreferrer"
-                                                    className="text-green-400 underline underline-offset-2 hover:text-green-300">
-                                                    Términos y Condiciones
-                                                </a>{' '}y la{' '}
-                                                <a href="/privacidad" target="_blank" rel="noopener noreferrer"
-                                                    className="text-green-400 underline underline-offset-2 hover:text-green-300">
-                                                    Política de Privacidad
-                                                </a>
-                                                {' '}de Cobralo.
-                                            </span>
-                                        </label>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            <div className="flex gap-3 pt-2">
-                                {isRegister && step > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={handlePrevStep}
-                                        className="flex-1 bg-slate-700 hover:bg-slate-650 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2"
-                                    >
-                                        <ChevronLeft size={20} />
-                                        Atrás
-                                    </button>
-                                )}
-                                <button
-                                    type="submit"
-                                    disabled={isLoading || (isRegister && step === 3 && !termsAccepted)}
-                                    className="flex-[2] bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                                >
-                                    {isLoading ? (
-                                        <Loader2 className="animate-spin" size={20} />
-                                    ) : (
-                                        <>
-                                            {isRegister ? (step === 3 ? 'Crear Cuenta' : 'Siguiente') : 'Ingresar'}
-                                            {(!isRegister || step < 3) && <ArrowRight size={20} />}
-                                        </>
+                                            {isRegister && (
+                                                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-1.5 pt-1">
+                                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Confirmar Contraseña</label>
+                                                    <div className="relative">
+                                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
+                                                        <input
+                                                            type={showConfirmPassword ? 'text' : 'password'}
+                                                            placeholder="••••••••"
+                                                            required
+                                                            value={formData.confirmPassword}
+                                                            onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                                            className={`w-full pl-10 pr-12 py-3.5 bg-white/[0.03] border rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 outline-none transition text-sm font-medium ${
+                                                                formData.confirmPassword && formData.password !== formData.confirmPassword
+                                                                    ? 'border-red-500/40 focus:ring-red-500/40 focus:border-red-500/40'
+                                                                    : 'border-white/[0.08] focus:ring-primary-main/50 focus:border-primary-main/50'
+                                                            }`}
+                                                        />
+                                                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
+                                                            {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </motion.div>
                                     )}
-                                </button>
-                            </div>
-                        </form>
 
-                        <div className="mt-8 pt-6 border-t border-slate-700/50 text-center">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIsRegister(!isRegister);
-                                    setStep(1);
-                                }}
-                                className="text-slate-400 hover:text-white transition text-sm"
-                            >
-                                {isRegister ? (
-                                    <>¿Ya{' '}tenés cuenta?{' '}<span className="text-green-400 font-semibold underline underline-offset-4">Iniciá sesión</span></>
-                                ) : (
-                                    <>¿No{' '}tenés cuenta?{' '}<span className="text-green-400 font-semibold underline underline-offset-4">Registrate</span></>
-                                )}
-                            </button>
+                                    {/* ── STEP 2: Name + Business ── */}
+                                    {step === 2 && isRegister && (
+                                        <motion.div key="step2" variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Tu Nombre</label>
+                                                <div className="relative">
+                                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
+                                                    <input type="text" placeholder="Ej: Juan Pérez" required value={formData.name}
+                                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                        className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Nombre de tu Academia</label>
+                                                <div className="relative">
+                                                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
+                                                    <input type="text" placeholder="Ej: English Studio" required value={formData.bizName}
+                                                        onChange={e => setFormData({ ...formData, bizName: e.target.value })}
+                                                        className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Teléfono (WhatsApp)</label>
+                                                <div className="relative">
+                                                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
+                                                    <input type="text" placeholder="+54 9 11 1234 5678" value={formData.phoneNumber}
+                                                        onChange={e => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                                        className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {/* ── STEP 3: Category + Terms ── */}
+                                    {step === 3 && isRegister && (
+                                        <motion.div key="step3" variants={stepVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="space-y-4">
+                                            <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary-main/[0.08] border border-primary-main/20">
+                                                <Sparkles className="text-primary-main shrink-0 mt-0.5" size={16} />
+                                                <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                                                    Completá esto para personalizar tu experiencia con el sistema.
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-1.5 pt-1">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">¿Qué tipo de academia tenés?</label>
+                                                <div className="relative">
+                                                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
+                                                    <input type="text" placeholder="Ej: Clases de Guitarra" value={formData.businessCategory}
+                                                        onChange={e => setFormData({ ...formData, businessCategory: e.target.value })}
+                                                        className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 mt-3 pl-1">
+                                                    {['Música', 'Idiomas', 'Deportes', 'Tutoría', 'Arte', 'Danza'].map(cat => (
+                                                        <button key={cat} type="button"
+                                                            onClick={() => setFormData({ ...formData, businessCategory: cat })}
+                                                            className={`text-[10px] font-black px-3 py-1.5 rounded-full border transition ${
+                                                                formData.businessCategory === cat
+                                                                    ? 'bg-primary-main/20 border-primary-main/40 text-primary-main'
+                                                                    : 'bg-white/[0.03] border-white/[0.08] text-zinc-500 hover:border-white/15 hover:text-zinc-300'
+                                                            }`}>
+                                                            {cat}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <label className="flex items-start gap-3 cursor-pointer mt-4 pt-2">
+                                                <input type="checkbox" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)}
+                                                    className="mt-0.5 w-4 h-4 rounded appearance-none border border-white/20 checked:bg-primary-main checked:border-primary-main flex items-center justify-center relative after:content-[''] after:absolute after:w-1.5 after:h-2.5 after:border-r-2 after:border-b-2 after:border-black after:rotate-45 after:-translate-y-0.5 checked:after:block after:hidden transition-colors" />
+                                                <span className="text-xs text-zinc-500 leading-relaxed max-w-[280px]">
+                                                    Acepto los{' '}
+                                                    <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Términos de uso</a>
+                                                    {' '}y{' '}
+                                                    <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Privacidad</a>.
+                                                </span>
+                                            </label>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Action buttons */}
+                                <div className="flex gap-3 pt-5">
+                                    {isRegister && step > 1 && (
+                                        <button type="button" onClick={handlePrevStep}
+                                            className="h-12 px-4 bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold rounded-2xl transition flex items-center justify-center border border-white/[0.1]">
+                                            <ChevronLeft size={20} />
+                                        </button>
+                                    )}
+                                    <button type="submit"
+                                        disabled={isLoading || (isRegister && step === 3 && !termsAccepted)}
+                                        className="flex-1 h-12 font-black rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-primary-main to-green-600 text-black shadow-[0_4px_20px_rgba(34,197,94,0.3)]"
+                                    >
+                                        {isLoading ? (
+                                            <Loader2 className="animate-spin" size={20} />
+                                        ) : (
+                                            <>
+                                                {isRegister ? (step === 3 ? 'Comenzar ahora' : 'Continuar') : 'Ingresar'}
+                                                {(!isRegister || step < 3) && <ArrowRight size={16} />}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
+
+                    <div className="mt-6 text-center">
+                        <button type="button"
+                            onClick={() => { setIsRegister(!isRegister); setStep(1); }}
+                            className="text-zinc-600 hover:text-zinc-400 transition text-sm font-medium">
+                            {isRegister ? (
+                                <>¿Ya tenés cuenta? <span className="text-white font-bold">Ingresá</span></>
+                            ) : (
+                                <>¿No tenés cuenta? <span className="text-primary-main font-black">Empezá gratis</span></>
+                            )}
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </div>

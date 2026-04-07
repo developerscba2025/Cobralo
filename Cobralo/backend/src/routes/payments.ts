@@ -5,12 +5,17 @@ import {
     getAnalytics,
     createPayment,
     deletePayment,
-    updatePayment
+    updatePayment,
+    handleStudentPaymentWebhook
 } from '../controllers/paymentController';
 import { createStudentPaymentLink } from '../controllers/subscriptionController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
+
+// Webhook para cobros de alumnos (Público)
+router.post('/webhook/:userId', handleStudentPaymentWebhook);
+
 router.use(authMiddleware);
 
 // POST create payment link for student

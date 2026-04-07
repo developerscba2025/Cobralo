@@ -92,7 +92,7 @@ const StudentNotes: React.FC<StudentNotesProps> = ({
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                         className="h-full w-full max-w-md bg-white dark:bg-slate-800 shadow-2xl flex flex-col"
                     >
                         {/* Header */}
