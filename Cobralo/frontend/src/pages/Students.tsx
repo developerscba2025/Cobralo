@@ -106,7 +106,6 @@ const Students = () => {
         classes_per_month: 4,
         payment_method: 'Efectivo',
         deadline_day: 10,
-        surcharge_percentage: 10,
         planType: 'MONTHLY',
         credits: 0,
         sub_category: '',
@@ -121,6 +120,14 @@ const Students = () => {
 
     const handleAddSchedule = (e: React.MouseEvent) => {
         e.preventDefault();
+        
+        // Prevent exact duplicates
+        const exists = formSchedules.some(s => s.dayOfWeek === newScheduleDay && s.startTime === newScheduleTime);
+        if (exists) {
+            showToast.error('Ese horario ya está agregado');
+            return;
+        }
+
         // Calc end time + custom duration
         const [h, m] = newScheduleTime.split(':').map(Number);
         const duration = Number(formData.class_duration_min) || 60;
@@ -128,7 +135,12 @@ const Students = () => {
         endD.setHours(h, m + duration);
         const endTime = `${endD.getHours().toString().padStart(2, '0')}:${endD.getMinutes().toString().padStart(2, '0')}`;
 
-        setFormSchedules([...formSchedules, { dayOfWeek: newScheduleDay, startTime: newScheduleTime, endTime }]);
+        const newSchedules = [...formSchedules, { dayOfWeek: newScheduleDay, startTime: newScheduleTime, endTime }];
+        setFormSchedules(newSchedules);
+        
+        // Auto-update classes_per_month if unchanged manually
+        const impliedClasses = newSchedules.length * 4;
+        setFormData(prev => ({ ...prev, classes_per_month: impliedClasses }));
     };
 
     const handleRemoveSchedule = (index: number) => {
@@ -194,7 +206,6 @@ const Students = () => {
             classes_per_month: 4,
             payment_method: 'Efectivo', 
             deadline_day: 10, 
-            surcharge_percentage: user?.defaultSurcharge || 10,
             planType: 'MONTHLY', 
             credits: 0,
             sub_category: '',
@@ -229,11 +240,14 @@ const Students = () => {
 
     const handleServiceChange = (name: string) => {
         const found = userServices.find(s => s.name.toLowerCase() === name.toLowerCase());
-        setFormData(prev => ({ 
-            ...prev, 
-            service_name: name,
-            price_per_hour: found ? Number(found.defaultPrice) : prev.price_per_hour
-        }));
+        setFormData(prev => {
+            const isDefaultPrice = prev.price_per_hour === 0 || prev.price_per_hour === Number(user?.defaultPrice);
+            return { 
+                ...prev, 
+                service_name: name,
+                price_per_hour: (found && isDefaultPrice) ? Number(found.defaultPrice) : prev.price_per_hour
+            };
+        });
     };
 
     const handleOpenEdit = (student: Student) => {
@@ -245,7 +259,6 @@ const Students = () => {
             classes_per_month: student.classes_per_month,
             payment_method: student.payment_method,
             deadline_day: student.deadline_day,
-            surcharge_percentage: student.surcharge_percentage,
             planType: student.planType || 'MONTHLY',
             credits: student.credits || 0,
             sub_category: student.sub_category || '',
@@ -272,7 +285,7 @@ const Students = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const amount = formData.planType === 'PACK'
+        const amount = (formData.planType === 'PACK' || formData.planType === 'PER_CLASS')
             ? calculateAmount(formData.price_per_hour || 0, 1, formData.class_duration_min) * (formData.credits || 0)
             : calculateAmount(formData.price_per_hour || 0, formData.classes_per_month || 0, formData.class_duration_min);
 
@@ -416,6 +429,7 @@ const Students = () => {
             showToast.error('Error al obtener contactos');
         } finally {
             setMassWaModal(false);
+            setSelectedStudentIds([]);
         }
     };
 
@@ -442,12 +456,15 @@ const Students = () => {
         }
 
         const message = `Hola ${student.name}, quería pedirte unos minutos para dejar una calificación y testimonio sobre las clases. Es 100% anónimo si así lo prefieres: ${link}`;
-        window.open(`https://wa.me/${student.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+        const cleanPhone = (student.phone || '').replace(/\D/g, '');
+        const finalPhone = cleanPhone.length === 10 && !cleanPhone.startsWith('54') ? `549${cleanPhone}` : cleanPhone;
+        window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`, '_blank');
     };
 
-    // Reset page on filter change
+    // Reset page and selection on filter change
     useEffect(() => {
         setCurrentPage(1);
+        setSelectedStudentIds([]);
     }, [searchTerm, filterService, filterStatus, filterPaymentMethod, filterDay]);
 
     const handleExtraPayment = async () => {
@@ -479,12 +496,14 @@ const Students = () => {
     };
 
     // Filter students
+    const removeTildes = (str: string) => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    
     const filteredStudents = students.filter(s => {
-        const lowerSearch = (searchTerm || '').toLowerCase();
-        const matchesSearch = (s.name || '').toLowerCase().includes(lowerSearch) ||
+        const lowerSearch = removeTildes(searchTerm);
+        const matchesSearch = removeTildes(s.name).includes(lowerSearch) ||
                               (s.schedules || []).some(sch => 
-                                  ['dom','lun','mar','mié','jue','vie','sáb'][sch.dayOfWeek].toLowerCase().includes(lowerSearch) || 
-                                  sch.startTime.includes(lowerSearch)
+                                  removeTildes(['dom','lun','mar','mie','jue','vie','sab'][sch.dayOfWeek === 7 ? 0 : sch.dayOfWeek]).includes(lowerSearch) || 
+                                  removeTildes(sch.startTime).includes(lowerSearch)
                               );
         const matchesService = !filterService || s.service_name === filterService;
         const matchesStatus = !filterStatus || s.status === filterStatus;
@@ -505,6 +524,13 @@ const Students = () => {
     const paginatedStudents = filteredStudents.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
     const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
 
+    // Limit currentPage if items are deleted
+    useEffect(() => {
+        if (totalPages > 0 && currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [totalPages, currentPage]);
+
     const exportToCSV = () => {
         if (!isPro) {
             showToast.error('Función no disponible en el plan actual');
@@ -521,7 +547,7 @@ const Students = () => {
 
         const rows = filteredStudents.map(s => {
             const schedulesStr = (s.schedules || [])
-                .map(sc => `${DAYS[sc.dayOfWeek]} ${sc.startTime}`)
+                .map(sc => `${DAYS[sc.dayOfWeek === 7 ? 0 : sc.dayOfWeek]} ${sc.startTime}`)
                 .join(' | ');
 
             return [
@@ -581,7 +607,9 @@ const Students = () => {
             .replace(/{moneda}/g, user?.currency || '$')
             .replace(/{link}/g, paymentLink);
 
-        return `https://wa.me/${(student.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        const cleanPhone = (student.phone || '').replace(/\D/g, '');
+        const finalPhone = cleanPhone.length === 10 && !cleanPhone.startsWith('54') ? `549${cleanPhone}` : cleanPhone;
+        return `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`;
     };
 
     const formatSchedules = (schedules?: any[]) => {
@@ -591,14 +619,14 @@ const Students = () => {
             <div className="flex flex-col gap-1">
                 {schedules.map(s => (
                     <span key={s.id} className="text-[10px] font-black bg-primary-main/10 dark:bg-primary-main/15 px-2 py-0.5 rounded-lg text-primary-main whitespace-nowrap w-fit border border-primary-main/20 dark:border-primary-main/25">
-                        {DAYS_SHORT[s.dayOfWeek]} {s.startTime}
+                        {DAYS_SHORT[s.dayOfWeek === 7 ? 0 : s.dayOfWeek]} {s.startTime}
                     </span>
                 ))}
             </div>
         );
     };
 
-    const hasActiveFilters = filterService || filterStatus || filterPaymentMethod;
+    const hasActiveFilters = filterService || filterStatus || filterPaymentMethod || filterDay;
     const pendingCount = students.filter(s => s.status === 'pending').length;
     const paidCount = students.filter(s => s.status === 'paid').length;
 
@@ -726,8 +754,8 @@ const Students = () => {
                                             <input 
                                                 type="checkbox" 
                                                 className="w-5 h-5 rounded-md accent-primary-main cursor-pointer"
-                                                checked={selectedStudentIds.length === filteredStudents.length && filteredStudents.length > 0}
-                                                onChange={() => handleSelectAll(filteredStudents)}
+                                                checked={selectedStudentIds.length === paginatedStudents.length && paginatedStudents.length > 0}
+                                                onChange={() => handleSelectAll(paginatedStudents)}
                                             />
                                         )}
                                     </th>
@@ -749,7 +777,11 @@ const Students = () => {
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <SkeletonCard variant="row" count={5} />
+                                    <tr>
+                                        <td colSpan={7} className="p-0 border-b border-border-main/50">
+                                            <SkeletonCard variant="row" count={5} />
+                                        </td>
+                                    </tr>
                                 ) : paginatedStudents.length === 0 ? (
                                     <tr><td colSpan={7} className="p-10">
                                         <EmptyState 
@@ -764,7 +796,7 @@ const Students = () => {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.05, type: 'spring', stiffness: 500, damping: 40 }}
-                                        className={`border-b border-border-main/30 transition-colors group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] ${selectedStudentIds.includes(student.id) ? 'bg-primary-main/5' : ''}`}
+                                        className={`border-b border-border-main/30 transition-colors group hover:bg-black/[0.02] dark:hover:bg-white/[0.02] relative ${selectedStudentIds.includes(student.id) ? 'bg-primary-main/5' : ''} ${activeMenuId === student.id ? 'z-[60]' : 'z-0'}`}
                                         onClick={() => isSelectionMode && handleToggleSelection(student.id)}
                                     >
                                         <td className="px-4 py-3.5">
@@ -834,6 +866,9 @@ const Students = () => {
                                                     <button onClick={() => handleOpenEdit(student)} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-primary-main/10 hover:text-primary-main transition-colors border-b border-border-main/50">
                                                         <Edit3 size={14} /> Editar Perfil
                                                     </button>
+                                                    <button onClick={() => setQrModal({ isOpen: true, student })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors border-b border-border-main/50">
+                                                        <DollarSign size={14} /> Mostrar Código QR
+                                                    </button>
                                                     <button onClick={() => setExtraPaymentModal({ isOpen: true, student })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[11px] font-bold text-text-muted hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors border-b border-border-main/50">
                                                         <DollarSign size={14} /> Pago Extra
                                                     </button>
@@ -890,7 +925,7 @@ const Students = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.05, type: 'spring', stiffness: 500, damping: 40 }}
                                     onClick={() => isSelectionMode && handleToggleSelection(student.id)}
-                                    className={`card-premium p-5 flex flex-col gap-4 relative overflow-hidden group h-full transition-all duration-300 ${selectedStudentIds.includes(student.id) ? 'ring-2 ring-primary-main shadow-2xl scale-[1.02] bg-primary-main/[0.02]' : ''}`}
+                                    className={`card-premium p-5 flex flex-col gap-4 relative group h-full transition-all duration-300 ${selectedStudentIds.includes(student.id) ? 'ring-2 ring-primary-main shadow-2xl scale-[1.02] bg-primary-main/[0.02]' : ''}`}
                                 >
                                     {/* Selection checkbox for mobile */}
                                     {isSelectionMode && (
@@ -902,7 +937,7 @@ const Students = () => {
                                     )}
 
                                     {/* Status indicator bar */}
-                                    <div className={`absolute top-0 left-0 w-1.5 h-full ${student.status === 'paid' ? 'bg-primary-main shadow-[0_0_15px_rgba(34,197,94,0.3)]' : student.status === 'paused' ? 'bg-zinc-400' : 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'}`} />
+                                    <div className={`absolute top-0 left-0 w-1.5 h-full rounded-l-[24px] ${student.status === 'paid' ? 'bg-primary-main shadow-[0_0_15px_rgba(34,197,94,0.3)]' : student.status === 'paused' ? 'bg-zinc-400' : 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'}`} />
                                     
                                     <div className="flex justify-between items-start gap-4">
                                         <div className="flex-1 min-w-0">
@@ -935,20 +970,20 @@ const Students = () => {
                                             <p className="label-premium !text-[8px] mb-1">WhatsApp</p>
                                             <p className="text-[12px] font-bold text-text-main font-mono shrink-0 truncate">{student.phone}</p>
                                         </div>
-                                        <div className="border-l border-border-main/30 pl-3">
+                                        <div className="border-l border-border-main/30 pl-3 overflow-hidden">
                                             <p className="label-premium !text-[8px] mb-1">Horarios</p>
-                                            <div className="flex flex-wrap gap-1">
+                                            <div className="flex flex-wrap gap-1 w-full max-w-full">
                                                 {student.schedules?.length ? (
                                                     student.schedules.slice(0, 1).map((s: any, idx: number) => (
-                                                        <span key={idx} className="text-[11px] font-bold text-text-main">
-                                                            {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][s.dayOfWeek]} {s.startTime}
+                                                        <span key={idx} className="text-[11px] font-bold text-text-main truncate max-w-full">
+                                                            {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][s.dayOfWeek === 7 ? 0 : s.dayOfWeek]} {s.startTime}
                                                         </span>
                                                     ))
                                                 ) : (
                                                     <span className="text-[10px] text-text-muted italic opacity-50">Sin definir</span>
                                                 )}
                                                 {student.schedules && student.schedules.length > 1 && (
-                                                    <span className="text-[9px] font-black text-primary-main">+{student.schedules.length - 1} más</span>
+                                                    <span className="text-[9px] font-black text-primary-main shrink-0">+{student.schedules.length - 1} más</span>
                                                 )}
                                             </div>
                                         </div>
@@ -981,6 +1016,9 @@ const Students = () => {
                                                 <div onClick={() => setActiveMenuId(null)} className={`absolute right-0 bottom-full mb-2 w-48 bg-surface dark:bg-bg-soft rounded-2xl shadow-xl border border-border-main z-50 transition-all flex flex-col overflow-hidden origin-bottom-right transform ${activeMenuId === student.id ? 'opacity-100 visible scale-100' : 'opacity-0 invisible scale-95'}`}>
                                                     <button onClick={() => handleOpenEdit(student)} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[10px] font-bold text-text-muted hover:bg-primary-main/10 hover:text-primary-main transition-colors border-b border-border-main/50">
                                                         <Edit3 size={14} /> Editar
+                                                    </button>
+                                                    <button onClick={() => setQrModal({ isOpen: true, student })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[10px] font-bold text-text-muted hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors border-b border-border-main/50">
+                                                        <DollarSign size={14} /> Mostrar Código QR
                                                     </button>
                                                     <button onClick={() => setExtraPaymentModal({ isOpen: true, student })} className="flex items-center gap-3 w-full p-2.5 px-4 text-left text-[10px] font-bold text-text-muted hover:bg-emerald-500/10 hover:text-emerald-500 transition-colors border-b border-border-main/50">
                                                         <DollarSign size={14} /> Pago Extra
@@ -1053,9 +1091,9 @@ const Students = () => {
             />
 
             {/* Mobile FAB */}
-            <button
-                onClick={handleOpenCreate}
-                className="lg:hidden fixed bottom-[90px] right-4 w-14 h-14 bg-primary-main text-white rounded-full flex items-center justify-center shadow-lg shadow-primary-glow z-40 active:scale-95 transition-transform"
+            <button 
+                onClick={handleOpenCreate} 
+                className="lg:hidden fixed bottom-[90px] right-4 w-14 h-14 bg-primary-main text-white rounded-full flex items-center justify-center shadow-lg shadow-primary-glow z-30 active:scale-95 transition-transform"
             >
                 <Plus size={24} strokeWidth={2.5} />
             </button>
@@ -1238,13 +1276,13 @@ const Students = () => {
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-2 mb-1 block">Cuenta Guardada</label>
                                                             <select 
                                                                 className="w-full p-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none font-bold text-sm outline-none shadow-inner focus:ring-2 focus:ring-primary-main/20 transition-all appearance-none" 
-                                                                onChange={e => setFormData({ ...formData, billing_alias: e.target.value })}
-                                                                value={formData.billing_alias || ''}
+                                                                onChange={e => setFormData({ ...formData, billing_alias: e.target.value === 'custom' ? '' : e.target.value })}
+                                                                value={paymentAccounts.some((a: any) => a.alias === formData.billing_alias) ? (formData.billing_alias || '') : 'custom'}
                                                             >
                                                                 {paymentAccounts.map((acc: any) => (
                                                                     <option key={acc.id} value={acc.alias}>{acc.name} ({acc.alias})</option>
                                                                 ))}
-                                                                <option value="">-- Alias Personalizado --</option>
+                                                                <option value="custom">-- Alias Personalizado --</option>
                                                             </select>
                                                         </div>
                                                     )}
@@ -1274,15 +1312,15 @@ const Students = () => {
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {formSchedules.map((s, i) => (
                                                 <div key={i} className="flex items-center gap-2 bg-zinc-50 dark:bg-bg-dark px-3 py-1.5 rounded-xl text-[10px] font-black text-zinc-500 shadow-sm border border-zinc-100 dark:border-border-emerald">
-                                                    <span>{['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][s.dayOfWeek]} {s.startTime}</span>
+                                                    <span>{['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][s.dayOfWeek === 7 ? 0 : s.dayOfWeek]} {s.startTime}</span>
                                                     <button type="button" onClick={() => handleRemoveSchedule(i)} className="text-zinc-300 hover:text-red-500"><X size={12} /></button>
                                                 </div>
                                             ))}
                                         </div>
                                         <div className="flex gap-2">
                                             <select value={newScheduleDay} onChange={e => setNewScheduleDay(Number(e.target.value))} className="flex-1 p-3 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-xl text-xs font-bold outline-none border-none shadow-sm">
-                                                {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((d, i) => (
-                                                    <option key={i} value={i+1}>{d}</option>
+                                                {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((d, i) => (
+                                                    <option key={i} value={i}>{d}</option>
                                                 ))}
                                             </select>
                                             <input type="time" value={newScheduleTime} onChange={e => setNewScheduleTime(e.target.value)} className="w-24 p-3 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-xl text-xs font-bold outline-none border-none shadow-sm" />
@@ -1366,7 +1404,7 @@ const Students = () => {
             {/* Extra Payment Modal */}
             {extraPaymentModal.isOpen && extraPaymentModal.student && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm" onClick={() => setExtraPaymentModal({isOpen: false, student: null})} />
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm" onClick={() => { setExtraPaymentModal({isOpen: false, student: null}); setExtraPaymentAmount(''); setExtraPaymentNote(''); }} />
                     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative w-full max-w-sm bg-white dark:bg-bg-soft rounded-3xl p-6 shadow-2xl border border-zinc-100 dark:border-border-emerald z-10">
                         <h2 className="text-xl font-black text-text-main mb-2">Pago Extra</h2>
                         <p className="text-sm font-bold text-text-muted mb-6">Registrar pago manual adicional para {extraPaymentModal.student.name}</p>
@@ -1377,6 +1415,7 @@ const Students = () => {
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-zinc-400">{user?.currency || '$'}</span>
                                     <input 
                                         type="number" 
+                                        min="0"
                                         className="w-full p-4 pl-8 bg-zinc-50 dark:bg-bg-dark rounded-xl font-bold border-none outline-none focus:ring-2 focus:ring-primary-main/20 text-text-main"
                                         placeholder="Ej: 5000"
                                         value={extraPaymentAmount}
@@ -1398,7 +1437,7 @@ const Students = () => {
                         </div>
 
                         <div className="flex gap-3 mt-8">
-                            <button onClick={() => { setExtraPaymentModal({isOpen: false, student: null}); setExtraPaymentNote(''); }} className="flex-1 p-4 rounded-xl font-bold bg-zinc-100 dark:bg-bg-dark text-text-muted hover:bg-zinc-200">Cancelar</button>
+                            <button onClick={() => { setExtraPaymentModal({isOpen: false, student: null}); setExtraPaymentAmount(''); setExtraPaymentNote(''); }} className="flex-1 p-4 rounded-xl font-bold bg-zinc-100 dark:bg-bg-dark text-text-muted hover:bg-zinc-200">Cancelar</button>
                             <button onClick={handleExtraPayment} disabled={!extraPaymentAmount} className="flex-1 p-4 rounded-xl font-black uppercase text-[10px] bg-primary-main text-white shadow-lg shadow-primary-glow active:scale-95 transition-all disabled:opacity-50">Registrar</button>
                         </div>
                     </motion.div>

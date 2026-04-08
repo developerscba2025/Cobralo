@@ -47,7 +47,7 @@ const Dashboard = () => {
 
             const schedules = await api.getSchedules();
             const today = new Date().getDay();
-            setTodaysSchedules(schedules.filter((s: any) => s.dayOfWeek === today));
+            setTodaysSchedules(schedules.filter((s: any) => s.dayOfWeek === today || (today === 0 && s.dayOfWeek === 7)));
 
             const subData = await api.getSubscriptionPlans();
             if (subData.pendingAdjustment) {
@@ -79,7 +79,7 @@ const Dashboard = () => {
     const lastMonthTotal = paymentStats?.stats?.[currentMonth - 1]?.total || 0;
     const monthChange = lastMonthTotal > 0
         ? ((currentMonthTotal - lastMonthTotal) / lastMonthTotal * 100).toFixed(1)
-        : "0";
+        : currentMonthTotal > 0 ? "100.0" : "0.0";
 
 
     if (loading || !user) {

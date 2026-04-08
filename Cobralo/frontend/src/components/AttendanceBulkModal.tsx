@@ -13,7 +13,7 @@ interface AttendanceBulkModalProps {
 }
 
 const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: AttendanceBulkModalProps) => {
-    const [attRecords, setAttRecords] = useState<Record<number, 'PRESENT' | 'ABSENT' | 'CANCELLED'>>({});
+    const [attRecords, setAttRecords] = useState<Record<number, 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'HOLIDAY'>>({});
     const [isSaving, setIsSaving] = useState(false);
 
     if (!schedule) return null;
@@ -21,12 +21,12 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
     // The schedule now has 'students' which is an array
     const participants = schedule.students || (schedule.student ? [schedule.student] : []);
 
-    const setStatus = (studentId: number, status: 'PRESENT' | 'ABSENT' | 'CANCELLED') => {
+    const setStatus = (studentId: number, status: 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'HOLIDAY') => {
         setAttRecords(prev => ({ ...prev, [studentId]: status }));
     };
 
-    const markAll = (status: 'PRESENT' | 'ABSENT' | 'CANCELLED') => {
-        const newRecords: Record<number, 'PRESENT' | 'ABSENT' | 'CANCELLED'> = {};
+    const markAll = (status: 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'HOLIDAY') => {
+        const newRecords: Record<number, 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'HOLIDAY'> = {};
         participants.forEach(p => {
             newRecords[p.id] = status;
         });
@@ -87,24 +87,30 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
                             </p>
                         </div>
 
-                        <div className="flex gap-2 mb-6 text-[9px]">
+                        <div className="flex gap-2 mb-6 text-[9px] overflow-x-auto pb-2 custom-scrollbar">
                             <button
                                 onClick={() => markAll('PRESENT')}
-                                className="flex-1 py-3 bg-primary-main/10 text-primary-main hover:bg-primary-main/20 rounded-2xl font-black uppercase tracking-widest transition-all"
+                                className="flex-1 min-w-[70px] py-3 bg-primary-main/10 text-primary-main hover:bg-primary-main/20 rounded-2xl font-black uppercase tracking-widest transition-all"
                             >
                                 Todas P.
                             </button>
                             <button
                                 onClick={() => markAll('CANCELLED')}
-                                className="flex-1 py-3 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 rounded-2xl font-black uppercase tracking-widest transition-all"
+                                className="flex-1 min-w-[70px] py-3 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 rounded-2xl font-black uppercase tracking-widest transition-all"
                             >
                                 Todas C.A.
                             </button>
                             <button
                                 onClick={() => markAll('ABSENT')}
-                                className="flex-1 py-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-2xl font-black uppercase tracking-widest transition-all"
+                                className="flex-1 min-w-[70px] py-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-2xl font-black uppercase tracking-widest transition-all"
                             >
                                 Todas F.
+                            </button>
+                            <button
+                                onClick={() => markAll('HOLIDAY')}
+                                className="flex-1 min-w-[70px] py-3 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 rounded-2xl font-black uppercase tracking-widest transition-all"
+                            >
+                                Feriado
                             </button>
                         </div>
 
@@ -119,6 +125,8 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
                                                 ? 'bg-primary-main/5 border-primary-main/20' 
                                                 : status === 'CANCELLED'
                                                 ? 'bg-amber-500/5 border-amber-500/20'
+                                                : status === 'HOLIDAY'
+                                                ? 'bg-blue-500/5 border-blue-500/20'
                                                 : 'bg-red-500/5 border-red-500/20'
                                         }`}
                                     >
@@ -151,6 +159,13 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
                                                 }`}
                                                 title="Falta Ausente"
                                             >F</button>
+                                            <button
+                                                onClick={() => setStatus(student.id, 'HOLIDAY')}
+                                                className={`px-3 py-2 rounded-xl font-black text-[10px] sm:text-xs uppercase transition-all ${
+                                                    status === 'HOLIDAY' ? 'bg-blue-500 text-white shadow-md' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'
+                                                }`}
+                                                title="Feriado"
+                                            >FER</button>
                                         </div>
                                     </div>
                                 );
@@ -161,7 +176,7 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
                             <div className="flex items-center gap-3 p-4 bg-bg-app rounded-2xl border border-border-main/50">
                                 <AlertCircle size={20} className="text-primary-main shrink-0" />
                                 <p className="text-[10px] font-bold text-text-muted leading-tight uppercase tracking-tight">
-                                    Al marcar Presente, se descuentan créditos de Packs. Al marcar C.A. (Con Aviso), se sumará 1 Clase por Recuperar.
+                                    Al marcar Presente, se descuentan créditos de Packs. Al marcar C.A., suma 1 recupero. Feriado no descuenta nada.
                                 </p>
                             </div>
 

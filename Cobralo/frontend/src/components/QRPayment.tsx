@@ -121,6 +121,13 @@ Alias ${paymentMethod}: ${alias}`;
                                     Compartir
                                 </button>
                             </div>
+
+                            {/* Disclaimer */}
+                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                                <p className="text-[9px] text-slate-400 dark:text-slate-500 leading-relaxed font-medium">
+                                    <strong>Aviso:</strong> Cobralo actúa únicamente como intermediario tecnológico mostrando los datos. No procesa pagos, no cobra comisiones ni interviene en la transacción real en ninguna forma. Todos los pagos ocurren de manera externa entre el alumno y el Profesor.
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
                 </motion.div>

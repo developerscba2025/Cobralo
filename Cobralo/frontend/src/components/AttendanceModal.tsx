@@ -32,7 +32,7 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
         }
     };
 
-    const handleMark = async (status: 'PRESENT' | 'ABSENT' | 'CANCELLED') => {
+    const handleMark = async (status: 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'HOLIDAY') => {
         setMarking(true);
         try {
             await api.markAttendance({
@@ -211,26 +211,26 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 mb-10">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-10">
                             <button
                                 onClick={() => handleMark('PRESENT')}
                                 disabled={marking || (student.planType === 'PACK' && (student.credits || 0) <= 0)}
-                                className="flex flex-col items-center justify-center p-6 rounded-[24px] border-2 border-emerald-100 dark:border-emerald-900/10 bg-emerald-50/50 dark:bg-emerald-900/5 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 transition-all disabled:opacity-30 disabled:grayscale group active:scale-95"
+                                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-[24px] border-2 border-emerald-100 dark:border-emerald-900/10 bg-emerald-50/50 dark:bg-emerald-900/5 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 transition-all disabled:opacity-30 disabled:grayscale group active:scale-95"
                             >
-                                <div className="w-12 h-12 rounded-2xl bg-emerald-200 dark:bg-emerald-900 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform group-hover:rotate-6 shadow-lg shadow-emerald-500/10">
-                                    <Check size={28} strokeWidth={3} />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-200 dark:bg-emerald-900 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform group-hover:rotate-6 shadow-lg shadow-emerald-500/10">
+                                    <Check size={24} strokeWidth={3} className="sm:w-7 sm:h-7" />
                                 </div>
-                                <span className="text-sm font-black uppercase tracking-wider">Presente</span>
-                                {student.planType === 'PACK' && <span className="text-[10px] opacity-60 mt-1">-1 Crédito</span>}
+                                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Presente</span>
+                                {student.planType === 'PACK' && <span className="text-[9px] opacity-60 mt-1">-1 Crédito</span>}
                             </button>
 
                             <button
                                 onClick={() => handleMark('CANCELLED')}
                                 disabled={marking}
-                                className="flex flex-col items-center justify-center p-3 sm:p-6 rounded-[24px] border-2 border-amber-100 dark:border-amber-900/10 bg-amber-50/50 dark:bg-amber-900/5 hover:bg-amber-100 dark:hover:bg-amber-900/20 text-amber-700 dark:text-amber-300 transition-all disabled:opacity-30 active:scale-95 group"
+                                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-[24px] border-2 border-amber-100 dark:border-amber-900/10 bg-amber-50/50 dark:bg-amber-900/5 hover:bg-amber-100 dark:hover:bg-amber-900/20 text-amber-700 dark:text-amber-300 transition-all disabled:opacity-30 active:scale-95 group"
                             >
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-200 dark:bg-amber-900 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-amber-500/10">
-                                    <Clock size={24} strokeWidth={3} />
+                                    <Clock size={24} strokeWidth={3} className="sm:w-6 sm:h-6" />
                                 </div>
                                 <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-center">Con Aviso</span>
                             </button>
@@ -238,12 +238,23 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
                             <button
                                 onClick={() => handleMark('ABSENT')}
                                 disabled={marking}
-                                className="flex flex-col items-center justify-center p-3 sm:p-6 rounded-[24px] border-2 border-red-100 dark:border-red-900/10 bg-red-50/50 dark:bg-red-900/5 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 transition-all disabled:opacity-30 active:scale-95 group"
+                                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-[24px] border-2 border-red-100 dark:border-red-900/10 bg-red-50/50 dark:bg-red-900/5 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-700 dark:text-red-300 transition-all disabled:opacity-30 active:scale-95 group"
                             >
-                                <div className="w-12 h-12 rounded-2xl bg-red-200 dark:bg-red-900 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform group-hover:-rotate-6 shadow-lg shadow-red-500/10">
-                                    <XCircle size={28} strokeWidth={3} />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-red-200 dark:bg-red-900 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform group-hover:-rotate-6 shadow-lg shadow-red-500/10">
+                                    <XCircle size={24} strokeWidth={3} className="sm:w-7 sm:h-7" />
                                 </div>
-                                <span className="text-sm font-black uppercase tracking-wider">Ausente</span>
+                                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Ausente</span>
+                            </button>
+
+                            <button
+                                onClick={() => handleMark('HOLIDAY')}
+                                disabled={marking}
+                                className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-[24px] border-2 border-blue-100 dark:border-blue-900/10 bg-blue-50/50 dark:bg-blue-900/5 hover:bg-blue-100 dark:hover:bg-blue-900/20 text-blue-700 dark:text-blue-300 transition-all disabled:opacity-30 active:scale-95 group"
+                            >
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-200 dark:bg-blue-900 flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-blue-500/10">
+                                    <Sparkles size={24} strokeWidth={3} className="sm:w-6 sm:h-6" />
+                                </div>
+                                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">Feriado</span>
                             </button>
                         </div>
 
@@ -287,10 +298,12 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
                                                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/40'
                                                     : record.status === 'CANCELLED' 
                                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300 border-amber-200 dark:border-amber-900/40 group-hover:bg-amber-200 dark:group-hover:bg-amber-900/40'
+                                                    : record.status === 'HOLIDAY'
+                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-900/40 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/40'
                                                     : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300 border-red-200 dark:border-red-900/40 group-hover:bg-red-200 dark:group-hover:bg-red-900/40'
                                                 }
                                             `}>
-                                                {record.status === 'PRESENT' ? 'Presente' : record.status === 'CANCELLED' ? 'Con Aviso' : 'Ausente'}
+                                                {record.status === 'PRESENT' ? 'Presente' : record.status === 'CANCELLED' ? 'Con Aviso' : record.status === 'HOLIDAY' ? 'Feriado' : 'Ausente'}
                                             </span>
                                         </div>
                                     ))}

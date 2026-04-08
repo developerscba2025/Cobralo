@@ -204,7 +204,7 @@ export interface PaymentStats {
 export interface Attendance {
     id: number;
     studentId: number;
-    status: 'PRESENT' | 'ABSENT' | 'CANCELLED';
+    status: 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'HOLIDAY';
     date: string;
 }
 

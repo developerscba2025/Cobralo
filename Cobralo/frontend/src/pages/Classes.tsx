@@ -12,13 +12,15 @@ import type { UnifiedSchedule } from '../services/api';
 import { showToast } from '../components/Toast';
 import AttendanceBulkModal from '../components/AttendanceBulkModal';
 import ClassParticipantsModal from '../components/ClassParticipantsModal';
+import ConfirmModal from '../components/ConfirmModal';
+import WhatsAppPreviewModal from '../components/WhatsAppPreviewModal';
 
 import { useAuth } from '../context/AuthContext';
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 const Classes = () => {
-    useAuth();
+    const { user, isPro } = useAuth();
     const [classes, setClasses] = useState<UnifiedSchedule[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +31,15 @@ const Classes = () => {
     const [participantsModal, setParticipantsModal] = useState<{ isOpen: boolean; schedule: UnifiedSchedule | null }>({
         isOpen: false,
         schedule: null
+    });
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null }>({
+        isOpen: false,
+        id: null
+    });
+    const [whatsappModal, setWhatsappModal] = useState<{ isOpen: boolean; students: any[]; template: string }>({
+        isOpen: false,
+        students: [],
+        template: ''
     });
 
     useEffect(() => {
@@ -53,41 +64,44 @@ const Classes = () => {
         if (participants.length === 0) return;
 
         const time = schedule.startTime;
-        const msg = `Hola! Les recuerdo nuestra clase de ${schedule.student?.service_name || 'clase'} hoy a las ${time} hs. ¡Nos vemos!`;
+        const msg = `Hola {alumno}! Te recuerdo nuestra clase de {servicio} hoy a las ${time} hs. ¡Nos vemos!`;
         
-        participants.forEach((p, i) => {
-            if (!p.phone) return;
-            setTimeout(() => {
-                window.open(`https://wa.me/${p.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
-            }, i * 1000);
+        setWhatsappModal({
+            isOpen: true,
+            students: participants,
+            template: msg
         });
-        
-        showToast.success(`Abriendo ${participants.length} mensajes de WhatsApp...`);
     };
 
-    const handleDelete = async (id: number) => {
-        if (!window.confirm('¿Estás seguro de eliminar esta clase para todos los alumnos?')) return;
+    const handleDelete = async () => {
+        if (!deleteModal.id) return;
         try {
-            await api.deleteSchedule(id);
+            await api.deleteSchedule(deleteModal.id);
             showToast.success('Clase eliminada');
             loadClasses();
         } catch {
             showToast.error('Error al eliminar');
+        } finally {
+            setDeleteModal({ isOpen: false, id: null });
         }
     };
 
+    const removeTildes = (str: string) => (str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
     const filteredClasses = classes.filter(c => {
-        const studentNames = (c.students || [c.student]).map(s => s?.name?.toLowerCase() || '').join(' ');
-        return studentNames.includes(searchTerm.toLowerCase()) || 
-               c.startTime.includes(searchTerm) ||
-               DAYS[c.dayOfWeek].toLowerCase().includes(searchTerm.toLowerCase());
+        const studentNames = (c.students || [c.student]).map(s => s?.name || '').join(' ');
+        const lowerSearch = removeTildes(searchTerm);
+        return removeTildes(studentNames).includes(lowerSearch) || 
+               removeTildes(c.startTime).includes(lowerSearch) ||
+               removeTildes(DAYS[c.dayOfWeek === 7 ? 0 : c.dayOfWeek]).includes(lowerSearch);
     });
 
     // Grouping by day
     const groupedByDay: Record<number, UnifiedSchedule[]> = {};
     filteredClasses.forEach(c => {
-        if (!groupedByDay[c.dayOfWeek]) groupedByDay[c.dayOfWeek] = [];
-        groupedByDay[c.dayOfWeek].push(c);
+        const safeDay = c.dayOfWeek === 7 ? 0 : c.dayOfWeek;
+        if (!groupedByDay[safeDay]) groupedByDay[safeDay] = [];
+        groupedByDay[safeDay].push(c);
     });
 
     // Sort by day (starting Monday=1)
@@ -155,7 +169,11 @@ const Classes = () => {
                                 <CalendarIcon size={14} /> {DAYS[dayNum]}
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {groupedByDay[dayNum].sort((a,b) => a.startTime.localeCompare(b.startTime)).map(schedule => {
+                                {groupedByDay[dayNum].sort((a,b) => {
+                                    const timeA = (a.startTime || '').replace(/^(\d:)/, '0$1');
+                                    const timeB = (b.startTime || '').replace(/^(\d:)/, '0$1');
+                                    return timeA.localeCompare(timeB);
+                                }).map(schedule => {
                                     const participants = schedule.students || (schedule.student ? [schedule.student] : []);
                                     return (
                                         <motion.div
@@ -195,7 +213,7 @@ const Classes = () => {
                                                         <UserPlus size={18} />
                                                     </button>
                                                     <button 
-                                                        onClick={() => handleDelete(schedule.id)}
+                                                        onClick={() => setDeleteModal({ isOpen: true, id: schedule.id })}
                                                         className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all"
                                                         title="Eliminar Clase"
                                                     >
@@ -227,7 +245,8 @@ const Classes = () => {
                                             <div className="grid grid-cols-2 gap-3">
                                                 <button
                                                     onClick={() => setAttendanceModal({ isOpen: true, schedule })}
-                                                    className="flex items-center justify-center gap-2 py-3 bg-primary-main text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition-all active:scale-95"
+                                                    disabled={participants.length === 0}
+                                                    className="flex items-center justify-center gap-2 py-3 bg-primary-main text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                                                 >
                                                     <CheckCircle2 size={16} /> Asistencia
                                                 </button>
@@ -259,6 +278,25 @@ const Classes = () => {
                 onClose={() => setParticipantsModal({ isOpen: false, schedule: null })}
                 schedule={participantsModal.schedule}
                 onSuccess={loadClasses}
+            />
+
+            <ConfirmModal
+                isOpen={deleteModal.isOpen}
+                title="Eliminar Clase"
+                message="¿Estás seguro de eliminar esta clase para todos los alumnos? Esta acción no se puede deshacer."
+                confirmText="Eliminar Clase"
+                onConfirm={handleDelete}
+                onCancel={() => setDeleteModal({ isOpen: false, id: null })}
+                variant="danger"
+            />
+
+            <WhatsAppPreviewModal
+                isOpen={whatsappModal.isOpen}
+                onClose={() => setWhatsappModal({ isOpen: false, students: [], template: '' })}
+                students={whatsappModal.students}
+                user={user}
+                isPro={isPro}
+                customTemplate={whatsappModal.template}
             />
         </Layout>
     );
