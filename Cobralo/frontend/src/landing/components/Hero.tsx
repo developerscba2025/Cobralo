@@ -109,18 +109,7 @@ const HeroDashboardMockup = () => (
       </div>
     </div>
     
-    <style>{`
-      .custom-scrollbar-hero::-webkit-scrollbar {
-        width: 3px;
-      }
-      .custom-scrollbar-hero::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .custom-scrollbar-hero::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 10px;
-      }
-    `}</style>
+
   </div>
 );
 
@@ -144,8 +133,7 @@ const Hero = () => {
   return (
     <section
       ref={ref}
-      className="relative min-h-screen flex flex-col items-center pt-28 sm:pt-44 pb-0 overflow-hidden"
-      style={{ background: '#0E1113' }}
+      className="relative min-h-screen flex flex-col items-center pt-28 sm:pt-44 pb-0 overflow-hidden bg-[#0E1113]"
     >
       {/* Dot grid background with Parallax */}
       <motion.div
@@ -235,7 +223,7 @@ const Hero = () => {
           <motion.h1
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] as any }}
+            transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="text-4xl sm:text-6xl lg:text-[6rem] font-bold tracking-tight leading-[1.1] sm:leading-[1.05]"
             style={{ color: '#fafafa' }}
           >
@@ -258,7 +246,7 @@ const Hero = () => {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] as any }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="text-sm sm:text-lg max-w-xl mx-auto mb-8 sm:mb-10 leading-relaxed font-medium px-4 sm:px-0"
           style={{ color: '#a1a1aa' }}
         >
@@ -270,27 +258,12 @@ const Hero = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] as any }}
+          transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
           className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-20 w-full sm:w-auto"
         >
           <Link to="/app/login?register=true" className="w-full sm:w-auto group">
             <button
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl font-bold text-sm transition-all duration-300"
-              style={{
-                background: '#22c55e',
-                color: '#0E1113',
-                boxShadow: '0 0 28px rgba(34,197,94,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
-              }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.background = '#4ade80';
-                el.style.boxShadow = '0 0 42px rgba(74,222,128,0.5), inset 0 1px 0 rgba(255,255,255,0.25)';
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.background = '#22c55e';
-                el.style.boxShadow = '0 0 28px rgba(34,197,94,0.4), inset 0 1px 0 rgba(255,255,255,0.2)';
-              }}
+              className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 bg-[#22c55e] text-[#0E1113] shadow-[0_0_28px_rgba(34,197,94,0.4)] inset-shadow-white/20 hover:bg-[#4ade80] hover:shadow-[0_0_42px_rgba(74,222,128,0.5)] active:scale-95"
             >
               Probar gratis
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
@@ -299,18 +272,7 @@ const Hero = () => {
 
           <a
             href="#funciones"
-            className="w-full sm:w-auto flex items-center justify-center px-7 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#d4d4d8' }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.background = 'rgba(255,255,255,0.07)';
-              el.style.borderColor = 'rgba(255,255,255,0.14)';
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.background = 'rgba(255,255,255,0.04)';
-              el.style.borderColor = 'rgba(255,255,255,0.08)';
-            }}
+            className="w-full sm:w-auto flex items-center justify-center px-7 py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 bg-white/[0.04] border border-white/[0.08] text-zinc-300 hover:bg-white/[0.07] hover:border-white/15"
           >
             Ver funciones
           </a>
@@ -320,7 +282,7 @@ const Hero = () => {
         <motion.div
           initial={{ opacity: 0, y: 80 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.42, ease: [0.16, 1, 0.3, 1] as any }}
+          transition={{ duration: 1, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
           style={{ opacity: fadeOut, y: yPush, rotateX, scale, transformPerspective: 1400, transformOrigin: 'center top' }}
           className="relative w-full max-w-5xl mx-auto px-2 sm:px-0"
         >

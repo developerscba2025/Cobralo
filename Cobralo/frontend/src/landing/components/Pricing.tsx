@@ -33,6 +33,9 @@ const Pricing = () => {
   const rotateY = useSpring(rotateYRaw, { stiffness: 150, damping: 20 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Disable tilt on touch devices
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;

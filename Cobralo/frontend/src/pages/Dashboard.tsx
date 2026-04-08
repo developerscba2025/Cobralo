@@ -6,6 +6,7 @@ import type { PaymentStats, Student } from '../services/api';
 import SkeletonCard from '../components/SkeletonCard';
 import ProDashboard from './ProDashboard';
 import BasicDashboard from './BasicDashboard';
+import { showToast } from '../components/Toast';
 
 const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -25,13 +26,24 @@ const Dashboard = () => {
 
     const fetchData = async () => {
         try {
-            const studentsData = await api.getStudents();
+            const [studentsData, pStats, schedulesData, subData] = await Promise.all([
+                api.getStudents(),
+                api.getPaymentStats(),
+                api.getSchedules(),
+                api.getSubscriptionPlans()
+            ]);
+
             setStudents(studentsData);
+            setPaymentStats(pStats);
 
-            const paid = studentsData
-                .filter(s => s.status === 'paid')
-                .reduce((acc, s) => acc + Number(s.amount || 0), 0);
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1;
 
+            // REAL INCOME: Sum of payments this month
+            const currentMonthRealStats = pStats.stats.find(s => s.month === currentMonth);
+            const paid = currentMonthRealStats ? currentMonthRealStats.total : 0;
+
+            // PENDING: Still based on theoretical student amount sum
             const pending = studentsData
                 .filter(s => s.status === 'pending')
                 .reduce((acc, s) => acc + Number(s.amount || 0), 0);
@@ -42,21 +54,22 @@ const Dashboard = () => {
                 totalStudents: studentsData.length
             });
 
-            const pStats = await api.getPaymentStats();
-            setPaymentStats(pStats);
+            const today = now.getDay();
+            const todayISO = now.toISOString().split('T')[0];
+            
+            // Fix: Filter by recurrence and exact date
+            setTodaysSchedules(schedulesData.filter((s: any) => {
+                const dayMatch = s.dayOfWeek === today || (today === 0 && s.dayOfWeek === 7);
+                if (s.isRecurring) return dayMatch;
+                return s.date === todayISO;
+            }));
 
-            const schedules = await api.getSchedules();
-            const today = new Date().getDay();
-            setTodaysSchedules(schedules.filter((s: any) => s.dayOfWeek === today || (today === 0 && s.dayOfWeek === 7)));
-
-            const subData = await api.getSubscriptionPlans();
             if (subData.pendingAdjustment) {
                 setPendingAdjustment(subData.pendingAdjustment);
             }
-
-
         } catch (error) {
             console.error("Error loading stats:", error);
+            showToast.error("Error al cargar datos del Dashboard. Verificá tu conexión.");
         } finally {
             setLoading(false);
         }
@@ -67,16 +80,22 @@ const Dashboard = () => {
     }, []);
 
     // Prepare chart data
-    const chartData = paymentStats?.stats.map((s, i) => ({
-        name: MONTHS_SHORT[i],
+    const chartData = paymentStats?.stats.map((s) => ({
+        name: MONTHS_SHORT[s.month - 1],
         ingresos: s.total,
         pagos: s.count
     })) || [];
 
     // Current month stats
-    const currentMonth = new Date().getMonth();
-    const currentMonthTotal = paymentStats?.stats?.[currentMonth]?.total || 0;
-    const lastMonthTotal = paymentStats?.stats?.[currentMonth - 1]?.total || 0;
+    const now = new Date();
+    const currentMonthNum = now.getMonth() + 1;
+    const currentMonthTotal = paymentStats?.stats?.find(s => s.month === currentMonthNum)?.total || 0;
+    
+    // Last month stats
+    let lastMonthNum = currentMonthNum - 1;
+    if (lastMonthNum === 0) lastMonthNum = 12;
+    const lastMonthTotal = paymentStats?.stats?.find(s => s.month === lastMonthNum)?.total || 0;
+
     const monthChange = lastMonthTotal > 0
         ? ((currentMonthTotal - lastMonthTotal) / lastMonthTotal * 100).toFixed(1)
         : currentMonthTotal > 0 ? "100.0" : "0.0";

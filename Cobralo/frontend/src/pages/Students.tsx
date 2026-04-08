@@ -293,7 +293,8 @@ const Students = () => {
             ...formData,
             amount,
             class_duration_min: formData.class_duration_min || 60,
-            due_day: 1,
+            deadline_day: formData.deadline_day ? Number(formData.deadline_day) : 10,
+            due_day: formData.deadline_day ? Number(formData.deadline_day) : 10,
             schedules: formSchedules
         };
 
@@ -508,7 +509,7 @@ const Students = () => {
         const matchesService = !filterService || s.service_name === filterService;
         const matchesStatus = !filterStatus || s.status === filterStatus;
         const matchesPayment = !filterPaymentMethod || s.payment_method === filterPaymentMethod;
-        const matchesDay = !filterDay || (s.schedules || []).some(sch => sch.dayOfWeek.toString() === filterDay);
+        const matchesDay = !filterDay || (s.schedules || []).some(sch => (sch.dayOfWeek === 7 ? 0 : sch.dayOfWeek).toString() === filterDay);
         return matchesSearch && matchesService && matchesStatus && matchesPayment && matchesDay;
     }).sort((a, b) => {
         if (sortConfig.key === 'amount') {
@@ -561,7 +562,7 @@ const Students = () => {
                 `${user?.currency || '$'}${Number(s.amount).toLocaleString('es-AR')}`,
                 s.deadline_day?.toString() || '10',
                 s.payment_method || '',
-                s.status === 'paid' ? 'Cobrado' : 'Pendiente'
+                s.status === 'paid' ? 'Cobrado' : (s.status === 'paused' ? 'Pausado' : 'Pendiente')
             ];
         });
 
@@ -642,37 +643,41 @@ const Students = () => {
                         {students.length} alumnos · {paidCount} cobrados · {pendingCount} pendientes
                     </p>
                 </div>
-                <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 md:pb-0 md:overflow-visible">
-                    <button
-                        onClick={() => setIsSelectionMode(!isSelectionMode)}
-                        className={`px-4 py-3 rounded-xl font-bold transition flex items-center gap-2 shadow-lg ${isSelectionMode ? 'bg-amber-500 text-white shadow-amber-500/20' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-white'}`}
-                    >
-                        {isSelectionMode ? <X size={18} /> : <Check size={18} />}
-                        {isSelectionMode ? 'Cancelar' : 'Seleccionar'}
-                    </button>
-                    <button
-                        onClick={isSelectionMode ? handleOpenWhatsAppPreview : () => setMassWaModal(true)}
-                        disabled={!isSelectionMode && pendingCount === 0}
-                        className="bg-primary-main hover:bg-green-600 disabled:opacity-50 text-white px-4 py-3 rounded-xl font-bold transition flex items-center gap-2 shadow-lg shadow-primary-glow"
-                    >
-                        <Send size={18} /> 
-                        {isSelectionMode 
-                            ? `WhatsApp (${selectedStudentIds.length})` 
-                            : `WhatsApp (${pendingCount})`}
-                    </button>
-                    <button
-                        onClick={exportToCSV}
-                        className={`hidden lg:flex px-4 py-3 rounded-xl font-bold transition items-center gap-2 group relative ${isPro ? 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white' : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-500'}`}
-                    >
-                        <Download size={18} /> CSV
-                        {!isPro && <Lock size={14} className="text-primary-main ml-1" />}
-                    </button>
-                    <button
-                        onClick={handleOpenCreate}
-                        className="hidden lg:flex bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary-glow transition items-center gap-2"
-                    >
-                        <Plus size={18} /> Nuevo
-                    </button>
+                <div className="relative flex-1 w-full md:w-auto">
+                    <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 md:pb-0 md:overflow-visible pr-12">
+                        <button
+                            onClick={() => setIsSelectionMode(!isSelectionMode)}
+                            className={`px-4 py-3 rounded-xl font-bold transition flex items-center gap-2 shadow-lg ${isSelectionMode ? 'bg-amber-500 text-white shadow-amber-500/20' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-white'}`}
+                        >
+                            {isSelectionMode ? <X size={18} /> : <Check size={18} />}
+                            {isSelectionMode ? 'Cancelar' : 'Seleccionar'}
+                        </button>
+                        <button
+                            onClick={isSelectionMode ? handleOpenWhatsAppPreview : () => setMassWaModal(true)}
+                            disabled={!isSelectionMode && pendingCount === 0}
+                            className="bg-primary-main hover:bg-green-600 disabled:opacity-50 text-white px-4 py-3 rounded-xl font-bold transition flex items-center gap-2 shadow-lg shadow-primary-glow"
+                        >
+                            <Send size={18} /> 
+                            {isSelectionMode 
+                                ? `WhatsApp (${selectedStudentIds.length})` 
+                                : `WhatsApp (${pendingCount})`}
+                        </button>
+                        <button
+                            onClick={exportToCSV}
+                            className={`hidden lg:flex px-4 py-3 rounded-xl font-bold transition items-center gap-2 group relative ${isPro ? 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-white' : 'bg-zinc-50 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-500'}`}
+                        >
+                            <Download size={18} /> CSV
+                            {!isPro && <Lock size={14} className="text-primary-main ml-1" />}
+                        </button>
+                        <button
+                            onClick={handleOpenCreate}
+                            className="hidden lg:flex bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary-glow transition items-center gap-2"
+                        >
+                            <Plus size={18} /> Nuevo
+                        </button>
+                    </div>
+                    {/* Scroll Indicator Shadow */}
+                    <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-bg-app dark:from-bg-dark to-transparent pointer-events-none md:hidden z-10" />
                 </div>
             </header>
 
@@ -689,55 +694,59 @@ const Students = () => {
                     />
                 </div>
 
-                <div className="flex gap-2 items-center overflow-x-auto hide-scrollbar pb-2 md:pb-0 md:flex-wrap md:overflow-visible">
-                    <Filter size={18} className="text-zinc-400 shrink-0" />
+                <div className="relative flex-1">
+                    <div className="flex gap-2 items-center overflow-x-auto hide-scrollbar pb-2 md:pb-0 md:flex-wrap md:overflow-visible pr-10">
+                        <Filter size={18} className="text-zinc-400 shrink-0" />
 
-                    <select
-                        value={filterService}
-                        onChange={e => setFilterService(e.target.value)}
-                        className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
-                    >
-                        <option value="">Servicio</option>
-                        {services.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-
-                    <select
-                        value={filterStatus}
-                        onChange={e => setFilterStatus(e.target.value)}
-                        className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
-                    >
-                        <option value="">Estado</option>
-                        <option value="paid">Cobrado</option>
-                        <option value="pending">Pendiente</option>
-                        <option value="paused">Pausado</option>
-                    </select>
-
-                    <select
-                        value={filterPaymentMethod}
-                        onChange={e => setFilterPaymentMethod(e.target.value)}
-                        className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
-                    >
-                        <option value="">Método</option>
-                        {paymentMethods.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-
-                    <select
-                        value={filterDay}
-                        onChange={e => setFilterDay(e.target.value)}
-                        className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
-                    >
-                        <option value="">Día</option>
-                        {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((d, i) => <option key={i} value={i.toString()}>{d}</option>)}
-                    </select>
-
-                    {hasActiveFilters && (
-                        <button
-                            onClick={() => { setFilterService(''); setFilterStatus(''); setFilterPaymentMethod(''); setFilterDay(''); }}
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500"
+                        <select
+                            value={filterService}
+                            onChange={e => setFilterService(e.target.value)}
+                            className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
                         >
-                            <X size={18} />
-                        </button>
-                    )}
+                            <option value="">Servicio</option>
+                            {services.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+
+                        <select
+                            value={filterStatus}
+                            onChange={e => setFilterStatus(e.target.value)}
+                            className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
+                        >
+                            <option value="">Estado</option>
+                            <option value="paid">Cobrado</option>
+                            <option value="pending">Pendiente</option>
+                            <option value="paused">Pausado</option>
+                        </select>
+
+                        <select
+                            value={filterPaymentMethod}
+                            onChange={e => setFilterPaymentMethod(e.target.value)}
+                            className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
+                        >
+                            <option value="">Método</option>
+                            {paymentMethods.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+
+                        <select
+                            value={filterDay}
+                            onChange={e => setFilterDay(e.target.value)}
+                            className="px-3 py-2 bg-surface text-text-main rounded-lg border border-border-main text-sm outline-none font-bold uppercase text-[10px] tracking-widest shadow-sm"
+                        >
+                            <option value="">Día</option>
+                            {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((d, i) => <option key={i} value={i.toString()}>{d}</option>)}
+                        </select>
+
+                        {hasActiveFilters && (
+                            <button
+                                onClick={() => { setFilterService(''); setFilterStatus(''); setFilterPaymentMethod(''); setFilterDay(''); }}
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500"
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+                    </div>
+                    {/* Scroll Indicator Shadow */}
+                    <div className="absolute right-0 top-0 bottom-2 w-10 bg-gradient-to-l from-bg-app dark:from-bg-soft to-transparent pointer-events-none md:hidden" />
                 </div>
             </div>
 
@@ -989,7 +998,7 @@ const Students = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-auto pt-2 gap-2">
+                                    <div className="flex items-center justify-between mt-auto pt-2 gap-2 flex-wrap sm:flex-nowrap">
                                         <div className="flex gap-1.5 text-zinc-400">
                                             <button 
                                                 onClick={() => handleToggle(student)} 
@@ -1101,7 +1110,7 @@ const Students = () => {
             {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-zinc-900/60 dark:bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-bg-soft w-full max-w-md rounded-[32px] p-8 shadow-2xl relative border border-zinc-100 dark:border-border-emerald max-h-[90vh] overflow-y-auto custom-scrollbar">
+                    <div className="bg-white dark:bg-bg-soft w-full max-w-md rounded-[32px] p-5 sm:p-10 shadow-2xl relative border border-zinc-100 dark:border-border-emerald max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <button onClick={() => { setIsModalOpen(false); resetForm(); }} className="absolute right-6 top-6 text-zinc-300 hover:text-zinc-600 dark:hover:text-white transition">
                             <X size={24} />
                         </button>
@@ -1317,7 +1326,7 @@ const Students = () => {
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 flex-wrap">
                                             <select value={newScheduleDay} onChange={e => setNewScheduleDay(Number(e.target.value))} className="flex-1 p-3 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-xl text-xs font-bold outline-none border-none shadow-sm">
                                                 {['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((d, i) => (
                                                     <option key={i} value={i}>{d}</option>
@@ -1360,10 +1369,10 @@ const Students = () => {
                 <QRPayment
                     isOpen={qrModal.isOpen}
                     onClose={() => setQrModal({ isOpen: false, student: null })}
-                    studentName={qrModal.student.name}
-                    amount={Number(qrModal.student.amount)}
-                    alias={qrModal.student.billing_alias || user?.bizAlias || 'Sin alias'}
-                    paymentMethod={qrModal.student.payment_method}
+                    studentName={qrModal.student?.name || ''}
+                    amount={Number(qrModal.student?.amount || 0)}
+                    alias={qrModal.student?.billing_alias || user?.bizAlias || 'Sin alias'}
+                    paymentMethod={qrModal.student?.payment_method || 'Efectivo'}
                 />
             )}
 

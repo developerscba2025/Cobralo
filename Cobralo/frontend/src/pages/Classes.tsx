@@ -125,7 +125,7 @@ const Classes = () => {
                 <div className="flex gap-3">
                     <button
                         onClick={() => navigate('/app/calendar', { state: { openModal: true } })}
-                        className="bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition items-center gap-2 flex"
+                        className="w-full md:w-auto bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition items-center gap-2 flex justify-center"
                     >
                         <Plus size={18} /> Nueva Clase en Agenda
                     </button>
@@ -150,7 +150,7 @@ const Classes = () => {
                         <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Cargando tus clases...</p>
                     </div>
                 ) : sortedDays.length === 0 ? (
-                    <div className="text-center p-20 bg-surface dark:bg-bg-soft rounded-[40px] border-2 border-dashed border-border-main">
+                    <div className="text-center p-8 md:p-20 bg-surface dark:bg-bg-soft rounded-[40px] border-2 border-dashed border-border-main">
                         <BookOpen className="mx-auto mb-4 text-zinc-300 dark:text-emerald-500/20" size={60} />
                         <h3 className="text-xl font-bold text-text-main mb-2">No se encontraron clases</h3>
                         <p className="text-text-muted max-w-xs mx-auto mb-8">Prueba ajustando tu búsqueda o crea una nueva clase desde la Agenda.</p>

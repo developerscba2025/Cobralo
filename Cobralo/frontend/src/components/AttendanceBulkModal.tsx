@@ -10,9 +10,10 @@ interface AttendanceBulkModalProps {
     onClose: () => void;
     schedule: UnifiedSchedule | null;
     onSuccess: () => void;
+    attendanceDate?: string;
 }
 
-const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: AttendanceBulkModalProps) => {
+const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceDate }: AttendanceBulkModalProps) => {
     const [attRecords, setAttRecords] = useState<Record<number, 'PRESENT' | 'ABSENT' | 'CANCELLED' | 'HOLIDAY'>>({});
     const [isSaving, setIsSaving] = useState(false);
 
@@ -43,7 +44,8 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess }: Attendanc
         try {
             await api.recordBulkAttendance({
                 scheduleId: schedule.id,
-                records
+                records,
+                date: attendanceDate
             });
             showToast.success('Asistencias registradas correctamente');
             onSuccess();
