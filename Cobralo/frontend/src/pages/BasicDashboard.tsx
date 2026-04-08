@@ -11,6 +11,7 @@ interface BasicDashboardProps {
         totalStudents: number;
     };
     students: Student[];
+    todaysSchedules?: any[];
     user: any;
     pendingAdjustment?: any;
     onAction?: () => Promise<void> | void;
@@ -24,7 +25,7 @@ const bentoBase: React.CSSProperties = {
     overflow: 'hidden',
 };
 
-const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, pendingAdjustment }) => {
+const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todaysSchedules = [], user, pendingAdjustment }) => {
     const recentActivity = [...students].sort((a, b) => (Number(b.id) - Number(a.id))).slice(0, 10);
     const paid = recentActivity.filter(s => s.status === 'paid');
     const pending = recentActivity.filter(s => s.status !== 'paid');
@@ -36,7 +37,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="space-y-6 pb-20"
+            className="space-y-6"
         >
             {/* IPC Notice Banner */}
             {pendingAdjustment && (
@@ -57,7 +58,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, 
                         </p>
                     </div>
                     <Link
-                        to="/settings?tab=subscription"
+                        to="/app/settings?tab=subscription"
                         className="px-5 py-2 text-amber-900 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
                         style={{ background: 'rgba(245,158,11,0.9)' }}
                     >
@@ -90,13 +91,21 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, 
                     </div>
                     <div className="mt-6">
                         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Ingresos Cobrados</p>
-                        <p className="text-4xl md:text-5xl font-black text-text-main tracking-tighter">
-                            {currency}{stats.paid.toLocaleString('es-AR')}
-                        </p>
-                        {stats.pending > 0 && (
-                            <p className="text-[10px] font-bold text-amber-500/90 uppercase tracking-wider mt-2">
-                                {currency}{stats.pending.toLocaleString('es-AR')} pendiente
+                        {stats.paid === 0 && stats.pending === 0 && stats.totalStudents === 0 ? (
+                            <p className="text-[11px] font-black text-text-muted mt-2 italic">
+                                Tu próximo ingreso aparecerá acá ✨
                             </p>
+                        ) : (
+                            <>
+                                <p className="text-4xl md:text-5xl font-black text-text-main tracking-tighter">
+                                    {currency}{stats.paid.toLocaleString('es-AR')}
+                                </p>
+                                {stats.pending > 0 && (
+                                    <p className="text-[10px] font-bold text-amber-500/90 uppercase tracking-wider mt-2">
+                                        {currency}{stats.pending.toLocaleString('es-AR')} pendiente
+                                    </p>
+                                )}
+                            </>
                         )}
                     </div>
                 </motion.div>
@@ -149,6 +158,39 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, user, 
                         />
                     </div>
                 </motion.div>
+                
+                {/* Agenda Mini Widget (si hay clases hoy) */}
+                {todaysSchedules.length > 0 && (
+                     <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.18 }}
+                        className="col-span-1 sm:col-span-2 md:col-span-4 p-5 flex flex-col justify-between"
+                        style={bentoBase}
+                    >
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-[10px] font-black text-text-main uppercase tracking-widest flex items-center gap-2">
+                                <Clock size={12} className="text-violet-500" />
+                                Clases de Hoy ({todaysSchedules.length})
+                            </h3>
+                            <Link to="/app/calendar" className="text-[9px] font-black text-primary-main uppercase tracking-widest hover:opacity-70 transition-opacity">
+                                Ver Agenda →
+                            </Link>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
+                            {todaysSchedules.map((schedule: any) => {
+                                const studentsList = schedule.students || (schedule.student ? [schedule.student] : []);
+                                const name = studentsList.length > 1 ? `${studentsList[0]?.name?.split(' ')[0]} +${studentsList.length - 1}` : (studentsList[0]?.name || 'Grupal');
+                                return (
+                                    <div key={schedule.id} className="min-w-[140px] p-3 rounded-2xl bg-black/5 dark:bg-white/[0.03] border border-border-main shrink-0 snap-start">
+                                        <p className="text-[12px] font-black text-text-main truncate max-w-full">{schedule.startTime}</p>
+                                        <p className="text-[10px] font-bold text-text-muted truncate mt-1">{name}</p>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </motion.div>
+                )}
             </div>
 
             {/* ══ ACTIVIDAD RECIENTE ══ */}

@@ -208,15 +208,25 @@ router.get('/public/teacher/:token', async (req, res) => {
     }
 });
 
+import rateLimit from 'express-rate-limit';
+
+const submitRatingLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Limit each IP to 5 requests per window
+    message: { error: 'Demasiadas calificaciones enviadas. Por favor, intentalo más tarde.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // POST /api/ratings/public/submit/:token - Public route to submit a rating
-router.post('/public/submit/:token', async (req, res) => {
+router.post('/public/submit/:token', submitRatingLimiter, async (req, res) => {
     try {
         const { token } = req.params;
         const { value, comment, studentName } = req.body;
 
         const user = await prisma.user.findFirst({
             where: {
-                ratingToken: token,
+                ratingToken: String(token) as string,
                 ratingTokenExpires: { gt: new Date() }
             }
         });

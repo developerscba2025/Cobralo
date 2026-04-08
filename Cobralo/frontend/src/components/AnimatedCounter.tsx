@@ -32,7 +32,7 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
     }, [motionValue, isInView, value]);
 
     useEffect(() => {
-        return springValue.onChange((latest) => {
+        return springValue.on("change", (latest) => {
             if (ref.current) {
                 ref.current.textContent = `${prefix}${Intl.NumberFormat('es-AR', {
                     minimumFractionDigits: decimals,

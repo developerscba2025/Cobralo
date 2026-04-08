@@ -8,9 +8,11 @@ import {
     toggleStudentStatus,
     updatePrices,
     resetMonth,
-    getPendingContacts
+    getPendingContacts,
+    getWhatsappDigest
 } from '../controllers/studentController';
 import { checkStudentLimit } from '../middleware/subscriptionMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -25,6 +27,9 @@ router.get('/pending-contacts', getPendingContacts);
 
 // GET all students
 router.get('/', getAllStudents);
+
+// GET single student whatsapp digest
+router.get('/:id/whatsapp-digest', getWhatsappDigest);
 
 // GET single student
 router.get('/:id', getStudentById);

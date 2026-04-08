@@ -33,7 +33,7 @@ interface Category {
 
 const Settings = () => {
     const { updateUser: updateAuthUser, isPro } = useAuth();
-    const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'academy' | 'services' | 'automation' | 'subscription' | 'ratings' | 'support' | 'legal'>('profile');
+    const [activeTab, setActiveTab] = useState<'account' | 'profile' | 'security' | 'academy' | 'services' | 'automation' | 'subscription' | 'ratings' | 'support' | 'legal' | 'payment-accounts'>('account');
 
     // Mobile toggle logic
     const [isNavOpen, setIsNavOpen] = useState(true);
@@ -65,28 +65,29 @@ const Settings = () => {
     const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
     const [priceLastUpdate, setPriceLastUpdate] = useState<string | null>(null);
     const [pendingAdjustment, setPendingAdjustment] = useState<any>(null);
+    const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+    const [cancelingSubscription, setCancelingSubscription] = useState(false);
     const [studentCount, setStudentCount] = useState(0);
     const [scheduleCount, setScheduleCount] = useState(0);
     const [hasRecentPayments, setHasRecentPayments] = useState(false);
 
     const categories: Category[] = [
-        { id: 'general', label: 'Mi Perfil', icon: UserIcon, tabs: [
-            { id: 'profile', label: 'Datos Personales', icon: UserIcon, description: 'Nombre, email y tema visual.' },
-            { id: 'security', label: 'Seguridad', icon: Shield, description: 'Contraseña y privacidad.' }
+        { id: 'cuenta', label: 'Cuenta', icon: UserIcon, tabs: [
+            { id: 'account', label: 'Mi Cuenta', icon: UserIcon, description: 'Datos personales y seguridad' },
         ]},
-        { id: 'academy', label: 'Mi Academia', icon: Building2, tabs: [
-            { id: 'academy', label: 'Mi Marca', icon: Building2, description: 'Nombre, logo y perfil público.' },
-            { id: 'services', label: 'Servicios', icon: Zap, description: 'Clases y aranceles.' },
-            { id: 'ratings', label: 'Testimonios', icon: Star, description: 'Lo que dicen tus alumnos.' }
+        { id: 'plan', label: 'Mi Plan', icon: Zap, tabs: [
+            { id: 'subscription', label: 'Plan y Suscripción', icon: Zap, description: isPro ? 'Activo — Plan PRO' : 'Mejorá tu cuenta' },
         ]},
-        { id: 'automation', label: 'Gestión', icon: MessageSquare, tabs: [
-            { id: 'automation', label: 'Pagos y Mensajes', icon: CreditCard, description: 'Cobros y recordatorios.' },
-            { id: 'payment-accounts', label: 'Cuentas de Pago', icon: Building2, description: 'CBU / CVU / Alias.' },
-            { id: 'subscription', label: 'Plan', icon: Zap, description: 'Tu suscripción activa.' }
+        { id: 'negocio', label: 'Negocio', icon: Building2, tabs: [
+            { id: 'academy', label: 'Perfil Público', icon: Building2, description: 'Tu página web y logo' },
+            { id: 'services', label: 'Servicios', icon: Star, description: 'Clases y precios' },
+            { id: 'payment-accounts', label: 'Medios de Pago', icon: CreditCard, description: 'Alias / CBU para cobrar' },
+            { id: 'automation', label: 'Automatización', icon: MessageSquare, description: 'Avisos por WhatsApp' },
+            { id: 'ratings', label: 'Testimonios', icon: MessageSquare, description: 'Reseñas de alumnos' }
         ]},
-        { id: 'support', label: 'Ayuda', icon: HelpCircle, tabs: [
-            { id: 'support', label: 'Soporte Técnico', icon: HelpCircle, description: 'Contactar al equipo.' },
-            { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos y condiciones.' }
+        { id: 'ayuda', label: 'Ayuda', icon: HelpCircle, tabs: [
+            { id: 'support', label: 'Soporte', icon: HelpCircle, description: 'Escribinos tu consulta' },
+            { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos de uso' }
         ]},
     ];
 
@@ -113,6 +114,7 @@ const Settings = () => {
         fetchMetrics();
         fetchSubscriptionPlans();
         fetchRatings();
+        fetchSubscriptionInfo();
     }, []);
 
     const autoCheckoutDone = useRef(false);
@@ -141,6 +143,15 @@ const Settings = () => {
             setSubscriptionPlans(data.plans || []);
             setPriceLastUpdate(data.lastUpdate);
             setPendingAdjustment(data.pendingAdjustment);
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchSubscriptionInfo = async () => {
+        try {
+            const subs = await api.getSubscriptionHistory();
+            if (subs && subs.length > 0) {
+                setSubscriptionStatus(subs[0].status);
+            }
         } catch (e) { console.error(e); }
     };
 
@@ -222,6 +233,22 @@ const Settings = () => {
         } catch (err: any) {
             showToast.error(err.message || 'Error al procesar el pago');
         } finally { setLoadingCheckout(null); }
+    };
+
+    const handleCancelSubscription = async () => {
+        if (!window.confirm('¿Seguro que querés dar de baja tu suscripción PRO? Seguirás teniendo acceso hasta el final del periodo pagado.')) {
+            return;
+        }
+        try {
+            setCancelingSubscription(true);
+            await api.cancelSubscription();
+            showToast.success('Suscripción dada de baja. Conservarás los beneficios hasta el final del periodo.');
+            setSubscriptionStatus('CANCEL_AT_PERIOD_END');
+        } catch (err: any) {
+            showToast.error(err.message || 'Error al cancelar la suscripción');
+        } finally {
+            setCancelingSubscription(false);
+        }
     };
 
     const handleAddService = async () => {
@@ -315,6 +342,9 @@ const Settings = () => {
                                 studentCount={studentCount} scheduleCount={scheduleCount} hasRecentPayments={hasRecentPayments}
                                 subscriptionPlans={subscriptionPlans} priceLastUpdate={priceLastUpdate}
                                 loadingCheckout={loadingCheckout} handleUpgrade={handleUpgrade}
+                                handleCancelSubscription={handleCancelSubscription}
+                                cancelingSubscription={cancelingSubscription}
+                                subscriptionStatus={subscriptionStatus}
                                 ratings={ratings} ratingToken={ratingToken} ratingExpires={ratingExpires}
                                 handleGenerateLink={handleGenerateLink} handleToggleRatingVisibility={handleToggleRatingVisibility}
                             />

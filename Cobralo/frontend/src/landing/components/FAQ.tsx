@@ -56,7 +56,7 @@ const FAQ = () => {
       <div className="container max-w-3xl relative z-10">
         <div className="text-center mb-16">
           <div
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.15em] mb-5 border"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] mb-5 border"
             style={{ background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)', color: '#4ade80' }}
           >
             FAQ

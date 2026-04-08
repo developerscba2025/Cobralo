@@ -350,7 +350,7 @@ const Calendar = () => {
             <div className="flex flex-col gap-4">
                 <header className="flex-shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-text-main uppercase italic italic tracking-tighter">AGENDA SEMANAL</h1>
+                        <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase">AGENDA SEMANAL</h1>
                         <p className="text-text-muted mt-1 font-medium tracking-tight">Gestiona tus horarios con precisión pro</p>
                     </div>
                     

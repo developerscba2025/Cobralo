@@ -22,7 +22,7 @@ const LandingPage = () => {
   const [legalType, setLegalType] = useState<'privacy' | 'terms' | null>(null);
 
   return (
-    <div className="min-h-screen bg-bg-landing text-text">
+    <div className="relative min-h-screen bg-bg-landing text-text">
       <LegalModal
         type={legalType || 'terms'}
         isOpen={!!legalType}
@@ -38,31 +38,31 @@ const LandingPage = () => {
         isOpen={showToast}
         onClose={() => setShowToast(false)}
       />
-
-      <>
-        <OfferBanner />
-        <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+      <OfferBanner />
+      
+      <header className="sticky top-0 z-50 pointer-events-none w-full h-0 overflow-visible">
+        <div className="pointer-events-auto">
           <Navbar />
-        </header>
+        </div>
+      </header>
 
-        <main className="pt-0">
-          <Hero />
-          <StatsBar />
-          <HowItWorks />
-          <Features />
-          <DashboardMockup />
-          <Testimonials />
-          <FeaturedTeachers />
-          <Roadmap />
-          <Pricing />
-          <FAQ />
-        </main>
+      <main className="pt-0">
+        <Hero />
+        <StatsBar />
+        <HowItWorks />
+        <Features />
+        <DashboardMockup />
+        <Testimonials />
+        <FeaturedTeachers />
+        <Roadmap />
+        <Pricing />
+        <FAQ />
+      </main>
 
-        <Footer
-          onOpenSupport={() => setShowSupport(true)}
-          onOpenLegal={(type: 'terms' | 'privacy') => setLegalType(type)}
-        />
-      </>
+      <Footer
+        onOpenSupport={() => setShowSupport(true)}
+        onOpenLegal={(type: 'terms' | 'privacy') => setLegalType(type)}
+      />
     </div>
   );
 };

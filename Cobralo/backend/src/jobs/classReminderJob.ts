@@ -18,6 +18,10 @@ export async function runClassReminderJob() {
                     isPro: true,
                     classRemindersEnabled: true,
                 },
+                OR: [
+                    { student: { wantsWhatsAppAlerts: true } },
+                    { students: { some: { wantsWhatsAppAlerts: true } } }
+                ]
             },
             include: {
                 owner: true,
@@ -42,7 +46,7 @@ export async function runClassReminderJob() {
                 if (schedule.students?.length > 0) participants.push(...schedule.students);
 
                 for (const student of participants) {
-                    if (!student.phone) continue;
+                    if (!student.phone || !student.wantsWhatsAppAlerts) continue;
 
                     // Generate a unique token for this student+class+day
                     const confirmToken = crypto.randomBytes(16).toString('hex');

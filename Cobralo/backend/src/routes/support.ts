@@ -11,7 +11,7 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
 
-        const supportEmail = 'developerscba2025@gmail.com';
+        const supportEmail = 'Support@cobralo.info';
         const formattedMessage = `
             Nuevo mensaje de soporte desde Cobralo:
             

@@ -5,7 +5,8 @@ import {
   Calendar, 
   Settings, 
   LibraryBig,
-  Bell
+  Bell,
+  Banknote
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -20,9 +21,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount, unreadNotifCount = 
     const menuItems = [
         { path: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/app/students', icon: Users2, label: 'Alumnos' },
+        { path: '/app/payments', icon: Banknote, label: 'Cobros' },
         { path: '/app/calendar', icon: Calendar, label: 'Calendario' },
-        { path: '/app/classes', icon: LibraryBig, label: 'Clases' },
-        { path: '/app/notifications', icon: Bell, label: 'Avisos' },
         { path: '/app/settings', icon: Settings, label: 'Ajustes' },
     ];
 
@@ -64,16 +64,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount, unreadNotifCount = 
                                 {pendingCount > 9 ? '9+' : pendingCount}
                             </motion.div>
                         )}
-                        {/* Unread Notifications Badge */}
-                        {item.path === '/app/notifications' && unreadNotifCount > 0 && (
-                            <motion.div 
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-md shadow-red-500/40 z-20"
-                            >
-                                {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
-                            </motion.div>
-                        )}
+
                     </div>
                     <span className={`text-[10px] font-black uppercase tracking-tighter transition-all ${
                         isActive(item.path) ? 'opacity-100 scale-105 font-black text-primary-main' : 'opacity-60 font-bold'

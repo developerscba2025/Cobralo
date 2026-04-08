@@ -104,7 +104,7 @@ export const getStudentAttendance = async (req: AuthRequest, res: Response) => {
  */
 export const recordAttendance = async (req: AuthRequest, res: Response) => {
     try {
-        const { studentId, status, date } = req.body;
+        const { studentId, status, date, scheduleId } = req.body;
 
         if (!req.userId) {
             res.status(401).json({ error: 'Autenticación requerida' });
@@ -132,13 +132,32 @@ export const recordAttendance = async (req: AuthRequest, res: Response) => {
         }
 
         const result = await prisma.$transaction(async (prismaTransaction) => {
+            // Anti-double-click logic
+            const checkDate = date ? new Date(date) : new Date();
+            const startOfDay = new Date(checkDate.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(checkDate.setHours(23, 59, 59, 999));
+            
+            const existingAttendance = await prismaTransaction.attendance.findFirst({
+                where: {
+                    ownerId: req.userId!,
+                    studentId: parseInt(studentId as any),
+                    scheduleId: scheduleId ? parseInt(scheduleId as any) : null,
+                    date: { gte: startOfDay, lte: endOfDay }
+                }
+            });
+
+            if (existingAttendance) {
+                return existingAttendance;
+            }
+
             // 1. Create attendance record
             const attendance = await prismaTransaction.attendance.create({
                 data: {
                     ownerId: req.userId!,
                     studentId: parseInt(studentId as any),
                     status,
-                    date: date ? new Date(date) : new Date()
+                    date: date ? new Date(date) : new Date(),
+                    scheduleId: scheduleId ? parseInt(scheduleId as any) : null
                 }
             });
 
@@ -150,7 +169,7 @@ export const recordAttendance = async (req: AuthRequest, res: Response) => {
                 } 
             });
 
-            if (student?.planType === 'PACK' && status === 'PRESENT') {
+            if (student?.planType === 'PACK' && (status === 'PRESENT' || status === 'ABSENT')) {
                 if ((student.credits || 0) > 0) {
                     await prismaTransaction.student.update({
                         where: { id: parseInt(studentId as any) },
@@ -164,6 +183,11 @@ export const recordAttendance = async (req: AuthRequest, res: Response) => {
                 await prismaTransaction.student.update({
                     where: { id: parseInt(studentId as any) },
                     data: { makeup_classes: { increment: 1 } }
+                });
+            } else if (status === 'MAKEUP' && (student?.makeup_classes || 0) > 0) {
+                await prismaTransaction.student.update({
+                    where: { id: parseInt(studentId as any) },
+                    data: { makeup_classes: { decrement: 1 } }
                 });
             }
 
@@ -290,6 +314,24 @@ export const recordBulkAttendance = async (req: AuthRequest, res: Response) => {
             for (const record of records) {
                 const { studentId, status } = record;
 
+                const checkDate = new Date(attendanceDate);
+                const startOfDay = new Date(checkDate.setHours(0, 0, 0, 0));
+                const endOfDay = new Date(checkDate.setHours(23, 59, 59, 999));
+
+                const existingAtt = await tx.attendance.findFirst({
+                    where: {
+                        ownerId: req.userId!,
+                        studentId: Number(studentId),
+                        scheduleId: scheduleId ? Number(scheduleId) : null,
+                        date: { gte: startOfDay, lte: endOfDay }
+                    }
+                });
+
+                if (existingAtt) {
+                    createdRecords.push(existingAtt);
+                    continue;
+                }
+
                 // 1. Create attendance record
                 const att = await tx.attendance.create({
                     data: {
@@ -309,7 +351,7 @@ export const recordBulkAttendance = async (req: AuthRequest, res: Response) => {
                     } 
                 });
 
-                if (student?.planType === 'PACK' && status === 'PRESENT') {
+                if (student?.planType === 'PACK' && (status === 'PRESENT' || status === 'ABSENT')) {
                     if ((student.credits || 0) > 0) {
                         await tx.student.update({
                             where: { id: Number(studentId) },
@@ -323,6 +365,11 @@ export const recordBulkAttendance = async (req: AuthRequest, res: Response) => {
                     await tx.student.update({
                         where: { id: Number(studentId) },
                         data: { makeup_classes: { increment: 1 } }
+                    });
+                } else if (status === 'MAKEUP' && (student?.makeup_classes || 0) > 0) {
+                    await tx.student.update({
+                        where: { id: Number(studentId) },
+                        data: { makeup_classes: { decrement: 1 } }
                     });
                 }
 

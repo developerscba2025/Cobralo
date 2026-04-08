@@ -4,11 +4,16 @@ import { Menu, X, LogIn } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const NAV_LINKS = [
-  { label: 'Funciones', href: '#funciones' },
-  { label: 'Profes', href: '#profes' },
-  { label: 'Precios', href: '#precios' },
-  { label: 'FAQ', href: '#faq' },
+  { label: 'Funciones', href: 'funciones' },
+  { label: 'Profes', href: 'profes' },
+  { label: 'Precios', href: 'precios' },
+  { label: 'FAQ', href: 'faq' },
 ];
+
+const scrollTo = (id: string) => {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +22,7 @@ const Navbar = () => {
 
   return (
     // Outer wrapper — provides the floating top padding
-    <div className="w-full px-4 pt-4 sm:pt-10">
+    <div className="w-full px-4 pt-3 sm:pt-6" style={{ position: 'relative', zIndex: 50 }}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -32,7 +37,8 @@ const Navbar = () => {
 
       {/* ── Pill container ── */}
       <div
-        className="mx-auto max-w-6xl rounded-2xl flex items-center justify-between px-4 h-12 relative z-50 bg-[#0E1113]/85 backdrop-blur-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)]"
+        className="mx-auto max-w-6xl rounded-2xl flex items-center justify-between px-4 h-12 relative bg-[#0E1113]/85 backdrop-blur-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)]"
+        style={{ zIndex: 50 }}
       >
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 group flex-shrink-0">
@@ -50,13 +56,13 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-6">
           {isHome ? (
             NAV_LINKS.map(item => (
-              <a
+              <button
                 key={item.label}
-                href={item.href}
-                className="text-[12px] font-bold uppercase tracking-wider transition-colors duration-200 text-zinc-400 hover:text-white"
+                onClick={() => scrollTo(item.href)}
+                className="text-[12px] font-bold uppercase tracking-wider transition-colors duration-200 text-zinc-400 hover:text-white cursor-pointer bg-transparent border-0 p-0"
               >
                 {item.label}
-              </a>
+              </button>
             ))
           ) : (
             <Link to="/" className="text-[12px] font-bold uppercase tracking-wider text-zinc-400 hover:text-zinc-50">
@@ -102,14 +108,13 @@ const Navbar = () => {
               className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[#0E1113] border border-white/10 p-6 rounded-2xl flex flex-col gap-6 md:hidden shadow-2xl z-50 overflow-hidden"
             >
               {NAV_LINKS.map(item => (
-                <a
+                <button
                   key={item.label}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className="text-lg font-bold text-[#fafafa] hover:text-[#4ade80] transition-colors"
+                  onClick={() => { scrollTo(item.href); setIsOpen(false); }}
+                  className="text-lg font-bold text-[#fafafa] hover:text-[#4ade80] transition-colors text-left bg-transparent border-0 p-0 cursor-pointer"
                 >
                   {item.label}
-                </a>
+                </button>
               ))}
               <div className="pt-6 border-t border-white/5 flex flex-col gap-4">
                 <Link

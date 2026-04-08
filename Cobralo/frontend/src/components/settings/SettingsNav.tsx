@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, ChevronRight, Lock } from 'lucide-react';
+import React from 'react';
+import { Lock } from 'lucide-react';
 
 interface Tab {
     id: string;
@@ -33,20 +32,6 @@ const SettingsNav: React.FC<SettingsNavProps> = ({
     setIsNavOpen,
     isPro,
 }) => {
-    // Start all categories open by default
-    const [openCategories, setOpenCategories] = useState<Set<string>>(
-        new Set(categories.map(c => c.id))
-    );
-
-    const toggleCategory = (id: string) => {
-        setOpenCategories(prev => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    };
-
     const handleTabClick = (tab: Tab) => {
         if (tab.isAction && tab.onClick) {
             tab.onClick();
@@ -57,114 +42,160 @@ const SettingsNav: React.FC<SettingsNavProps> = ({
     };
 
     return (
-        <div className="space-y-1 w-full">
+        <div className="w-full pb-10">
             {/* Header */}
-            <div className="mb-8 px-2">
-                <h1 className="text-3xl font-black text-zinc-900 dark:text-emerald-50 tracking-tighter uppercase">
+            <div className="mb-8 px-1">
+                <h1 className="text-2xl lg:text-3xl font-black text-zinc-900 dark:text-emerald-50 tracking-tighter uppercase">
                     Ajustes
                 </h1>
-                <p className="text-zinc-500 font-bold text-[10px] tracking-widest uppercase opacity-60 mt-1">
-                    Gestioná tu cuenta y academia.
+                <p className="text-zinc-400 font-bold text-[11px] tracking-wide mt-1">
+                    Gestioná tu cuenta y tu negocio.
                 </p>
             </div>
 
-            {/* Accordion categories */}
-            {categories.map(cat => {
-                const isOpen = openCategories.has(cat.id);
-                return (
-                    <div key={cat.id} className="mb-1">
-                        {/* Category header — clickable to expand/collapse */}
-                        <button
-                            onClick={() => toggleCategory(cat.id)}
-                            className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl group transition-all"
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <cat.icon
-                                    size={13}
-                                    className="text-primary-main opacity-70"
-                                />
-                                <span className="text-[10px] font-extrabold text-zinc-400 dark:text-emerald-500/60 uppercase tracking-[0.2em]">
+            <div className="space-y-5">
+                {categories.map((cat, catIdx) => {
+                    const isPlanSection = cat.id === 'plan';
+
+                    // ── MI PLAN: tratamiento especial destacado ──
+                    if (isPlanSection) {
+                        const tab = cat.tabs[0];
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <div key={cat.id}>
+                                <button
+                                    onClick={() => handleTabClick(tab)}
+                                    className={`w-full flex items-center gap-3.5 p-4 rounded-2xl transition-all text-left group relative border ${
+                                        isActive
+                                            ? 'bg-primary-main border-primary-main shadow-lg shadow-primary-main/20'
+                                            : isPro
+                                                ? 'bg-zinc-50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-700/60 hover:border-primary-main/40'
+                                                : 'bg-gradient-to-br from-primary-main/5 to-emerald-400/10 dark:from-emerald-500/10 dark:to-emerald-400/5 border-primary-main/20 hover:border-primary-main/50 hover:shadow-md hover:shadow-primary-main/10'
+                                    }`}
+                                >
+                                    {/* Icon */}
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                                        isActive
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-primary-main/10 dark:bg-emerald-500/15 text-primary-main'
+                                    }`}>
+                                        <tab.icon size={18} />
+                                    </div>
+
+                                    {/* Text */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[13px] font-extrabold tracking-tight ${
+                                                isActive ? 'text-white' : 'text-zinc-700 dark:text-zinc-200'
+                                            }`}>
+                                                {tab.label}
+                                            </span>
+                                            {isPro ? (
+                                                <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter ${
+                                                    isActive ? 'bg-white/20 text-white' : 'bg-primary-main/10 text-primary-main'
+                                                }`}>
+                                                    ACTIVO
+                                                </span>
+                                            ) : (
+                                                <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter ${
+                                                    isActive ? 'bg-white/20 text-white' : 'bg-primary-main/10 text-primary-main'
+                                                }`}>
+                                                    MEJORÁ
+                                                </span>
+                                            )}
+                                        </div>
+                                        {tab.description && (
+                                            <span className={`block text-[11px] font-medium mt-0.5 ${
+                                                isActive ? 'text-white/70' : 'text-zinc-400 dark:text-zinc-500'
+                                            }`}>
+                                                {tab.description}
+                                            </span>
+                                        )}
+                                    </div>
+                                </button>
+                            </div>
+                        );
+                    }
+
+                    // ── CATEGORÍAS NORMALES ──
+                    return (
+                        <div key={cat.id}>
+                            {/* Category Header */}
+                            <div className="flex items-center gap-2.5 mb-3 px-1">
+                                <div className="w-7 h-7 rounded-lg bg-primary-main/10 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                    <cat.icon size={14} className="text-primary-main" />
+                                </div>
+                                <span className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.15em]">
                                     {cat.label}
                                 </span>
                             </div>
-                            <motion.div
-                                animate={{ rotate: isOpen ? 0 : -90 }}
-                                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                            >
-                                <ChevronDown size={13} className="text-zinc-400 dark:text-zinc-600" />
-                            </motion.div>
-                        </button>
 
-                        {/* Tabs inside category */}
-                        <AnimatePresence initial={false}>
-                            {isOpen && (
-                                <motion.div
-                                    key={cat.id + '-content'}
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                                    style={{ overflow: 'hidden' }}
-                                >
-                                    <div className="flex flex-col gap-0.5 pl-2 pb-2 pt-0.5">
-                                        {cat.tabs.map(tab => {
-                                            const isActive = activeTab === tab.id && !tab.isAction;
-                                            return (
-                                                <button
-                                                    key={tab.id}
-                                                    onClick={() => handleTabClick(tab)}
-                                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all text-left group border ${
-                                                        isActive
-                                                            ? 'bg-primary-main text-white border-transparent shadow-md'
-                                                            : 'border-transparent text-zinc-500 dark:text-zinc-400'
-                                                    }`}
-                                                >
-                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                                                        isActive
-                                                            ? 'bg-white/20 text-white'
-                                                            : 'bg-bg-app text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300'
+                            {/* Tab cards */}
+                            <div className="rounded-2xl bg-zinc-50/60 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800/60 overflow-hidden">
+                                {cat.tabs.map((tab, tabIdx) => {
+                                    const isActive = activeTab === tab.id && !tab.isAction;
+                                    const isLast = tabIdx === cat.tabs.length - 1;
+                                    const needsPro = !isPro && (tab.id === 'academy' || tab.id === 'ratings');
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => handleTabClick(tab)}
+                                            className={`w-full flex items-center gap-3.5 px-4 py-3.5 transition-all text-left group relative ${
+                                                isActive
+                                                    ? 'bg-primary-main/[0.08] dark:bg-emerald-500/10'
+                                                    : 'hover:bg-zinc-100/80 dark:hover:bg-zinc-800/40'
+                                            } ${!isLast ? 'border-b border-zinc-100 dark:border-zinc-800/50' : ''}`}
+                                        >
+                                            {/* Active indicator bar */}
+                                            {isActive && (
+                                                <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary-main" />
+                                            )}
+
+                                            {/* Icon */}
+                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                                                isActive
+                                                    ? 'bg-primary-main text-white shadow-md shadow-primary-main/20'
+                                                    : 'bg-white dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 group-hover:text-primary-main border border-zinc-100 dark:border-zinc-700/60'
+                                            }`}>
+                                                <tab.icon size={16} />
+                                            </div>
+
+                                            {/* Text */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-[13px] font-extrabold tracking-tight truncate ${
+                                                        isActive ? 'text-primary-main dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300'
                                                     }`}>
-                                                        <tab.icon size={16} />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0 text-left">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`block text-[12px] font-bold uppercase tracking-tight truncate ${
-                                                                isActive ? 'text-white' : ''
-                                                            }`}>
-                                                                {tab.label}
-                                                            </span>
-                                                            {!isPro && (tab.id === 'academy' || tab.id === 'ratings') && (
-                                                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary-main/10 border border-primary-main/20 text-[8px] font-black text-primary-main uppercase tracking-tighter">
-                                                                    <Lock size={8} />
-                                                                    <span>PRO</span>
-                                                                </div>
-                                                            )}
+                                                        {tab.label}
+                                                    </span>
+                                                    {needsPro && (
+                                                        <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary-main/10 dark:bg-emerald-500/15 text-[8px] font-black text-primary-main dark:text-emerald-400 uppercase tracking-tighter shrink-0">
+                                                            <Lock size={7} />
+                                                            <span>PRO</span>
                                                         </div>
-                                                        {tab.description && (
-                                                            <span className={`block text-[10px] font-bold mt-0.5 truncate ${
-                                                                isActive ? 'text-white/60' : 'text-zinc-400 opacity-70'
-                                                            }`}>
-                                                                {tab.description}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    {tab.isAction ? (
-                                                        <ChevronRight size={14} className="opacity-40 shrink-0" />
-                                                    ) : (
-                                                        !isPro && (tab.id === 'academy' || tab.id === 'ratings') && (
-                                                            <Lock size={12} className="text-primary-main/40 shrink-0" />
-                                                        )
                                                     )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                );
-            })}
+                                                </div>
+                                                {tab.description && (
+                                                    <span className={`block text-[11px] font-medium mt-0.5 truncate ${
+                                                        isActive ? 'text-primary-main/60 dark:text-emerald-400/50' : 'text-zinc-400 dark:text-zinc-500'
+                                                    }`}>
+                                                        {tab.description}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Lock for PRO */}
+                                            {needsPro && !tab.isAction && (
+                                                <Lock size={13} className="text-primary-main/50 dark:text-emerald-400/60 shrink-0" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 };

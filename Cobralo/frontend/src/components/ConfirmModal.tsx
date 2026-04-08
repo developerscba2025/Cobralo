@@ -47,7 +47,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
                     onClick={onCancel}
                 >
                     <motion.div
@@ -56,11 +56,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ duration: 0.2 }}
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 w-full max-w-md rounded-[32px] p-8 shadow-2xl relative border border-slate-100 dark:border-slate-700"
+                        className="bg-surface w-full max-w-md rounded-[32px] p-8 shadow-2xl relative border border-border-main"
                     >
                         <button
                             onClick={onCancel}
-                            className="absolute right-6 top-6 text-slate-300 hover:text-slate-600 dark:hover:text-white transition"
+                            className="absolute right-6 top-6 text-text-muted hover:text-text-main transition"
                         >
                             <X size={24} />
                         </button>
@@ -70,18 +70,18 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                                 <AlertTriangle size={32} />
                             </div>
 
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                            <h2 className="text-2xl font-black text-text-main mb-2">
                                 {title}
                             </h2>
 
-                            <p className="text-slate-500 dark:text-slate-400 mb-8">
+                            <p className="text-text-muted mb-8">
                                 {message}
                             </p>
 
                             <div className="flex gap-4 w-full">
                                 <button
                                     onClick={onCancel}
-                                    className="flex-1 py-4 px-6 rounded-2xl font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition"
+                                    className="flex-1 py-4 px-6 rounded-2xl font-bold text-text-main bg-bg-app hover:brightness-95 dark:hover:brightness-110 transition"
                                 >
                                     {cancelText}
                                 </button>

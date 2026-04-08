@@ -117,7 +117,7 @@ const Classes = () => {
         <Layout>
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
                 <div>
-                    <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase italic">Mis Clases</h1>
+                    <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase">Mis Clases</h1>
                     <p className="text-text-muted font-medium tracking-tight">
                         Gestiona tus horarios grupales y asistencia centralizada
                     </p>

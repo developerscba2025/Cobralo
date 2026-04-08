@@ -3,7 +3,13 @@ import { prisma } from '../db';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { getMercadoPagoPayment } from '../services/mercadoPagoService';
 import { decrypt } from '../utils/crypto';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('America/Argentina/Buenos_Aires');
 /**
  * GET /api/payments - Get all payments for the authenticated user
  */
@@ -52,33 +58,43 @@ export const getPaymentStats = async (req: AuthRequest, res: Response) => {
             return;
         }
         
-        const currentYear = new Date().getFullYear();
+        const currentYear = dayjs.tz().year();
         const year = Number(req.query.year) || currentYear;
 
-        const monthlyStats = await prisma.$queryRaw<Array<{ month: number; total: number; count: number }>>`
-            SELECT 
-                month,
-                CAST(SUM(amount) AS DECIMAL(10,2)) as total,
-                COUNT(*) as count
-            FROM payment_history
-            WHERE year = ${year} AND ownerId = ${req.userId}
-            GROUP BY month
-            ORDER BY month
-        `;
-
+        const monthlyStats = await prisma.paymentHistory.groupBy({
+            by: ['month'],
+            where: {
+                year,
+                ownerId: req.userId
+            },
+            _sum: {
+                amount: true
+            },
+            _count: {
+                id: true
+            }
+        });
+        
+        // Map the results to a 12-month array
         const stats = Array.from({ length: 12 }, (_, i) => {
             const found = monthlyStats.find(s => s.month === i + 1);
             return {
                 month: i + 1,
-                total: found ? Number(found.total) : 0,
-                count: found ? Number(found.count) : 0
+                total: found?._sum?.amount ? Number(found._sum.amount) : 0,
+                count: found?._count?.id ? Number(found._count.id) : 0
             };
         });
 
         res.json({ year, stats });
     } catch (error) {
-        console.error('Error fetching payment stats:', error);
-        res.status(500).json({ error: 'Error fetching payment stats' });
+        console.error('CRITICAL: Error fetching payment stats:', error);
+        if (error instanceof Error) {
+            console.error('Stack:', error.stack);
+        }
+        res.status(500).json({ 
+            error: 'Error fetching payment stats',
+            details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        });
     }
 };
 
@@ -92,21 +108,44 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
             return;
         }
         
-        const currentYear = new Date().getFullYear();
-        const lastYear = currentYear - 1;
+        const currentYear = dayjs.tz().year();
+        const currentMonth = dayjs.tz().month() + 1;
+        
+        const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+        const yearOfLastMonth = currentMonth === 1 ? currentYear - 1 : currentYear;
 
-        const currentYearTotal = await prisma.paymentHistory.aggregate({
+        const currentMonthTotal = await prisma.paymentHistory.aggregate({
             _sum: { amount: true },
             where: { 
                 year: currentYear,
+                month: currentMonth,
                 ownerId: req.userId
             }
         });
 
-        const lastYearTotal = await prisma.paymentHistory.aggregate({
+        const lastMonthTotal = await prisma.paymentHistory.aggregate({
             _sum: { amount: true },
             where: { 
-                year: lastYear,
+                year: yearOfLastMonth,
+                month: lastMonth,
+                ownerId: req.userId
+            }
+        });
+
+        const currentMonthExpenses = await prisma.expense.aggregate({
+            _sum: { amount: true },
+            where: {
+                year: currentYear,
+                month: currentMonth,
+                ownerId: req.userId
+            }
+        });
+
+        const lastMonthExpenses = await prisma.expense.aggregate({
+            _sum: { amount: true },
+            where: {
+                year: yearOfLastMonth,
+                month: lastMonth,
                 ownerId: req.userId
             }
         });
@@ -140,11 +179,19 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
             })
         );
 
+        const currentIncome = Number(currentMonthTotal._sum.amount) || 0;
+        const lastIncome = Number(lastMonthTotal._sum.amount) || 0;
+        const currentExp = Number(currentMonthExpenses._sum.amount) || 0;
+        const lastExp = Number(lastMonthExpenses._sum.amount) || 0;
+
         res.json({
             yearComparison: {
-                current: Number(currentYearTotal._sum.amount) || 0,
-                last: Number(lastYearTotal._sum.amount) || 0,
-                growth: (((Number(currentYearTotal._sum.amount) || 0) - (Number(lastYearTotal._sum.amount) || 0)) / (Number(lastYearTotal._sum.amount) || 1)) * 100
+                current: currentIncome,
+                last: lastIncome,
+                growth: lastIncome > 0 ? ((currentIncome - lastIncome) / lastIncome) * 100 : 0,
+                netIncome: currentIncome - currentExp,
+                expenses: currentExp,
+                period: 'Mensual (vs. mes anterior)'
             },
             topStudents: enrichedTopStudents
         });
@@ -230,7 +277,7 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
                 ownerId: req.userId,
                 studentId: parseInt(studentId as any),
                 amount: parseFloat(amount),
-                paidAt: paidAt ? new Date(paidAt) : new Date(),
+                paidAt: paidAt ? dayjs.tz(paidAt).toDate() : dayjs.tz().toDate(),
                 month: parseInt(month),
                 year: parseInt(year)
             },
@@ -242,6 +289,11 @@ export const createPayment = async (req: AuthRequest, res: Response) => {
                     }
                 }
             }
+        });
+
+        await prisma.student.update({
+            where: { id: parseInt(studentId as any) },
+            data: { status: 'paid' }
         });
 
         res.json(payment);
@@ -329,6 +381,23 @@ export const deletePayment = async (req: AuthRequest, res: Response) => {
             where: { id: parseInt(id as any) }
         });
 
+        // Revertir a pending si no quedan pagos para ese alumno en ese mes específico
+        const remainingPayments = await prisma.paymentHistory.findFirst({
+            where: {
+                studentId: payment.studentId,
+                ownerId: req.userId,
+                month: payment.month,
+                year: payment.year
+            }
+        });
+
+        if (!remainingPayments) {
+            await prisma.student.update({
+                where: { id: payment.studentId },
+                data: { status: 'pending' }
+            });
+        }
+
         res.json({ message: 'Payment deleted' });
     } catch (error) {
         console.error('Error al eliminar pago:', error);
@@ -369,10 +438,12 @@ export const handleStudentPaymentWebhook = async (req: Request, res: Response) =
         const { status, external_reference } = payment;
 
         if (status === 'approved' && external_reference?.startsWith('student-')) {
-            // external_reference format: `student-${studentId}-user-${userId}`
-            const match = external_reference.match(/student-(\d+)-user-\d+/);
+            // external_reference format: `student-${studentId}-user-${userId}` or `student-${studentId}-user-${userId}-month-${month}-year-${year}`
+            const match = external_reference.match(/student-(\d+)-user-\d+(?:-month-(\d+)-year-(\d+))?/);
             if (match) {
                 const studentId = Number(match[1]);
+                const refMonth = match[2] ? Number(match[2]) : dayjs.tz().month() + 1;
+                const refYear = match[3] ? Number(match[3]) : dayjs.tz().year();
 
                 // Mover a pagado
                 await prisma.student.update({
@@ -383,11 +454,7 @@ export const handleStudentPaymentWebhook = async (req: Request, res: Response) =
                 // Evitar duplicados (MercadoPago puede enviar el webhook más de una vez)
                 const existingPayment = await prisma.paymentHistory.findFirst({
                     where: {
-                        studentId: studentId,
-                        ownerId: Number(userId),
-                        amount: payment.transaction_amount,
-                        month: new Date().getMonth() + 1,
-                        year: new Date().getFullYear()
+                        mpPaymentId: paymentId.toString()
                     }
                 });
 
@@ -398,8 +465,9 @@ export const handleStudentPaymentWebhook = async (req: Request, res: Response) =
                             studentId: studentId,
                             amount: payment.transaction_amount,
                             paidAt: new Date(payment.date_approved || payment.date_created),
-                            month: new Date().getMonth() + 1,
-                            year: new Date().getFullYear()
+                            month: refMonth,
+                            year: refYear,
+                            mpPaymentId: paymentId.toString()
                         }
                     });
                 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import ProfileTab from './ProfileTab';
 import SecurityTab from './SecurityTab';
+import AccountTab from './AccountTab';
 import AcademyTab from './AcademyTab';
 import ServicesTab from './ServicesTab';
 import AutomationTab from './AutomationTab';
@@ -43,6 +44,9 @@ interface SettingsContentProps {
     priceLastUpdate: string | null;
     loadingCheckout: string | null;
     handleUpgrade: (planId: string) => void;
+    handleCancelSubscription: () => void;
+    cancelingSubscription: boolean;
+    subscriptionStatus: string | null;
     handleGenerateLink: () => void;
     handleToggleRatingVisibility: (id: number) => void;
     ratings: any[];
@@ -54,6 +58,17 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
     const { activeTab } = props;
 
     switch (activeTab) {
+        case 'account':
+            return (
+                <AccountTab
+                    user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving}
+                    passwordData={props.passwordData} setPasswordData={props.setPasswordData}
+                    handleChangePassword={props.handleChangePassword} changingPassword={props.changingPassword}
+                    showCurrentPassword={props.showCurrentPassword} setShowCurrentPassword={props.setShowCurrentPassword}
+                    showNewPassword={props.showNewPassword} setShowNewPassword={props.setShowNewPassword}
+                    showConfirmPassword={props.showConfirmPassword} setShowConfirmPassword={props.setShowConfirmPassword}
+                />
+            );
         case 'profile':
             return <ProfileTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} tab={props.tab} />;
         case 'security':
@@ -102,7 +117,7 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
         case 'automation':
             return <AutomationTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} isPro={props.isPro} />;
         case 'payment-accounts':
-            return <PaymentAccountsTab />;
+            return <PaymentAccountsTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} />;
         case 'ratings':
             return (
                 <RatingsTab
@@ -124,6 +139,9 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     pendingAdjustment={props.pendingAdjustment}
                     loadingCheckout={props.loadingCheckout}
                     handleUpgrade={props.handleUpgrade}
+                    handleCancelSubscription={props.handleCancelSubscription}
+                    cancelingSubscription={props.cancelingSubscription}
+                    subscriptionStatus={props.subscriptionStatus}
                 />
             );
         case 'support':

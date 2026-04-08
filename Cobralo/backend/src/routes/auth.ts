@@ -146,12 +146,13 @@ router.post('/forgot-password', authLimiter, async (req: Request, res: Response)
         }
 
         const token = crypto.randomBytes(32).toString('hex');
+        const hash = crypto.createHash('sha256').update(token).digest('hex');
         const expires = new Date(Date.now() + 3600000); // 1 hora
 
         await prisma.user.update({
             where: { id: user.id },
             data: {
-                resetPasswordToken: token,
+                resetPasswordToken: hash,
                 resetPasswordExpires: expires
             }
         });
@@ -186,9 +187,11 @@ router.post('/reset-password', authLimiter, async (req: Request, res: Response) 
             return;
         }
 
+        const hash = crypto.createHash('sha256').update(token).digest('hex');
+
         const user = await prisma.user.findFirst({
             where: {
-                resetPasswordToken: token,
+                resetPasswordToken: hash,
                 resetPasswordExpires: {
                     gt: new Date()
                 }
@@ -431,13 +434,33 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
     }
 });
 
-// DELETE /api/auth/me - Delete current account
-router.delete('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
+// DELETE /api/auth/delete-account - Delete current account with password protection
+router.delete('/delete-account', authLimiter, authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
+        const { password } = req.body;
+        
+        if (!password) {
+            res.status(400).json({ error: 'La contraseña es requerida para eliminar la cuenta.' });
+            return;
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: req.userId } });
+        if (!user) {
+            res.status(401).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            res.status(401).json({ error: 'Contraseña incorrecta. Operación cancelada.' });
+            return;
+        }
+
         await prisma.user.delete({
             where: { id: req.userId }
         });
-        res.json({ message: 'Cuenta eliminada exitosamente' });
+        
+        res.json({ message: 'Cuenta y todos los datos asociados eliminados exitosamente.' });
     } catch (error) {
         console.error('Delete account error:', error);
         res.status(500).json({ error: 'Error al eliminar la cuenta' });

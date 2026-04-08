@@ -89,7 +89,7 @@ const Pricing = () => {
               color: '#4ade80' 
             }}
           >
-            PLANES &amp; PRECIOS
+            PLANES & PRECIOS
           </div>
           <h2 className="text-3xl md:text-6xl font-bold mb-6 tracking-tight leading-[1.1]" style={{ color: '#fafafa' }}>
             Inversión mínima.<br />

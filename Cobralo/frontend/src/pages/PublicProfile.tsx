@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, MessageSquare, Loader2, Award, CheckCircle2, Building2, Shield } from 'lucide-react';
+import { Star, MessageSquare, Loader2, Award, CheckCircle2, Building2, Shield, MessageCircle } from 'lucide-react';
 import { floatVariants } from '../utils/motion';
 
 /* ─── Local animation helpers ──────────────────────────────────────────────── */
@@ -352,6 +352,22 @@ const PublicProfile = () => {
                                             </div>
                                         </RevealSection>
                                     ))}
+                                </div>
+                                <div className="pt-6 mt-6 border-t border-border-main/50">
+                                    <a
+                                        href={profile.phone ? `https://wa.me/${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hola, quiero consultar por tus clases!')}` : '#'}
+                                        target="_blank" rel="noreferrer"
+                                        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-primary-main hover:bg-primary-main/90 text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-lg shadow-primary-main/20 hover:scale-[1.02] active:scale-95"
+                                        onClick={(e) => {
+                                            if (!profile.phone) {
+                                                e.preventDefault();
+                                                alert("Este profesional aún no configuró su número de contacto.");
+                                            }
+                                        }}
+                                    >
+                                        <MessageCircle size={18} />
+                                        Contactar
+                                    </a>
                                 </div>
                             </motion.div>
                         </RevealSection>

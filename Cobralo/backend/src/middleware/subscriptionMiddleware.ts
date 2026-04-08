@@ -127,3 +127,44 @@ export const enrichWithFeatures = async (req: AuthRequest, res: Response, next: 
         next();
     }
 };
+
+/**
+ * Middleware que bloquea a los usuarios FREE que volvieron de PRO
+ * y superan el límite. Sólo les permite leer y borrar.
+ */
+export const enforceFreeRiderBlock = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    // Permitir solo lectura o borrado (para que puedan regularizar su cuenta)
+    if (['GET', 'OPTIONS', 'DELETE'].includes(req.method)) return next();
+
+    try {
+        if (!req.userId) {
+            return res.status(401).json({ error: 'Autenticación requerida' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: req.userId },
+            select: { plan: true, isPro: true }
+        });
+
+        if (!user?.isPro || user.plan !== 'PRO') {
+            const studentCount = await prisma.student.count({
+                where: { ownerId: req.userId }
+            });
+
+            const FREE_STUDENT_LIMIT = 5;
+
+            if (studentCount > FREE_STUDENT_LIMIT) {
+                res.status(403).json({ 
+                    error: `[LIMIT_EXCEEDED_LOCK] Tu cuenta tiene ${studentCount} alumnos, excediendo el límite de ${FREE_STUDENT_LIMIT} del plan FREE. Por favor elimina alumnos o suscríbete a PRO para desbloquear tus funciones.`,
+                    requiresPro: true,
+                    locked: true
+                });
+                return;
+            }
+        }
+        next();
+    } catch (error) {
+        console.error('Error in enforceFreeRiderBlock:', error);
+        next();
+    }
+};

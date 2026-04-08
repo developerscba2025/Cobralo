@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Banknote } from 'lucide-react';
+import { Plus, Trash2, Banknote, Zap } from 'lucide-react';
 import { api } from '../../services/api';
-import type { BusinessPaymentAccount } from '../../services/api';
+import type { BusinessPaymentAccount, User } from '../../services/api';
 import { showToast } from '../Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const PaymentAccountsTab: React.FC = () => {
+interface PaymentAccountsTabProps {
+    user: Partial<User>;
+    setUser: (u: Partial<User>) => void;
+    handleSave: () => void;
+    saving: boolean;
+}
+
+const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser, handleSave, saving }) => {
     const [accounts, setAccounts] = useState<BusinessPaymentAccount[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
     const [newAccount, setNewAccount] = useState({ name: '', alias: '' });
-    const [saving, setSaving] = useState(false);
+    const [savingAccount, setSavingAccount] = useState(false);
 
     useEffect(() => {
         loadAccounts();
@@ -32,7 +39,7 @@ const PaymentAccountsTab: React.FC = () => {
         e.preventDefault();
         if (!newAccount.name || !newAccount.alias) return;
         try {
-            setSaving(true);
+            setSavingAccount(true);
             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/payment-accounts`, {
                 method: 'POST',
                 headers: {
@@ -50,7 +57,7 @@ const PaymentAccountsTab: React.FC = () => {
         } catch (error: any) {
             showToast.error('Error al guardar la cuenta');
         } finally {
-            setSaving(false);
+            setSavingAccount(false);
         }
     };
 
@@ -162,10 +169,10 @@ const PaymentAccountsTab: React.FC = () => {
                             </button>
                             <button
                                 type="submit"
-                                disabled={saving}
+                                disabled={savingAccount}
                                 className="px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest bg-primary-main text-white shadow-lg shadow-primary-glow active:scale-95 transition disabled:opacity-50"
                             >
-                                {saving ? 'Guardando...' : 'Guardar Cuenta'}
+                                {savingAccount ? 'Guardando...' : 'Guardar Cuenta'}
                             </button>
                         </div>
                     </form>
@@ -180,6 +187,34 @@ const PaymentAccountsTab: React.FC = () => {
                         </button>
                     )
                 )}
+            </div>
+
+            {/* Mercado Pago API */}
+            <div className="p-5 md:p-6 lg:p-8 bg-blue-50/30 dark:bg-blue-500/5 rounded-[24px] lg:rounded-[40px] border border-blue-100/50 dark:border-blue-500/10 space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-sm font-black text-blue-700 dark:text-blue-400 flex items-center gap-2 uppercase tracking-tight">
+                            <Zap size={18} /> Mercado Pago Automático
+                        </h3>
+                        <p className="text-[10px] font-bold text-blue-500/60 uppercase tracking-widest mt-1">Generá links de pago sin compartir tu alias</p>
+                    </div>
+                    <a href="https://www.mercadopago.com.ar/developers/panel/applications" target="_blank" rel="noreferrer" className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 hover:underline shrink-0">MP Developers ↗</a>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-zinc-400 dark:text-blue-500/40 uppercase ml-4 tracking-widest">Access Token</label>
+                        <input type="password" className="w-full p-5 bg-surface text-text-main rounded-[20px] border-none font-bold text-text-main shadow-sm focus:ring-2 focus:ring-blue-400/20 outline-none" value={user.mpAccessToken || ''} onChange={e => setUser({ ...user, mpAccessToken: e.target.value })} placeholder="APP_USR-..." />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-zinc-400 dark:text-blue-500/40 uppercase ml-4 tracking-widest">Public Key</label>
+                        <input type="text" className="w-full p-5 bg-surface text-text-main rounded-[20px] border-none font-bold text-text-main shadow-sm focus:ring-2 focus:ring-blue-400/20 outline-none" value={user.mpPublicKey || ''} onChange={e => setUser({ ...user, mpPublicKey: e.target.value })} placeholder="APP_USR-..." />
+                    </div>
+                </div>
+                <div className="flex justify-end">
+                    <button onClick={() => handleSave()} disabled={saving} className="w-full lg:w-auto bg-primary-main text-white font-black py-4 px-8 lg:py-5 lg:px-14 rounded-2xl lg:rounded-[28px] shadow-xl shadow-primary-glow flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
+                        {saving ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full inline-block" /> : 'Guardar Cambios'}
+                    </button>
+                </div>
             </div>
         </div>
     );

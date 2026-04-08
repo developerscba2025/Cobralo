@@ -87,7 +87,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
                   <CheckCircle2 size={40} />
                 </div>
                 <h4 className="text-xl font-black text-white">¡Mensaje enviado!</h4>
-                <p className="text-text-muted text-sm max-w-[200px]">Te responderemos a tu correo en menos de 24hs.</p>
+                <p className="text-white/60 text-sm max-w-[200px]">Te responderemos a tu correo en menos de 24hs.</p>
               </motion.div>
             ) : (
               <form 
@@ -96,7 +96,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-black text-text-dim tracking-widest pl-1">Nombre</label>
+                    <label className="text-[10px] uppercase font-black text-white/50 tracking-widest pl-1">Nombre</label>
                     <input 
                       name="name"
                       type="text" 
@@ -106,7 +106,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] uppercase font-black text-text-dim tracking-widest pl-1">Email</label>
+                    <label className="text-[10px] uppercase font-black text-white/50 tracking-widest pl-1">Email</label>
                     <input 
                       name="email"
                       type="email" 
@@ -118,7 +118,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
                 </div>
                 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-black text-text-dim tracking-widest pl-1">Asunto</label>
+                  <label className="text-[10px] uppercase font-black text-white/50 tracking-widest pl-1">Asunto</label>
                   <input 
                     name="subject"
                     type="text" 
@@ -129,7 +129,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-black text-text-dim tracking-widest pl-1">Mensaje</label>
+                  <label className="text-[10px] uppercase font-black text-white/50 tracking-widest pl-1">Mensaje</label>
                   <textarea 
                     name="message"
                     rows={4}

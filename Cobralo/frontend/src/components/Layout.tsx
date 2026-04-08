@@ -7,7 +7,7 @@ import {
   Settings, Moon, Sun, LogOut, Menu, 
   Search, ExternalLink,
   LayoutDashboard, Calendar, Users2, LibraryBig,
-  RefreshCw, Bell, Lock
+  RefreshCw, Bell, Lock, Banknote
 } from 'lucide-react';
 import { showToast } from './Toast';
 import MobileMenu from './MobileMenu';
@@ -179,6 +179,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         {[
                             { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
                             { to: '/app/students', icon: Users2, label: 'Alumnos' },
+                            { to: '/app/payments', icon: Banknote, label: 'Cobros' },
                             { to: '/app/calendar', icon: Calendar, label: 'Calendario' },
                             { to: '/app/classes', icon: LibraryBig, label: 'Clases' },
                             { to: '/app/settings', icon: Settings, label: 'Ajustes' },

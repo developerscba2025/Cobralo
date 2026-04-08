@@ -12,12 +12,32 @@ export const getAllStudents = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const students = await prisma.student.findMany({
-            where: { ownerId: req.userId },
+        const { page = 1, limit = 50, all = "false" } = req.query;
+        const isAll = all === "true";
+
+        const queryOptions: any = {
+            where: { ownerId: req.userId, isActive: true },
             include: { schedules: true },
             orderBy: { name: 'asc' }
-        });
+        };
 
+        if (!isAll) {
+            const pageNum = parseInt(page as string);
+            const limitNum = parseInt(limit as string);
+            queryOptions.skip = (pageNum - 1) * limitNum;
+            queryOptions.take = limitNum;
+            
+            const total = await prisma.student.count({ where: queryOptions.where });
+            const students = await prisma.student.findMany(queryOptions);
+            return res.json({
+                data: students,
+                total,
+                page: pageNum,
+                totalPages: Math.ceil(total / limitNum)
+            });
+        }
+
+        const students = await prisma.student.findMany(queryOptions);
         res.json(students);
     } catch (error) {
         console.error('Error al obtener estudiantes:', error);
@@ -68,6 +88,58 @@ export const getStudentById = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Error al obtener estudiante:', error);
         res.status(500).json({ error: 'Error al obtener estudiante' });
+    }
+};
+
+export const getWhatsappDigest = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        if (!req.userId) {
+            res.status(401).json({ error: 'Autenticación requerida' });
+            return;
+        }
+
+        const student = await prisma.student.findUnique({
+            where: { id: Number(id), ownerId: req.userId },
+            include: { owner: true }
+        });
+
+        if (!student) {
+            res.status(404).json({ error: 'Alumno no encontrado' });
+            return;
+        }
+
+        const currency = student.owner.currency || '$';
+        let amountText = 'Estás al día.';
+        
+        if (student.status !== 'paid') {
+            amountText = `Tu deuda pendiente es de ${currency}${Number(student.balance_due || student.amount).toLocaleString('es-AR')}.`;
+        }
+
+        // Recuperar si hay cuenta bancaria
+        const bankData = await prisma.businessPaymentAccount.findFirst({
+            where: { ownerId: req.userId, isDefault: true } // Assuming they have one Default
+        });
+
+        const paymentOptions = bankData ? `Podes transferir al Alias/CBU: ${bankData.alias}` : '';
+
+        // Generate text
+        let message = `Hola ${student.name.split(' ')[0]},\nTe escribo de *${student.owner.bizName || student.owner.name}*.\n\n${amountText}\n`;
+        
+        if (student.planType === 'PACK') {
+            message += `Te quedan ${student.credits} clases en tu pack.\n`;
+        }
+
+        if (paymentOptions) {
+            message += `\n${paymentOptions}`;
+        }
+
+        const link = `https://wa.me/${student.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(message)}`;
+
+        res.json({ link, message });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al generar el resumen' });
     }
 };
 
@@ -156,10 +228,28 @@ export const updateStudent = async (req: AuthRequest, res: Response) => {
                 status: req.body.status !== undefined ? req.body.status : undefined,
                 makeup_classes: req.body.makeup_classes !== undefined ? parseInt(String(req.body.makeup_classes)) : undefined,
                 schedules: req.body.schedules ? {
-                    deleteMany: {},
-                    create: req.body.schedules.map((s: any) => ({
-                        ...s,
-                        ownerId: req.userId
+                    deleteMany: {
+                        id: {
+                            notIn: req.body.schedules.filter((s: any) => s.id).map((s: any) => s.id)
+                        }
+                    },
+                    upsert: req.body.schedules.map((s: any) => ({
+                        where: { id: s.id || -1 },
+                        update: {
+                            dayOfWeek: s.dayOfWeek,
+                            startTime: s.startTime,
+                            endTime: s.endTime,
+                            isRecurring: s.isRecurring,
+                            date: s.date
+                        },
+                        create: {
+                            ownerId: req.userId,
+                            dayOfWeek: s.dayOfWeek,
+                            startTime: s.startTime,
+                            endTime: s.endTime,
+                            isRecurring: s.isRecurring,
+                            date: s.date
+                        }
                     }))
                 } : undefined
             },
@@ -185,11 +275,12 @@ export const deleteStudent = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        await prisma.student.delete({
+        await prisma.student.update({
             where: { 
                 id: Number(id),
                 ownerId: req.userId
-            }
+            },
+            data: { isActive: false }
         });
 
         res.json({ message: 'Student deleted' });
@@ -259,16 +350,19 @@ export const updatePrices = async (req: AuthRequest, res: Response) => {
         if (service && service !== 'ALL') {
             await prisma.$executeRaw`
                 UPDATE students 
-                SET amount = amount * ${factor}, 
-                    price_per_hour = price_per_hour * ${factor}
-                WHERE service_name = ${service} AND ownerId = ${req.userId}
+                SET amount = ROUND(amount * ${factor}), 
+                    price_per_hour = ROUND(price_per_hour * ${factor})
+                WHERE service_name = ${service} 
+                  AND "ownerId" = ${req.userId}
+                  AND "excludeFromMassiveIncreases" = false
             `;
         } else {
             await prisma.$executeRaw`
                 UPDATE students 
-                SET amount = amount * ${factor}, 
-                    price_per_hour = price_per_hour * ${factor}
-                WHERE ownerId = ${req.userId}
+                SET amount = ROUND(amount * ${factor}), 
+                    price_per_hour = ROUND(price_per_hour * ${factor})
+                WHERE "ownerId" = ${req.userId}
+                  AND "excludeFromMassiveIncreases" = false
             `;
         }
 
@@ -292,7 +386,11 @@ export const resetMonth = async (req: AuthRequest, res: Response) => {
         const result = await prisma.student.updateMany({
             where: { 
                 status: 'paid',
-                ownerId: req.userId
+                ownerId: req.userId,
+                OR: [
+                    { paidUntil: null },
+                    { paidUntil: { lt: new Date() } }
+                ]
             },
             data: { status: 'pending' }
         });
@@ -321,7 +419,8 @@ export const getPendingContacts = async (req: AuthRequest, res: Response) => {
             where: {
                 ownerId: req.userId,
                 status: 'pending',
-                phone: { not: null }
+                phone: { not: null },
+                isActive: true
             },
             select: {
                 id: true,

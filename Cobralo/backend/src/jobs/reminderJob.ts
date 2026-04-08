@@ -21,6 +21,7 @@ export async function runReminderJob() {
             where: {
                 due_day: targetDay,
                 status: 'pending',
+                wantsWhatsAppAlerts: true,
                 owner: {
                     OR: [
                         { isPro: true },

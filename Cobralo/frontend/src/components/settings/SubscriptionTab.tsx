@@ -10,10 +10,14 @@ interface SubscriptionTabProps {
     pendingAdjustment: any;
     loadingCheckout: string | null;
     handleUpgrade: (planId: string) => void;
+    handleCancelSubscription: () => void;
+    cancelingSubscription: boolean;
+    subscriptionStatus: string | null;
 }
 
 const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
     user, isPro, subscriptionPlans, priceLastUpdate, pendingAdjustment, loadingCheckout, handleUpgrade,
+    handleCancelSubscription, cancelingSubscription, subscriptionStatus
 }) => {
     const [isTrimestral, setIsTrimestral] = useState(false);
 
@@ -60,12 +64,30 @@ const SubscriptionTab: React.FC<SubscriptionTabProps> = ({
                             )}
                         </div>
                     </div>
-                    <button
-                        onClick={() => user.plan !== 'PRO' && document.getElementById('pricing-grid')?.scrollIntoView({ behavior: 'smooth' })}
-                        className={`w-full lg:w-auto px-6 py-4 lg:px-10 lg:py-5 rounded-2xl lg:rounded-[24px] font-black text-xs uppercase tracking-widest transition-all ${isPro ? 'bg-surface text-zinc-900 dark:text-emerald-50 shadow-md border border-border-main hover:bg-zinc-50' : 'bg-primary-main text-white shadow-xl shadow-primary-glow hover:bg-green-600'}`}
-                    >
-                        {user.plan === 'PRO' ? 'Suscripción Activa' : (user.plan === 'INITIAL' ? 'Pasar a Pro (25% OFF)' : 'Activar Pro')}
-                    </button>
+                    <div className="flex flex-col lg:flex-row gap-3 w-full lg:w-auto">
+                        <button
+                            onClick={() => user.plan !== 'PRO' && document.getElementById('pricing-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                            className={`px-6 py-4 lg:px-10 lg:py-5 rounded-2xl lg:rounded-[24px] font-black text-xs uppercase tracking-widest transition-all ${isPro ? 'bg-primary-main/10 text-primary-main border border-primary-main/20 cursor-default' : 'bg-primary-main text-white shadow-xl shadow-primary-glow hover:bg-green-600 w-full lg:w-auto'}`}
+                        >
+                            {user.plan === 'PRO' ? 'Suscripción Activa' : (user.plan === 'INITIAL' ? 'Pasar a Pro (25% OFF)' : 'Activar Pro')}
+                        </button>
+                        
+                        {isPro && subscriptionStatus === 'CANCEL_AT_PERIOD_END' && (
+                            <div className="px-6 py-4 lg:py-5 rounded-2xl lg:rounded-[24px] font-black text-xs uppercase tracking-widest bg-amber-500/10 text-amber-600 border border-amber-500/20 text-center">
+                                Baja Programada
+                            </div>
+                        )}
+                        
+                        {isPro && subscriptionStatus !== 'CANCEL_AT_PERIOD_END' && (
+                            <button
+                                onClick={handleCancelSubscription}
+                                disabled={cancelingSubscription}
+                                className="px-6 py-4 lg:py-5 rounded-2xl lg:rounded-[24px] font-black text-xs uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
+                            >
+                                {cancelingSubscription ? 'Procesando...' : 'Dar de baja'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 

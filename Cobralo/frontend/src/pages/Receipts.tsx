@@ -104,7 +104,7 @@ const Receipts: React.FC = () => {
                             <div className="w-12 h-12 bg-green-600/10 text-green-600 rounded-2xl flex items-center justify-center">
                                 <ReceiptIcon size={28} />
                             </div>
-                            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic font-accent">Recibos</h1>
+                            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase">Recibos</h1>
                         </div>
                         <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[11px] ml-1">Historial de pagos y comprobantes emitidos</p>
                     </div>

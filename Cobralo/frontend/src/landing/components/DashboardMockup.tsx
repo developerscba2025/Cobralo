@@ -175,12 +175,14 @@ const DashboardMockup = () => {
             </div>
 
             {/* Floating Call to Action */}
-            <motion.div 
-               style={{ translateZ: 100 }}
-               className="absolute -bottom-18 left-1/2 -translate-x-1/2 px-10 py-5 bg-[#22c55e] rounded-[28px] shadow-2xl shadow-primary/40 text-[#090B0D] text-[12px] font-black uppercase tracking-[0.3em] transform transition-all group-hover:-translate-y-1 cursor-pointer z-50 hover:bg-white active:scale-95 text-center min-w-[280px]"
-            >
-               Probar Gratis 14 Días
-            </motion.div>
+            <Link to="/app/login?register=true">
+              <motion.div 
+                 style={{ translateZ: 100 }}
+                 className="absolute -bottom-18 left-1/2 -translate-x-1/2 px-10 py-5 bg-[#22c55e] rounded-[28px] shadow-2xl shadow-primary/40 text-[#090B0D] text-[12px] font-black uppercase tracking-[0.3em] transform transition-all group-hover:-translate-y-1 cursor-pointer z-50 hover:bg-white active:scale-95 text-center min-w-[280px]"
+              >
+                 Probar Gratis 14 Días
+              </motion.div>
+            </Link>
           </div>
         </motion.div>
         </div>

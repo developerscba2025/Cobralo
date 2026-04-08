@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MessageSquare, Zap, Save, RefreshCw } from 'lucide-react';
+import { MessageSquare, Save, RefreshCw } from 'lucide-react';
 import type { User } from '../../services/api';
 import { ProFeature } from '../ProGuard';
 
@@ -26,9 +26,9 @@ const AutomationTab: React.FC<AutomationTabProps> = ({ user, setUser, handleSave
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div>
             <h2 className="text-2xl font-black text-zinc-900 dark:text-emerald-50 flex items-center gap-3 mb-2 tracking-tight uppercase">
-                <MessageSquare size={24} className="text-primary-main" /> Automatización y Pagos
+                <MessageSquare size={24} className="text-primary-main" /> Automatización
             </h2>
-            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Simplificá tu gestión y cobros.</p>
+            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Recordatorios automáticos por WhatsApp.</p>
         </div>
 
         <div className="p-5 md:p-6 lg:p-8 bg-bg-app rounded-[32px] md:rounded-[48px] border border-border-main space-y-8">
@@ -135,24 +135,7 @@ const AutomationTab: React.FC<AutomationTabProps> = ({ user, setUser, handleSave
             </div>
         </div>
 
-        <div className="p-4 md:p-6 lg:p-8 bg-blue-50/30 dark:bg-blue-500/5 rounded-[24px] lg:rounded-[48px] border border-blue-100/50 dark:border-blue-500/10 space-y-6 lg:space-y-8">
-            <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-blue-700 dark:text-blue-400 flex items-center gap-2 uppercase tracking-tight">
-                    <Zap size={20} /> Mercado Pago Automático
-                </h3>
-                <a href="https://www.mercadopago.com.ar/developers/panel/applications" target="_blank" rel="noreferrer" className="text-[10px] font-black uppercase text-blue-600 hover:underline">MP Developers ↗</a>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-zinc-400 dark:text-blue-500/40 uppercase ml-4">Access Token</label>
-                    <input type="password" className="w-full p-5 bg-surface text-text-main rounded-[24px] border-none font-bold text-text-main shadow-sm" value={user.mpAccessToken || ''} onChange={e => setUser({ ...user, mpAccessToken: e.target.value })} placeholder="APP_USR-..." />
-                </div>
-                <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-zinc-400 dark:text-blue-500/40 uppercase ml-4">Public Key</label>
-                    <input type="text" className="w-full p-5 bg-surface text-text-main rounded-[24px] border-none font-bold text-text-main shadow-sm" value={user.mpPublicKey || ''} onChange={e => setUser({ ...user, mpPublicKey: e.target.value })} placeholder="APP_USR-..." />
-                </div>
-            </div>
-        </div>
+
 
             <div className="flex justify-end pt-4">
                 <button onClick={() => handleSave()} disabled={saving} className="w-full lg:w-auto bg-primary-main text-white font-black py-4 px-8 lg:py-5 lg:px-14 rounded-2xl lg:rounded-[28px] shadow-xl shadow-primary-glow flex items-center justify-center gap-3 uppercase tracking-widest text-xs">

@@ -76,12 +76,49 @@ router.get('/confirm/:token', async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Token inválido o expirado.' });
         }
 
+        const classDate = new Date(attendance.date);
+        classDate.setHours(23, 59, 59, 999);
+        const deadline = new Date(classDate.getTime() + 24 * 60 * 60 * 1000);
+        
+        if (new Date() > deadline) {
+            return res.status(400).json({ error: 'Este enlace ya venció. Solo es válido hasta 24 horas después de la clase.' });
+        }
+
         if (attendance.confirmedAt) {
             return res.json({ 
                 alreadyConfirmed: true,
                 studentName: (attendance as any).student.name,
                 time: (attendance as any).schedule?.startTime,
             });
+        }
+
+        // Validar límite Free Rider Owner (Para presionar al profesor moroso)
+        if (!(attendance as any).owner.isPro || (attendance as any).owner.plan !== 'PRO') {
+             const studentCount = await prisma.student.count({
+                 where: { ownerId: attendance.ownerId }
+             });
+             if (studentCount > 5) {
+                 return res.status(403).json({ error: 'La plataforma no procesará más ingresos hasta que la academia libere cupos o active el plan PRO.' });
+             }
+        }
+
+        // Validar capacidad
+        if (attendance.scheduleId && attendance.schedule?.capacity) {
+            const checkDate = new Date(attendance.date);
+            const startOfDay = new Date(checkDate.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(checkDate.setHours(23, 59, 59, 999));
+
+            const currentConfirmed = await prisma.attendance.count({
+                where: {
+                    scheduleId: attendance.scheduleId,
+                    status: 'present',
+                    date: { gte: startOfDay, lte: endOfDay }
+                }
+            });
+
+            if (currentConfirmed >= attendance.schedule.capacity) {
+                return res.status(400).json({ error: 'La clase ya está llena. Capacidad máxima alcanzada.' });
+            }
         }
 
         // Mark as confirmed
@@ -124,6 +161,23 @@ router.get('/cancel/:token', async (req: Request, res: Response) => {
 
         if (!attendance) {
             return res.status(404).json({ error: 'Token inválido o expirado.' });
+        }
+
+        // Zombie link protection
+        const classDate = new Date(attendance.date);
+        classDate.setHours(23, 59, 59, 999);
+        const deadline = new Date(classDate.getTime() + 24 * 60 * 60 * 1000);
+        
+        if (new Date() > deadline) {
+            return res.status(400).json({ error: 'Este enlace ya venció. Solo es válido hasta 24 horas después de la clase.' });
+        }
+        
+        // Prevent cancelling if already confirmed or cancelled
+        if (attendance.confirmedAt || attendance.status === 'absent') {
+            return res.json({ 
+                alreadyConfirmed: true,
+                error: 'Esta clase ya fue procesada.'
+            });
         }
 
         await prisma.attendance.update({

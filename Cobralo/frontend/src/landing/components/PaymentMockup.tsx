@@ -64,7 +64,7 @@ const PaymentMockup = () => {
           <div className="mt-8 flex items-center justify-center gap-4 opacity-30">
              <div className="flex items-center gap-1.5">
                 <ShieldCheck size={10} />
-                <span className="text-[8px] font-black uppercase tracking-widest">Encritación SSL</span>
+                <span className="text-[8px] font-black uppercase tracking-widest">Encriptación SSL</span>
              </div>
              <div className="w-1 h-1 rounded-full bg-zinc-600" />
              <div className="flex items-center gap-1.5">

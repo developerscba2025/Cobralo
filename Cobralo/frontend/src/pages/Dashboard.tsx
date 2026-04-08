@@ -7,6 +7,7 @@ import SkeletonCard from '../components/SkeletonCard';
 import ProDashboard from './ProDashboard';
 import BasicDashboard from './BasicDashboard';
 import { showToast } from '../components/Toast';
+import OnboardingWizard from '../components/dashboard/OnboardingWizard';
 
 const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -20,6 +21,7 @@ const Dashboard = () => {
     const [paymentStats, setPaymentStats] = useState<PaymentStats | null>(null);
     const [todaysSchedules, setTodaysSchedules] = useState<any[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
+    const [services, setServices] = useState<any[]>([]);
     const [pendingAdjustment, setPendingAdjustment] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -35,6 +37,14 @@ const Dashboard = () => {
 
             setStudents(studentsData);
             setPaymentStats(pStats);
+
+            // Non-critical: fetch services for onboarding wizard
+            try {
+                const servicesData = await api.getServices();
+                setServices(servicesData);
+            } catch {
+                setServices([]);
+            }
 
             const now = new Date();
             const currentMonth = now.getMonth() + 1;
@@ -115,8 +125,13 @@ const Dashboard = () => {
         );
     }
 
+    const showWizard = students.length === 0 || services.length === 0;
+
     return (
         <Layout>
+            {showWizard && (
+                <OnboardingWizard hasServices={services.length > 0} hasStudents={students.length > 0} />
+            )}
             {user.plan === 'PRO' ? (
                 <ProDashboard 
                     stats={stats}
@@ -132,6 +147,7 @@ const Dashboard = () => {
                 <BasicDashboard 
                     stats={stats}
                     students={students}
+                    todaysSchedules={todaysSchedules}
                     user={user}
                     pendingAdjustment={pendingAdjustment}
                     onAction={fetchData}

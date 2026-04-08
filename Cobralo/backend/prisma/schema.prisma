@@ -61,6 +61,7 @@ model User {
   userServices          UserService[]
 
   notifications         Notification[]
+  paymentProofs         PaymentProof[]
 
   @@map("users")
 }
@@ -83,6 +84,13 @@ model Student {
   planType             String?          @default("MONTHLY")
   credits              Int?             @default(0)
   makeup_classes       Int?             @default(0)
+  isActive             Boolean          @default(true)
+  balance_due          Decimal?         @default(0)
+  paidUntil            DateTime?
+  wantsWhatsAppAlerts  Boolean          @default(true)
+  paymentToken         String?          @unique
+  excludeFromMassiveIncreases Boolean   @default(false)
+  serviceId            Int?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   sub_category         String?
@@ -91,10 +99,13 @@ model Student {
   schedules            ClassSchedule[]  @relation("ClassParticipants")
   individualSchedules  ClassSchedule[]  @relation("IndividualStudent")
   payments             PaymentHistory[]
+  paymentProofs        PaymentProof[]
   notes                StudentNote[]
   owner                User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  service              UserService?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
 
   @@index([ownerId])
+  @@index([serviceId])
   @@map("students")
 }
 
@@ -125,6 +136,7 @@ model PaymentHistory {
   paidAt    DateTime @default(now())
   month     Int
   year      Int
+  mpPaymentId String?  @unique
   createdAt DateTime @default(now())
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -132,6 +144,22 @@ model PaymentHistory {
   @@index([ownerId])
   @@index([studentId])
   @@map("payment_history")
+}
+
+model PaymentProof {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  studentId Int
+  ownerId   Int
+  imageUrl  String
+  status    String   @default("pending") // pending, approved, rejected
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([studentId])
+  @@map("payment_proofs")
 }
 
 model StudentNote {
@@ -210,6 +238,7 @@ model UserService {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students     Student[]
 
   @@index([userId])
   @@map("user_services")

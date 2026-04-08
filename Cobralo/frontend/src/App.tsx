@@ -20,6 +20,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Students = lazy(() => import('./pages/Students'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Payments = lazy(() => import('./pages/Payments'));
 const History = lazy(() => import('./pages/History'));
 const Receipts = lazy(() => import('./pages/Receipts'));
 const Calendar = lazy(() => import('./pages/Calendar'));
@@ -32,6 +33,7 @@ const DirectoryPage = lazy(() => import('./landing/DirectoryPage'));
 const NotificationsPage = lazy(() => import('./pages/Notifications'));
 const AttendanceConfirmPage = lazy(() => import('./pages/AttendanceConfirmPage'));
 const StudentPaymentSuccess = lazy(() => import('./pages/StudentPaymentSuccess'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
 
@@ -97,16 +99,13 @@ function App() {
                       <Students />
                     </PrivateRoute>
                   } />
-                  <Route path="history" element={
+                  <Route path="payments" element={
                     <PrivateRoute>
-                      <History />
+                      <Payments />
                     </PrivateRoute>
                   } />
-                  <Route path="receipts" element={
-                    <PrivateRoute>
-                      <Receipts />
-                    </PrivateRoute>
-                  } />
+                  <Route path="history" element={<Navigate to="/app/payments?tab=history" replace />} />
+                  <Route path="receipts" element={<Navigate to="/app/payments?tab=receipts" replace />} />
                   <Route path="calendar" element={
                     <PrivateRoute>
                       <Calendar />
@@ -132,6 +131,7 @@ function App() {
                       <SubscriptionCallback />
                     </PrivateRoute>
                   } />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
             } />
@@ -148,7 +148,11 @@ function App() {
             <Route path="/calendar" element={<Navigate to="/app/calendar" replace />} />
             <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
             
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={
+              <Suspense fallback={<GenericLoading />}>
+                <NotFound />
+              </Suspense>
+            } />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

@@ -9,6 +9,7 @@ import {
     getMercadoPagoPreference
 } from '../services/mercadoPagoService';
 import { decrypt } from '../utils/crypto';
+import dayjs from 'dayjs';
 
 /**
  * GET /api/subscription/plans - Get available subscription plans
@@ -153,7 +154,7 @@ export const createStudentPaymentLink = async (req: AuthRequest, res: Response) 
             return;
         }
 
-        const { studentId, amount, title } = req.body;
+        const { studentId, amount, title, month, year } = req.body;
 
         if (!studentId || !amount) {
             res.status(400).json({ error: 'studentId y amount son requeridos' });
@@ -187,7 +188,9 @@ export const createStudentPaymentLink = async (req: AuthRequest, res: Response) 
             { 
                 title: title || `Clase de ${user.bizName || 'Tu Profe'}`, 
                 amount: Number(amount), 
-                studentId: Number(studentId) 
+                studentId: Number(studentId),
+                month: month ? Number(month) : undefined,
+                year: year ? Number(year) : undefined
             }
         );
 
@@ -256,23 +259,33 @@ export const handleMercadoPagoWebhook = async (req: any, res: Response) => {
                 return;
             }
 
-            // Calcular fecha de expiración basada en el plan
-            const expiryDate = new Date();
+            const userCurrent = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { subscriptionExpiry: true, isPro: true }
+            });
+
+            // Considerar si ya tenía días a favor
+            let baseDate = dayjs();
+            if (userCurrent?.isPro && userCurrent.subscriptionExpiry && dayjs(userCurrent.subscriptionExpiry).isAfter(dayjs())) {
+                baseDate = dayjs(userCurrent.subscriptionExpiry);
+            }
+
+            // Calcular fecha de expiración basada en el plan usando dayjs para evitar fallos de bisiestos/fin de mes
+            let expiryDate = baseDate;
             const plan = subscription.plan as keyof typeof BASE_SUBSCRIPTION_PLANS;
 
             if (plan === 'PRO_MONTHLY') {
-                expiryDate.setMonth(expiryDate.getMonth() + 1);
+                expiryDate = baseDate.add(1, 'month');
             } else if (plan === 'PRO_TRIMESTRAL') {
-                expiryDate.setMonth(expiryDate.getMonth() + 3);
+                expiryDate = baseDate.add(3, 'months');
             }
 
-            // Actualizar usuario a Pro
             await prisma.user.update({
                 where: { id: userId },
                 data: {
                     isPro: true,
                     plan: 'PRO',
-                    subscriptionExpiry: expiryDate,
+                    subscriptionExpiry: expiryDate.toDate(),
                     mercadoPagoCustomerId: payment.payer?.id?.toString()
                 }
             });
@@ -282,8 +295,8 @@ export const handleMercadoPagoWebhook = async (req: any, res: Response) => {
                 where: { userId },
                 data: {
                     status: 'active',
-                    mercadoPagoOrderId: paymentId,
-                    expiryDate,
+                    mercadoPagoOrderId: paymentId.toString(),
+                    expiryDate: expiryDate.toDate(),
                     startDate: new Date()
                 }
             });
@@ -351,21 +364,14 @@ export const cancelSubscription = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        // Actualizar usuario
-        await prisma.user.update({
-            where: { id: req.userId },
-            data: {
-                isPro: false,
-                plan: 'FREE',
-                subscriptionExpiry: null
-            }
-        });
+        // No modificamos el usuario aquí para no quitarle los días que ya pagó. 
+        // El cronjob diario se encargará de pasarlo a FREE cuando expire.
 
-        // Marcar suscripción como cancelada
+        // Marcar suscripción como cancelada al final del periodo
         await prisma.subscription.update({
             where: { userId: req.userId },
             data: {
-                status: 'cancelled'
+                status: 'CANCEL_AT_PERIOD_END'
             }
         });
 

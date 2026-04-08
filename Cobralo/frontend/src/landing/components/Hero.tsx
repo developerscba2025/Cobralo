@@ -133,7 +133,7 @@ const Hero = () => {
   return (
     <section
       ref={ref}
-      className="relative min-h-screen flex flex-col items-center pt-28 sm:pt-44 pb-0 overflow-hidden bg-[#0E1113]"
+      className="relative min-h-screen flex flex-col items-center pt-24 sm:pt-40 pb-0 overflow-hidden bg-[#0E1113]"
     >
       {/* Dot grid background with Parallax */}
       <motion.div
@@ -178,7 +178,7 @@ const Hero = () => {
         >
           <Zap size={11} className="text-primary fill-primary flex-shrink-0" />
           <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.08em] sm:tracking-[0.12em] uppercase" style={{ color: 'rgba(255,255,255,0.75)' }}>
-            Para profes &amp; freelancers
+            Para profes & freelancers
           </span>
         </motion.div>
 

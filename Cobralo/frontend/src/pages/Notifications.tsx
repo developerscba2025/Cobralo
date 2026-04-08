@@ -90,7 +90,7 @@ const NotificationsPage: React.FC = () => {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-black text-text-main flex items-center gap-3 uppercase tracking-tight">
+                        <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase flex items-center gap-3">
                             <Bell size={24} className="text-primary-main" />
                             Notificaciones
                         </h1>

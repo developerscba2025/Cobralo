@@ -88,7 +88,7 @@ export const createMercadoPagoPreference = async (
     planId: keyof typeof BASE_SUBSCRIPTION_PLANS | 'CLASS_PAYMENT',
     returnUrl: string,
     customAccessToken?: string,
-    classDetails?: { title: string; amount: number; studentId: number }
+    classDetails?: { title: string; amount: number; studentId: number; month?: number; year?: number }
 ) => {
     try {
         const headers: any = {
@@ -110,7 +110,11 @@ export const createMercadoPagoPreference = async (
                     currency_id: 'ARS'
                 }
             ];
-            external_reference = `student-${classDetails.studentId}-user-${userId}`;
+            let extRef = `student-${classDetails.studentId}-user-${userId}`;
+            if (classDetails.month && classDetails.year) {
+                extRef += `-month-${classDetails.month}-year-${classDetails.year}`;
+            }
+            external_reference = extRef;
             metadata = { student_id: classDetails.studentId, user_id: userId, type: 'class_payment' };
         } else {
             const plans = await getCalculatedPlans();
