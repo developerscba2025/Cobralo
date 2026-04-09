@@ -32,7 +32,7 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
              </div>
              <div className="mt-8">
                 <p className="text-[11px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-3 italic">Ingresos (Mes Actual)</p>
-                <p className="text-6xl md:text-7xl font-black text-white tracking-tighter">$36.000</p>
+                <p className="text-6xl md:text-7xl font-black text-white tracking-tighter">$152.000</p>
              </div>
           </div>
 
@@ -45,7 +45,7 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
                 </div>
              </div>
              <div className="mt-6">
-                <p className="text-7xl font-black text-white tracking-tighter">2</p>
+                <p className="text-7xl font-black text-white tracking-tighter">8</p>
                 <p className="text-[11px] text-zinc-600 font-black uppercase mt-3 tracking-widest">Alumnos Activos</p>
              </div>
           </div>
@@ -59,11 +59,11 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
                 </div>
              </div>
              <div className="mt-6">
-                <p className="text-7xl font-black text-green-500 tracking-tighter">100%</p>
+                <p className="text-7xl font-black text-green-500 tracking-tighter">85%</p>
                 <p className="text-[11px] text-zinc-600 font-black uppercase mt-3 tracking-widest">Eficiencia de Cobro</p>
              </div>
              <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500/20">
-                <div className="h-full bg-green-500 w-full shadow-[0_0_15px_rgba(34,197,94,0.4)]" />
+                <div className="h-full bg-green-500 w-[85%] shadow-[0_0_15px_rgba(34,197,94,0.4)]" />
              </div>
           </div>
 
@@ -92,8 +92,9 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
                    </thead>
                    <tbody className="divide-y divide-white/[0.02]">
                       {[
-                        { name: 'pedro', service: 'Ingles', amount: '$36.000', ok: true },
-                        { name: 'pamela', service: 'General', amount: '$0', ok: true }
+                        { name: 'roberto', service: 'Plan Guitarra', amount: '$25.000', ok: true },
+                        { name: 'camila', service: 'Ensayo Banda', amount: '$15.000', ok: true },
+                        { name: 'lucas', service: 'Clase Suelta', amount: '$8.500', ok: true }
                       ].map((s, i) => (
                         <tr key={i} className="group hover:bg-white/[0.01] transition-all">
                            <td className="px-10 py-8">
@@ -138,14 +139,14 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
                <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse" /> Registro PRO
              </div>
              <div className="px-4 py-1.5 bg-[#22c55e]/10 border border-[#22c55e]/20 rounded-xl text-[10px] font-black text-[#22c55e] uppercase tracking-widest shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-               +15.4% VS MES PASADO
+               +22.8% VS MES PASADO
              </div>
           </div>
           <div className="mt-10">
             <p className="text-[10px] font-black text-zinc-700 uppercase tracking-widest mb-1 italic">Ingresos Cobrados</p>
-            <p className="text-5xl md:text-7xl font-black text-white tracking-tighter">$ 248.500</p>
+            <p className="text-5xl md:text-7xl font-black text-white tracking-tighter">$ 845.000</p>
             <p className="text-[10px] md:text-[12px] text-zinc-600 font-bold mt-3 uppercase tracking-wider">
-              En tiempo real. <span className="text-amber-500 font-black tracking-widest ml-1">$12.000 PENDIENTES.</span>
+              En tiempo real. <span className="text-amber-500 font-black tracking-widest ml-1">$45.000 PENDIENTES.</span>
             </p>
           </div>
         </div>
@@ -157,8 +158,8 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500 border border-purple-500/10"><Calendar size={18} /></div>
           </div>
           <div className="mt-6">
-             <p className="text-6xl font-black text-white tracking-tighter">4</p>
-             <p className="text-[11px] text-zinc-600 font-black uppercase mt-2 tracking-[0.1em]">3h de enseñanza</p>
+             <p className="text-6xl font-black text-white tracking-tighter">7</p>
+             <p className="text-[11px] text-zinc-600 font-black uppercase mt-2 tracking-[0.1em]">5h 30m de enseñanza</p>
           </div>
         </div>
 
@@ -168,7 +169,7 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
              <div className="w-10 h-10 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center justify-center text-zinc-500"><Users2 size={18} /></div>
           </div>
           <div className="mt-6">
-             <p className="text-6xl font-black text-white tracking-tighter">42</p>
+             <p className="text-6xl font-black text-white tracking-tighter">89</p>
              <p className="text-[11px] text-zinc-600 font-black uppercase mt-2 tracking-[0.1em]">Activos</p>
           </div>
         </div>
@@ -182,9 +183,9 @@ const DashboardView = ({ plan = 'PRO' }: DashboardViewProps) => {
           </div>
           <div className="space-y-4">
             {[
-              { time: '14:00', name: 'Martín S.', type: 'Piano Individual', c: '#22c55e' },
-              { time: '16:00', name: 'Grupo Avanzado', type: 'Inglés para Adultos', c: '#3b82f6' },
-              { time: '18:30', name: 'Lucía Fernández', type: 'Matemática CBC', c: '#f59e0b' }
+              { time: '10:00', name: 'Laura', type: 'Asesoría Marketing', c: '#22c55e' },
+              { time: '11:30', name: 'Equipo de Ventas', type: 'Reunión Semanal', c: '#3b82f6' },
+              { time: '15:00', name: 'Andrés López', type: 'Consultoría Financiera', c: '#f59e0b' }
             ].map((item, i) => (
                <div key={i} className="flex gap-5 items-center group cursor-pointer">
                   <p className="text-[11px] font-black text-zinc-800 w-12 tabular-nums">{item.time}</p>

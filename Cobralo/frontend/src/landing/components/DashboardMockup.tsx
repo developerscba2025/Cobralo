@@ -12,8 +12,7 @@ import CalendarView from './mockup/CalendarView';
 import ClassesView from './mockup/ClassesView';
 import PaymentsView from './mockup/PaymentsView';
 import NotificationsView from './mockup/NotificationsView';
-
-
+ import SettingsView from './mockup/SettingsView';
 
 
 
