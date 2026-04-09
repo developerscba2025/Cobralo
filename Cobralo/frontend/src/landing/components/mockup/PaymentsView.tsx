@@ -1,5 +1,4 @@
-import React from 'react';
-import { Banknote, DollarSign, Clock, CheckCircle2, MoreHorizontal, Filter, Download, Zap } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle2, Filter, Download, Zap } from 'lucide-react';
 
 interface PaymentsViewProps {
   plan?: 'PRO' | 'BASIC';

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users2, Calendar, LibraryBig, Bell, Banknote } from 'lucide-react';
+import { LayoutDashboard, Users2, Calendar, LibraryBig, Banknote } from 'lucide-react';
 
 interface BottomNavProps {
   active: string;
