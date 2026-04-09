@@ -8,13 +8,14 @@ import Features from './components/Features';
 import FeaturedTeachers from './components/FeaturedTeachers';
 import Testimonials from './components/Testimonials';
 import DashboardMockup from './components/DashboardMockup';
-import Roadmap from './components/Roadmap';
+// import Roadmap from './components/Roadmap';
 import Pricing from './components/Pricing';
 import FAQ from './components/FAQ';
 import SupportModal from './components/SupportModal';
 import Toast from './components/Toast';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
+import BackToTop from './components/BackToTop';
 
 const LandingPage = () => {
   const [showSupport, setShowSupport] = useState(false);
@@ -28,6 +29,7 @@ const LandingPage = () => {
         isOpen={!!legalType}
         onClose={() => setLegalType(null)}
       />
+      <BackToTop />
       <SupportModal
         isOpen={showSupport}
         onClose={() => setShowSupport(false)}
@@ -54,7 +56,7 @@ const LandingPage = () => {
         <DashboardMockup />
         <Testimonials />
         <FeaturedTeachers />
-        <Roadmap />
+        {/* <Roadmap /> - Ocultado temporalmente a pedido del usuario */}
         <Pricing />
         <FAQ />
       </main>

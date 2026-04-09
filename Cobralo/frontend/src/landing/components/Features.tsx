@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { Clock, MessageSquare, Smartphone, Users, Zap, BarChart3, CheckCircle2, ArrowRight } from 'lucide-react';
-import PaymentMockup from './PaymentMockup';
 
 const MAIN_FEATURES = [
   {
@@ -32,27 +31,40 @@ const MAIN_FEATURES = [
     accentColor: '#22c55e',
     isCustomMockup: true,
   },
+  {
+    icon: Users,
+    label: 'FUTURO',
+    title: 'Portal del Alumno',
+    description: 'Tus alumnos tendrán su propio espacio para gestionar su asistencia, ver pagos realizados y descargar recibos sin tener que preguntarte nada.',
+    bullets: ['Autogestión de clases', 'Historial de pagos', 'Descarga de facturas/recibos'],
+    image: '/assets/student_portal.png', 
+    accentColor: '#4ade80',
+    isFuture: true,
+  },
+  {
+    icon: BarChart3,
+    label: 'FUTURO',
+    title: 'Gastos y Análisis AFIP',
+    description: 'Control total de la rentabilidad real de tu academia. Registrá gastos operativos y obtené reportes listos para presentar ante tu contador o AFIP.',
+    bullets: ['Registro de gastos fijos', 'Reportes impositivos', 'Cálculo de ganancia neta'],
+    image: '/assets/dashboard_future.png', 
+    accentColor: '#22c55e',
+    reverse: true,
+    isFuture: true,
+  },
+  {
+    icon: Clock,
+    label: 'FUTURO',
+    title: 'Clases Grupales Pro',
+    description: 'Subimos de nivel la gestión de grupos. Control de cupos dinámicos, listas de espera y inscripciones automáticas desde tu perfil público.',
+    bullets: ['Control de cupos limitado', 'Listas de espera automáticas', 'Inscripción vía landing page'],
+    image: '/assets/calendar_mockup.png', 
+    accentColor: '#4ade80',
+    isFuture: true,
+  },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  }
-};
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as any }
-  }
-};
 
 const SECONDARY_FEATURES = [
   {
@@ -67,8 +79,8 @@ const SECONDARY_FEATURES = [
   },
   {
     icon: Users,
-    title: 'Clases grupales',
-    description: 'Gestión masiva, control de cupos limitados y organización por día de la semana.',
+    title: 'Perfiles Premium',
+    description: 'Personalizá tu marca con fotos, bios y links directos a tus redes sociales.',
   },
 ];
 
@@ -96,7 +108,7 @@ const Features = () => (
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.25em] mb-6 border"
           style={{ background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)', color: '#4ade80' }}
         >
-          POTENCIA TU ACADEMIA
+          EL FUTURO DE TU ACADEMIA
         </motion.div>
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
@@ -119,91 +131,66 @@ const Features = () => (
         </motion.p>
       </div>
 
-      {/* ── Main Feature Rows (Zig-Zag) ── */}
-      <div className="space-y-16 md:space-y-48 mb-16 md:mb-32">
+      {/* ── Main Feature Grid (Bento Style) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-16 md:mb-32">
         {MAIN_FEATURES.map((f, i) => (
-          <div 
-            key={i} 
-            className={`flex flex-col ${f.reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-8 md:gap-24`}
+          <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] as any }}
+              className="flex flex-col p-8 rounded-[32px] border transition-all duration-500 relative overflow-hidden group"
+              style={{ 
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', 
+                  borderColor: 'rgba(255,255,255,0.08)' 
+              }}
           >
-            {/* Text Side */}
-            <motion.div 
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-100px' }}
-              className="flex-1 space-y-8"
-            >
-              <motion.div variants={itemVariants} className="space-y-4">
-                <div 
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 md:mb-6"
-                  style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}
-                >
-                  <f.icon size={22} style={{ color: '#4ade80' }} />
-                </div>
-                <h3 className="text-2xl md:text-4xl font-bold tracking-tight" style={{ color: '#fafafa' }}>
-                  {f.title}
-                </h3>
-                <p className="text-lg leading-relaxed opacity-60" style={{ color: '#a1a1aa' }}>
-                  {f.description}
-                </p>
-              </motion.div>
-
-              <motion.div variants={itemVariants} className="space-y-3">
-                {f.bullets.map((bullet, j) => (
-                  <div key={j} className="flex items-center gap-3">
-                    <CheckCircle2 size={16} className="text-primary" />
-                    <span className="text-sm font-bold text-zinc-300">{bullet}</span>
+              {/* Hover Glow */}
+              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              
+              {/* Header */}
+              <div className="flex items-start justify-between mb-8 relative z-10">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110"
+                       style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                     <f.icon size={26} className="text-primary" />
                   </div>
-                ))}
-              </motion.div>
-
-              <motion.button
-                variants={itemVariants}
-                whileHover={{ gap: '12px' }}
-                className="flex items-center gap-2 text-primary font-black uppercase text-[11px] tracking-widest pt-4 transition-all"
-              >
-                Saber más <ArrowRight size={14} />
-              </motion.button>
-            </motion.div>
-
-            {/* Visual Side (Mockup Placeholder / Custom Component) */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true, margin: '-100px' }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as any, delay: 0.1 }}
-              className="flex-1 relative group w-full"
-            >
-              <div 
-                className="absolute -inset-4 bg-primary/10 rounded-[40px] blur-[80px] opacity-0 group-hover:opacity-40 transition-opacity duration-1000" 
-              />
-              <div 
-                className="relative aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-900 shadow-black/60 w-full"
-              >
-                {f.isCustomMockup ? (
-                  <PaymentMockup />
-                ) : (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-transparent z-10" />
-                    <img 
-                      src={f.image} 
-                      alt={f.title}
-                      className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-1000"
-                    />
-                  </>
-                )}
-                
-                {/* Minimal Overlay UI */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                   <div className="px-6 py-3 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center gap-3 scale-90 md:scale-110 opacity-0 group-hover:opacity-100 transition-all duration-500 delay-150">
-                      <Zap size={16} className="text-primary fill-primary" />
-                      <span className="text-xs font-black uppercase tracking-widest text-white">Función Pro Activa</span>
-                   </div>
-                </div>
+                  
+                  {(f.label === 'PRO' || f.isFuture) && (
+                      <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border ${
+                          f.isFuture ? 'bg-zinc-800/80 text-zinc-400 border-zinc-700' : 'bg-primary/10 text-primary border-primary/20'
+                      }`}>
+                          {f.isFuture ? 'PRÓXIMAMENTE' : 'PRO'}
+                      </span>
+                  )}
               </div>
-            </motion.div>
-          </div>
+
+              {/* Content */}
+              <div className="flex-1 relative z-10">
+                  <h3 className="text-2xl font-bold tracking-tight mb-4 text-zinc-100 group-hover:text-primary transition-colors duration-300">
+                      {f.title}
+                  </h3>
+                  <p className="text-zinc-400 leading-relaxed mb-8">
+                      {f.description}
+                  </p>
+
+                  <div className="space-y-3 mb-8">
+                      {f.bullets.map((bullet, j) => (
+                          <div key={j} className="flex items-start gap-3">
+                              <CheckCircle2 size={18} className="text-primary shrink-0 mt-0.5" />
+                              <span className="text-sm font-semibold text-zinc-300 leading-snug">{bullet}</span>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+
+              {/* Action */}
+              <div className="mt-auto pt-6 border-t border-white/10 relative z-10">
+                  <button className="flex items-center gap-2 text-zinc-400 group-hover:text-primary font-black uppercase text-[11px] tracking-widest transition-colors duration-300">
+                      Saber más <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+              </div>
+          </motion.div>
         ))}
       </div>
 

@@ -52,6 +52,7 @@ interface SettingsContentProps {
     ratings: any[];
     ratingToken: string | null;
     ratingExpires: string | null;
+    handleUpdateService: (id: number, data: any) => Promise<void>;
 }
 
 const SettingsContent: React.FC<SettingsContentProps> = (props) => {
@@ -61,7 +62,7 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
         case 'account':
             return (
                 <AccountTab
-                    user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving}
+                    user={props.user} setUser={props.setUser}
                     passwordData={props.passwordData} setPasswordData={props.setPasswordData}
                     handleChangePassword={props.handleChangePassword} changingPassword={props.changingPassword}
                     showCurrentPassword={props.showCurrentPassword} setShowCurrentPassword={props.setShowCurrentPassword}
@@ -70,7 +71,7 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                 />
             );
         case 'profile':
-            return <ProfileTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} tab={props.tab} />;
+            return <ProfileTab user={props.user} setUser={props.setUser} tab={props.tab} />;
         case 'security':
             return (
                 <SecurityTab
@@ -91,8 +92,6 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                 <AcademyTab
                     user={props.user}
                     setUser={props.setUser}
-                    handleSave={props.handleSave}
-                    saving={props.saving}
                     isPro={props.isPro}
                     pendingAdjustment={props.pendingAdjustment}
                     setActiveTab={props.setActiveTab}
@@ -109,15 +108,14 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     newService={props.newService}
                     setNewService={props.setNewService}
                     handleAddService={props.handleAddService}
+                    handleUpdateService={props.handleUpdateService}
                     handleDeleteService={props.handleDeleteService}
-                    handleSave={props.handleSave}
-                    saving={props.saving}
                 />
             );
         case 'automation':
-            return <AutomationTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} isPro={props.isPro} />;
+            return <AutomationTab user={props.user} setUser={props.setUser} isPro={props.isPro} />;
         case 'payment-accounts':
-            return <PaymentAccountsTab user={props.user} setUser={props.setUser} handleSave={props.handleSave} saving={props.saving} />;
+            return <PaymentAccountsTab user={props.user} setUser={props.setUser} />;
         case 'ratings':
             return (
                 <RatingsTab

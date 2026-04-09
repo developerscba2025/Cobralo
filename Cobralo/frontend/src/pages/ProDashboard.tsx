@@ -12,6 +12,7 @@ import EmergencyNoticeModal from '../components/EmergencyNoticeModal';
 import { AlertTriangle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import TiltCard from '../components/TiltCard';
 
 interface ProDashboardProps {
     stats: {
@@ -40,6 +41,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     user, 
     todaysSchedules = [], 
     students = [],
+    chartData,
     pendingAdjustment,
     monthChange = 12,
     onAction
@@ -101,11 +103,15 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
     };
 
     const hour = new Date().getHours();
-    let greeting = 'Hola';
+    let greeting = 'HOLA';
     let icon = '👋';
-    if (hour < 12) { greeting = 'Buenos días'; icon = '☕'; }
-    else if (hour < 20) { greeting = 'Buenas tardes'; icon = '☀️'; }
-    else { greeting = 'Buenas noches'; icon = '🌙'; }
+    if (hour >= 20 || hour < 5) {
+        greeting = 'BUENAS NOCHES';
+        icon = '🌙';
+    } else if (hour >= 5 && hour < 12) {
+        greeting = 'BUEN DÍA';
+        icon = '🌅';
+    }
 
     const classesToday = todaysSchedules.length;
     const pendingAmount = Number(stats.pending || 0);
@@ -182,11 +188,12 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
 
             {/* ── Header ── */}
             <motion.div variants={listItemVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="w-full sm:w-auto">
-                    <h1 className="text-2xl sm:text-3xl font-black text-text-main tracking-tighter uppercase">
-                        {greeting}, {user?.name?.split(' ')[0] || 'Profe'} {icon}
+                <div className="w-full sm:w-auto space-y-2">
+                    <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic">
+                        {greeting}, {user?.name?.split(' ')[0].toUpperCase() || 'USUARIO'}{' '}
+                        <span className={icon === '👋' ? 'animate-bounce inline-block' : ''} style={icon === '👋' ? { animationDuration: '3s' } : {}}>{icon}</span>
                     </h1>
-                    <p className="text-[10px] sm:text-xs font-bold text-text-muted mt-0.5 sm:mt-1">{insight}</p>
+                    <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">{insight}</p>
                 </div>
                 <Link 
                     to={pendingStudents.length > 0 ? "/app/payments?tab=pending" : "#"} 
@@ -209,30 +216,32 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             <motion.div variants={listItemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 xl:gap-5">
                 
                 {/* 1. Big card: Ingresos (PRIORITY) */}
-                <div className={`col-span-2 lg:col-span-2 ${bentoBase} ${bentoGlass} p-5 lg:p-7 flex flex-col justify-between order-first lg:order-none`}>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-main/5 dark:bg-primary-main/10 rounded-full blur-[60px] -translate-y-1/4 translate-x-1/4 pointer-events-none" />
+                <TiltCard intensity={3} className="col-span-2 lg:col-span-2">
+                    <div className={`h-full ${bentoBase} ${bentoGlass} p-5 lg:p-7 flex flex-col justify-between order-first lg:order-none`}>
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-main/5 dark:bg-primary-main/10 rounded-full blur-[60px] -translate-y-1/4 translate-x-1/4 pointer-events-none" />
 
-                    <div className="flex items-center justify-between mb-4 sm:mb-6">
-                        <span className="px-3 py-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-[10px] font-black text-text-muted flex items-center gap-2 uppercase tracking-widest">
-                            <TrendingUp size={11} className="text-primary-main" /> Mes actual
-                        </span>
-                        <span className={`text-[10px] font-black px-2.5 py-1.5 rounded-lg ${Number(monthChange) >= 0 ? 'text-primary-main bg-primary-main/10' : 'text-red-500 bg-red-500/10'}`}>
-                            {Number(monthChange) > 0 ? '+' : ''}{monthChange}% vs mes pasado
-                        </span>
-                    </div>
-
-                    <div>
-                        <p className="text-2xl sm:text-3xl 2xl:text-5xl font-black text-text-main tracking-tighter">
-                            <AnimatedCounter value={stats.paid} prefix={user?.currency || '$'} />
-                        </p>
-                        <p className="text-[10px] sm:text-xs font-bold text-text-muted mt-1">
-                            Cobrados.{' '}
-                            <span className="text-amber-500 font-black">
-                                {user?.currency || '$'}{Number(stats.pending).toLocaleString('es-AR')} pendientes.
+                        <div className="flex items-center justify-between mb-4 sm:mb-6">
+                            <span className="px-3 py-1.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-[10px] font-black text-text-muted flex items-center gap-2 uppercase tracking-widest">
+                                <TrendingUp size={11} className="text-primary-main" /> Mes actual
                             </span>
-                        </p>
+                            <span className={`text-[10px] font-black px-2.5 py-1.5 rounded-lg ${Number(monthChange) >= 0 ? 'text-primary-main bg-primary-main/10' : 'text-red-500 bg-red-500/10'}`}>
+                                {Number(monthChange) > 0 ? '+' : ''}{monthChange}% vs mes pasado
+                            </span>
+                        </div>
+
+                        <div>
+                            <p className="text-2xl sm:text-3xl 2xl:text-5xl font-black text-text-main tracking-tighter">
+                                <AnimatedCounter value={stats.paid} prefix={user?.currency || '$'} />
+                            </p>
+                            <p className="text-[10px] sm:text-xs font-bold text-text-muted mt-1">
+                                Cobrados.{' '}
+                                <span className="text-amber-500 font-black">
+                                    {user?.currency || '$'}{Number(stats.pending).toLocaleString('es-AR')} pendientes.
+                                </span>
+                            </p>
+                        </div>
                     </div>
-                </div>
+                </TiltCard>
 
                 {/* 2. Clases Hoy */}
                 {(() => {
@@ -248,40 +257,44 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     const hours = Math.floor(weeklyMinutes / 60);
                     const mins = weeklyMinutes % 60;
                     return (
-                        <div className={`${bentoBase} ${bentoGlass} p-5 lg:p-7 flex flex-col justify-between`}>
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="text-[10px] sm:text-xs font-black text-text-main uppercase tracking-widest leading-none">Clases Hoy</span>
-                                    <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                                        <CalendarDays size={14} className="text-violet-500" />
+                        <TiltCard intensity={5}>
+                            <div className={`h-full ${bentoBase} ${bentoGlass} p-5 lg:p-7 flex flex-col justify-between`}>
+                                <div>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-[10px] sm:text-xs font-black text-text-main uppercase tracking-widest leading-none">Clases Hoy</span>
+                                        <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                                            <CalendarDays size={14} className="text-violet-500" />
+                                        </div>
                                     </div>
+                                    <p className="text-2xl sm:text-4xl font-black text-text-main tracking-tighter">
+                                        {totalClasses}
+                                    </p>
+                                    <p className="text-[10px] font-bold text-text-muted mt-1">
+                                        {hours > 0 ? `${hours}h` : ''}{mins > 0 ? ` ${mins}min` : ''}{hours === 0 && mins === 0 ? 'Libre' : ' de enseñanza'}
+                                    </p>
                                 </div>
-                                <p className="text-2xl sm:text-4xl font-black text-text-main tracking-tighter">
-                                    {totalClasses}
-                                </p>
-                                <p className="text-[10px] font-bold text-text-muted mt-1">
-                                    {hours > 0 ? `${hours}h` : ''}{mins > 0 ? ` ${mins}min` : ''}{hours === 0 && mins === 0 ? 'Libre' : ' de enseñanza'}
-                                </p>
                             </div>
-                        </div>
+                        </TiltCard>
                     );
                 })()}
 
                 {/* 3. Alumnos */}
-                <div className={`${bentoBase} ${bentoGlass} p-5 lg:p-7 flex flex-col justify-between`}>
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-[10px] sm:text-xs font-black text-text-main uppercase tracking-widest leading-none">Alumnos</span>
-                        <div className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-text-muted">
-                            <Users size={14} />
+                <TiltCard intensity={5}>
+                    <div className={`h-full ${bentoBase} ${bentoGlass} p-5 lg:p-7 flex flex-col justify-between`}>
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-[10px] sm:text-xs font-black text-text-main uppercase tracking-widest leading-none">Alumnos</span>
+                            <div className="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-text-muted">
+                                <Users size={14} />
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-2xl sm:text-4xl font-black text-text-main tracking-tighter">
+                                <AnimatedCounter value={stats.totalStudents} />
+                            </p>
+                            <p className="text-[10px] font-bold text-text-muted mt-1">Activos</p>
                         </div>
                     </div>
-                    <div>
-                        <p className="text-2xl sm:text-4xl font-black text-text-main tracking-tighter">
-                            <AnimatedCounter value={stats.totalStudents} />
-                        </p>
-                        <p className="text-[10px] font-bold text-text-muted mt-1">Activos</p>
-                    </div>
-                </div>
+                </TiltCard>
             </motion.div>
 
             {/* ── Row 2: Agenda + Recordatorios ── */}

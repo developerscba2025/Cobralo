@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+
 
 const ITEMS = [
   '🔥 25% OFF lanzamiento',

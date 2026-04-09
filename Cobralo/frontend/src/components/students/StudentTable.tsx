@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     MessageCircle, MoreHorizontal, User, Calendar, 
-    FileText, QrCode, ClipboardList, Trash2, Edit2
+    FileText, ClipboardList, Trash2, Edit2, PlusCircle
 } from 'lucide-react';
 import type { Student } from '../../services/api';
 
@@ -68,12 +68,35 @@ const StudentRow: React.FC<StudentRowProps> = ({
             </td>
             <td className="py-4 px-3 hidden md:table-cell">
                 <div className="flex flex-col">
-                    <span className="text-sm font-bold text-text-main tabular-nums">{currency}{Number(student.amount).toLocaleString('es-AR')}</span>
-                    <span className="text-[10px] font-bold text-text-muted">Vence el {student.due_day || '--'}</span>
+                    <span className="text-sm font-bold text-text-main tabular-nums">
+                        {currency}{Number(student.amount).toLocaleString('es-AR')}
+                        <span className="text-[10px] text-text-muted ml-1 opacity-60">
+                            / {student.planType === 'PACK' ? (student.credits || 0) : (student.classes_per_month || 0)} clases
+                        </span>
+                    </span>
+                    <span className="text-[10px] font-bold text-text-muted">
+                        {(student.schedules?.length || 0) === 0 ? (
+                            <span className="bg-primary-main/10 text-primary-main px-1.5 py-0.5 rounded-md text-[9px] uppercase tracking-tighter">Flexible / Sin horario fijo</span>
+                        ) : (
+                            `Vence el ${student.due_day || '--'}`
+                        )}
+                    </span>
                 </div>
             </td>
-            <td className="py-4 px-3 hidden lg:table-cell">
-                <p className="text-sm font-bold text-text-main">{student.phone || '--'}</p>
+            <td className="py-4 px-3 hidden md:table-cell">
+                {student.phone ? (
+                    <a 
+                        href={`https://wa.me/${student.phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-500/10 hover:bg-green-500 text-green-600 dark:text-green-400 hover:text-white transition-all text-xs font-bold group"
+                    >
+                        <MessageCircle size={14} className="transition-transform group-hover:scale-110" />
+                        {student.phone}
+                    </a>
+                ) : (
+                    <p className="text-xs font-bold text-text-muted">--</p>
+                )}
             </td>
             <td className="py-4 px-3 text-right pr-4">
                 <div className="flex items-center justify-end gap-1">
@@ -92,10 +115,11 @@ const StudentRow: React.FC<StudentRowProps> = ({
                             <button onClick={() => onOpenModals('edit', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
                                 <Edit2 size={14} className="text-text-muted" /> Editar Datos
                             </button>
-                            <button onClick={() => onOpenModals('qr', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
-                                <QrCode size={14} className="text-text-muted" /> Generar QR Cobro
+                            <button onClick={() => onOpenModals('renew', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-primary-main hover:bg-primary-main/10 transition-colors text-left">
+                                <PlusCircle size={14} /> Cargar Clases (Pack)
                             </button>
-                            <button onClick={() => onOpenModals('schedule', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
+
+                             <button onClick={() => onOpenModals('schedule', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
                                 <Calendar size={14} className="text-text-muted" /> Ver Horarios
                             </button>
                             <button onClick={() => onOpenModals('history', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
@@ -135,11 +159,27 @@ const StudentTable: React.FC<StudentTableProps> = ({
     onOpenModals,
     currency
 }) => {
-    const allSelected = students.length > 0 && selectedIds.length === students.length;
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    
+    // Calculate pagination
+    const totalPages = Math.ceil(students.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedStudents = students.slice(startIndex, startIndex + itemsPerPage);
+    
+    const allSelected = paginatedStudents.length > 0 && paginatedStudents.every(s => selectedIds.includes(s.id));
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) setCurrentPage(prev => prev - 1);
+    };
 
     return (
-        <div className="bg-surface dark:bg-bg-soft border border-border-main rounded-[28px] overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
+        <div className="bg-surface dark:bg-bg-soft border border-border-main rounded-[28px] overflow-visible shadow-sm">
+            <div className="overflow-x-auto min-h-[600px]">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-border-main/50 bg-black/5 dark:bg-white/[0.02]">
@@ -154,13 +194,13 @@ const StudentTable: React.FC<StudentTableProps> = ({
                             <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest">Alumno</th>
                             <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden sm:table-cell">Estado Pago</th>
                             <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Monto / Venc.</th>
-                            <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden lg:table-cell">Teléfono</th>
+                            <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Teléfono</th>
                             <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest text-right pr-4">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <AnimatePresence>
-                            {students.map((student) => (
+                        <AnimatePresence mode="popLayout">
+                            {paginatedStudents.map((student) => (
                                 <StudentRow 
                                     key={student.id}
                                     student={student}
@@ -175,6 +215,40 @@ const StudentTable: React.FC<StudentTableProps> = ({
                     </tbody>
                 </table>
             </div>
+            {students.length > 0 && (
+                <div className="p-4 border-t border-border-main/50 flex items-center justify-between bg-black/5 dark:bg-white/[0.02]">
+                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                        Mostrando {startIndex + 1}-{Math.min(startIndex + itemsPerPage, students.length)} de {students.length}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={handlePrevPage}
+                            disabled={currentPage === 1}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                currentPage === 1 
+                                ? 'opacity-30 cursor-not-allowed text-text-muted' 
+                                : 'bg-surface dark:bg-bg-soft text-text-main border border-border-main hover:bg-primary-main/10 hover:text-primary-main'
+                            }`}
+                        >
+                            Anterior
+                        </button>
+                        <div className="px-3 py-2 rounded-xl bg-primary-main/10 text-primary-main text-[10px] font-black">
+                            {currentPage} / {totalPages || 1}
+                        </div>
+                        <button 
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                currentPage === totalPages || totalPages === 0
+                                ? 'opacity-30 cursor-not-allowed text-text-muted' 
+                                : 'bg-surface dark:bg-bg-soft text-text-main border border-border-main hover:bg-primary-main/10 hover:text-primary-main'
+                            }`}
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+            )}
             {students.length === 0 && (
                 <div className="py-20 flex flex-col items-center justify-center text-center px-4">
                     <User size={48} className="text-text-muted/20 mb-4" />

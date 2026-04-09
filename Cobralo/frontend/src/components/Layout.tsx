@@ -7,7 +7,7 @@ import {
   Settings, Moon, Sun, LogOut, Menu, 
   Search, ExternalLink,
   LayoutDashboard, Calendar, Users2, LibraryBig,
-  RefreshCw, Bell, Lock, Banknote
+  RefreshCw, Bell, Lock, Banknote, HelpCircle, Mail
 } from 'lucide-react';
 import { showToast } from './Toast';
 import MobileMenu from './MobileMenu';
@@ -130,7 +130,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <MobileMenu 
                 isOpen={isMobileMenuOpen} 
                 onClose={() => setIsMobileMenuOpen(false)} 
-                onOpenSupport={() => navigate('/app/settings?tab=support')}
                 onOpenLegal={() => navigate('/app/settings?tab=legal')}
             />
 
@@ -145,6 +144,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             <span className="text-xl font-black italic tracking-tighter uppercase text-text-main group-hover:text-primary-main transition-colors">
                                 COBRALO
                             </span>
+                            <span className="text-[9px] font-black px-1.5 py-0.5 bg-primary-main text-white rounded-lg shadow-lg shadow-primary-main/20 animate-pulse">BETA</span>
                         </div>
 
                         {/* Notification Bell next to logo */}
@@ -211,6 +211,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                         })}
 
                     </nav>
+                    
+                    {/* Beta Support Box */}
+                    <div className="mt-4 mb-6 p-4 bg-primary-main/5 border border-primary-main/10 rounded-[24px] relative overflow-hidden group">
+                        <div className="absolute -right-2 -bottom-2 text-primary-main/10 group-hover:scale-110 transition-transform">
+                            <HelpCircle size={40} />
+                        </div>
+                        <p className="text-[10px] font-bold text-primary-main uppercase tracking-widest mb-1.5 leading-none">Soporte Cobralo</p>
+                        <p className="text-[9px] text-text-muted font-medium mb-3">
+                            Si ves un error o algo no funciona, escribinos un mensaje para ayudarte.
+                        </p>
+                        <Link 
+                            to="/app/settings?tab=support" 
+                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-primary-main text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-primary-main/10 active:scale-95 relative z-10"
+                        >
+                            <Mail size={12} /> Contactar Soporte
+                        </Link>
+                    </div>
 
                     {/* User Info & Actions */}
                     <div className="pt-6 border-t border-border-main/50 space-y-4 px-1">
@@ -334,9 +351,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
 
                 <div className="p-4 sm:p-6 md:p-8 lg:p-8 2xl:p-12 flex-1 overflow-x-hidden transition-all duration-300">
-                    <div className="w-full">
+                    <motion.div 
+                        key={location.pathname}
+                        initial={{ opacity: 0, filter: 'blur(10px)', scale: 1.02 }}
+                        animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                        className="w-full h-full"
+                    >
                         {children}
-                    </div>
+                    </motion.div>
                 </div>
 
             </main>

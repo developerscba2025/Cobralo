@@ -1,21 +1,15 @@
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { ArrowRight, Zap, LayoutDashboard, Users2, Calendar, LibraryBig, Settings, Bell, Search, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Zap, LayoutDashboard, Users2, Calendar, LibraryBig, Settings, Bell, Search, CheckCircle2, TrendingUp, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useRef } from 'react';
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', active: true },
   { icon: Users2, label: 'Alumnos' },
+  { icon: DollarSign, label: 'Cobros' },
   { icon: Calendar, label: 'Calendario' },
   { icon: LibraryBig, label: 'Clases' },
   { icon: Settings, label: 'Ajustes' },
-];
-
-const RECENT_ACTIVITY = [
-  { name: 'Lucía Fernández', svc: 'Matemática CBC', amount: '$15.000', status: 'COBRADO', ok: true },
-  { name: 'Tomás Quiroga', svc: 'Inglés para Adultos', amount: '$12.000', status: 'PENDIENTE', ok: false },
-  { name: 'Valentina Ríos', svc: 'Piano Individual', amount: '$8.500', status: 'COBRADO', ok: true },
-  { name: 'Mateo López', svc: 'Taller de Guitarra', amount: '$10.000', status: 'PENDIENTE', ok: false },
 ];
 
 const HeroDashboardMockup = () => (
@@ -25,91 +19,150 @@ const HeroDashboardMockup = () => (
       <div className="flex items-center gap-2">
         <div className="w-6 h-6 rounded-lg bg-[#22c55e] flex items-center justify-center font-black italic text-[10px] text-black shadow-[0_0_15px_rgba(34,197,94,0.3)]">C</div>
         <span className="text-[11px] font-black italic tracking-tighter text-white">COBRALO</span>
+        <span className="text-[7px] font-black px-1.5 py-0.5 bg-green-500/10 text-green-500 rounded border border-green-500/20">BETA</span>
       </div>
       <div className="flex items-center gap-4">
         <div className="h-6 w-32 rounded-full bg-white/[0.03] border border-white/5 flex items-center px-3 gap-2">
           <Search size={10} className="text-zinc-600" />
-          <div className="w-16 h-1 bg-zinc-800/50 rounded-full" />
+          <span className="text-[8px] font-bold text-zinc-500">Buscar alumnos...</span>
         </div>
         <div className="relative">
           <Bell size={14} className="text-zinc-500 hover:text-zinc-300 transition-colors" />
-          <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full border border-[#0E1113]" />
         </div>
       </div>
     </div>
 
     <div className="flex-1 flex overflow-hidden">
       {/* Sidebar - Mini version for Hero - Hidden on mobile */}
-      <div className="hidden sm:flex w-14 border-r border-white/[0.05] flex-col items-center py-6 gap-5 bg-[#090B0D]">
+      <div className="hidden sm:flex w-36 border-r border-white/[0.05] flex-col py-6 px-3 gap-2 bg-[#090B0D]">
         {NAV_ITEMS.map((item, i) => (
-          <div key={i} className={`p-2.5 rounded-xl transition-all duration-300 ${item.active ? 'bg-[#22c55e]/10 text-[#22c55e] shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'text-zinc-700 hover:text-zinc-400'}`}>
-            <item.icon size={16} strokeWidth={item.active ? 3 : 2} />
+          <div key={i} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${item.active ? 'bg-[#22c55e] text-black shadow-[0_0_15px_rgba(34,197,94,0.1)]' : 'text-zinc-600'}`}>
+            <item.icon size={12} strokeWidth={item.active ? 3 : 2} />
+            {item.label}
           </div>
         ))}
+        
+        <div className="mt-auto pt-4 space-y-4">
+            <div className="p-3 rounded-2xl bg-green-500/5 border border-green-500/10">
+                <p className="text-[8px] font-black text-green-500 uppercase tracking-widest mb-1">SOPORTE</p>
+                <div className="w-full py-1.5 bg-green-500 text-black text-[8px] font-black uppercase tracking-widest rounded-lg text-center mt-2 shadow-lg shadow-green-500/10">Contactar</div>
+            </div>
+            <div className="flex items-center gap-2 px-1">
+                <div className="w-6 h-6 rounded-lg bg-[#0E1113] border border-white/5 flex items-center justify-center text-[8px] font-black text-green-500">U</div>
+                <div>
+                   <p className="text-[8px] font-black text-white uppercase truncate tracking-tighter">USUARIO BÁSICO</p>
+                   <p className="text-[6px] font-black text-zinc-700 uppercase tracking-widest">+ FREE</p>
+                </div>
+            </div>
+        </div>
       </div>
 
       {/* Main Content Area: Basic Dashboard Replica */}
-      <div className="flex-1 p-5 overflow-auto custom-scrollbar-hero space-y-4">
+      <div className="flex-1 p-6 md:p-8 overflow-auto custom-scrollbar-hero space-y-8 bg-[#090B0D]">
         
+        <div className="space-y-2">
+           <div className="flex items-center gap-2">
+              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic">HOLA, USUARIO</h2>
+              <span className="text-2xl md:text-3xl">👋</span>
+           </div>
+           <p className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em]">Resumen de tu academia hoy</p>
+        </div>
+
         {/* Top Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          <div className="p-4 sm:p-5 rounded-[20px] flex flex-col justify-between relative overflow-hidden" 
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="sm:col-span-2 p-6 rounded-[24px] flex flex-col justify-between relative overflow-hidden" 
                style={{ background: 'linear-gradient(165deg, #121518 0%, #090B0D 100%)', border: '1px solid rgba(255,255,255,0.05)' }}>
-             <h3 className="text-[8px] sm:text-[9px] font-black text-[#22c55e] uppercase tracking-[0.15em] mb-3 sm:mb-4">INGRESOS MES</h3>
-             <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter">$ 248.500</p>
-             <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-[30px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+             <div className="flex justify-between items-start">
+               <div className="px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-xl text-[8px] font-black text-green-500 uppercase tracking-widest flex items-center gap-2">
+                 <div className="w-1 h-1 rounded-full bg-green-500" /> + MES ACTUAL
+               </div>
+               <div className="w-8 h-8 rounded-xl bg-green-500/5 text-green-500 border border-green-500/10 flex items-center justify-center">
+                   <span className="font-bold text-xs">$</span>
+               </div>
+             </div>
+             <div className="mt-8">
+               <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2 italic">Ingresos (Mes Actual)</p>
+               <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">$36.000</p>
+             </div>
           </div>
-          <div className="p-4 sm:p-5 rounded-[20px] flex flex-col justify-between relative" 
-               style={{ background: '#090B0D', border: '1px solid rgba(255,255,255,0.05)' }}>
-             <h3 className="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-[0.15em] mb-3 sm:mb-4">ALUMNOS ACTIVOS</h3>
-             <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter">42</p>
+
+          <div className="p-6 rounded-[24px] flex flex-col justify-between" 
+               style={{ background: 'var(--color-surface, #121518)', border: '1px solid rgba(255,255,255,0.05)' }}>
+             <div className="flex justify-between items-start">
+               <h3 className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">ALUMNOS</h3>
+               <Users2 size={14} className="text-zinc-600" />
+             </div>
+             <div className="mt-6">
+               <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">2</p>
+               <p className="text-[9px] font-black text-zinc-600 uppercase mt-2 tracking-widest">Alumnos Activos</p>
+             </div>
+          </div>
+
+          <div className="p-6 rounded-[24px] flex flex-col justify-between relative overflow-hidden" 
+               style={{ background: 'var(--color-surface, #121518)', border: '1px solid rgba(255,255,255,0.05)' }}>
+             <div className="flex justify-between items-start">
+               <h3 className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">COBRADO</h3>
+               <div className="w-6 h-6 rounded-lg bg-green-500/5 flex items-center justify-center text-green-500">
+                   <TrendingUp size={12} />
+               </div>
+             </div>
+             <div className="mt-6">
+               <p className="text-4xl md:text-5xl font-black text-green-500 tracking-tighter">100%</p>
+               <p className="text-[9px] font-black text-zinc-600 uppercase mt-2 tracking-widest">Eficiencia</p>
+             </div>
+             <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500/20">
+                <div className="h-full bg-green-500 w-full" />
+             </div>
           </div>
         </div>
 
         {/* Actividad Reciente Table */}
-        <div className="bg-[#090B0D] border border-white/[0.05] rounded-[24px] p-5">
-          <h3 className="text-[9px] font-black text-white uppercase tracking-[0.15em] mb-5">ACTIVIDAD RECIENTE</h3>
-          
-          <div className="w-full">
-            <div className="flex items-center px-4 mb-3 text-[8px] font-black text-zinc-600 uppercase tracking-widest border-b border-white/[0.05] pb-3">
-              <div className="flex-1">ALUMNO</div>
-              <div className="hidden sm:block w-[120px]">SERVICIO</div>
-              <div className="w-[80px] text-right">MONTO</div>
-              <div className="hidden xs:block w-[90px] text-right">ESTADO</div>
-            </div>
-            
-            <div className="space-y-1">
-              {RECENT_ACTIVITY.map((item, i) => (
-                <div key={i} className="flex items-center px-4 py-2 hover:bg-white/[0.02] rounded-xl transition-colors group">
-                  <div className="flex-1 flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-white/[0.05] flex items-center justify-center text-[9px] font-black text-zinc-400 group-hover:border-white/[0.1] transition-all">
-                      {item.name[0]}
-                    </div>
-                    <span className="text-[11px] font-bold text-zinc-200">{item.name}</span>
-                  </div>
-                  <div className="hidden sm:block w-[120px]">
-                    <span className="text-[10px] font-semibold text-zinc-500">{item.svc}</span>
-                  </div>
-                  <div className="w-[80px] text-right">
-                    <span className="text-[11px] font-bold text-white tracking-tight">{item.amount}</span>
-                  </div>
-                  <div className="hidden xs:flex w-[90px] justify-end">
-                    <span className={`px-2 py-1 rounded-md text-[8px] font-black uppercase tracking-widest border shadow-inner ${
-                      item.ok ? 'bg-green-500/10 text-green-500 border-green-500/10' : 'bg-amber-500/10 text-amber-500 border-amber-500/10'
-                    }`}>
-                      {item.status}
-                    </span>
-                  </div>
+        <div className="bg-[#0E1113] border border-white/[0.05] rounded-[28px] overflow-hidden">
+          <div className="px-6 py-5 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
+             <div className="flex items-center gap-4">
+                <h3 className="text-[9px] font-black text-white uppercase tracking-[0.2em]">ACTIVIDAD RECIENTE</h3>
+                <div className="px-2 py-1 bg-green-500/10 text-green-500 rounded-full border border-green-500/20 text-[7px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                   <div className="w-1 h-1 rounded-full bg-green-500" /> AL DÍA
                 </div>
-              ))}
-            </div>
+             </div>
+             <div className="text-[8px] font-black text-green-500 uppercase tracking-widest">VER TODOS →</div>
           </div>
+          
+          <table className="w-full text-left">
+             <tbody className="divide-y divide-white/[0.02]">
+                {[
+                  { name: 'pedro', svc: 'Ingles', amount: '$36.000', ok: true },
+                  { name: 'pamela', svc: 'General', amount: '$0', ok: true },
+                ].map((item, i) => (
+                  <tr key={i} className="hover:bg-white/[0.01]">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-white/[0.05] flex items-center justify-center text-[10px] font-black text-zinc-500 uppercase">
+                          {item.name[0]}
+                        </div>
+                        <span className="text-[12px] font-black text-zinc-200 uppercase tracking-tight">{item.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 hidden sm:table-cell">
+                      <span className="text-[10px] font-bold text-zinc-500">{item.svc}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-[13px] font-black text-white tabular-nums">{item.amount}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/5 text-green-500 border border-green-500/10 text-[8px] font-black uppercase tracking-widest shadow-inner">
+                         <CheckCircle2 size={10} /> COBRADO
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+             </tbody>
+          </table>
         </div>
 
       </div>
     </div>
     
-
   </div>
 );
 

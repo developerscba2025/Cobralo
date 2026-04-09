@@ -54,7 +54,7 @@ const SettingsNav: React.FC<SettingsNavProps> = ({
             </div>
 
             <div className="space-y-5">
-                {categories.map((cat, catIdx) => {
+                {categories.map((cat) => {
                     const isPlanSection = cat.id === 'plan';
 
                     // ── MI PLAN: tratamiento especial destacado ──

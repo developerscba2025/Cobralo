@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, User, MessageCircle, AlertCircle } from 'lucide-react';
 import { showToast } from './Toast';
+import { api } from '../services/api';
 
 interface Student {
     id: number;
@@ -30,28 +31,58 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
 
     const [isSending, setIsSending] = React.useState(false);
     const [currentIndex, setCurrentIndex] = React.useState(0);
+    const [selectedAccountId, setSelectedAccountId] = React.useState<number | 'default'>(
+        user?.paymentAccounts?.find((a: any) => a.isDefault)?.id || 'default'
+    );
+
+    // Get current alias based on selection
+    const getActiveAlias = () => {
+        if (selectedAccountId === 'default') return user?.bizAlias || 'Alias';
+        const account = user?.paymentAccounts?.find((a: any) => a.id === selectedAccountId);
+        return account?.alias || user?.bizAlias || 'Alias';
+    };
 
     // Reset state when opened
     React.useEffect(() => {
         if (isOpen) {
             setIsSending(false);
             setCurrentIndex(0);
+            const defaultAcc = user?.paymentAccounts?.find((a: any) => a.isDefault);
+            setSelectedAccountId(defaultAcc?.id || 'default');
         }
-    }, [isOpen]);
+    }, [isOpen, user]);
 
     const handleStartSending = () => {
         setIsSending(true);
         setCurrentIndex(0);
     };
 
-    const handleSendNext = () => {
+    const handleSendNext = async () => {
         if (currentIndex >= students.length) return;
         
         const s = students[currentIndex];
-        const alias = s.billing_alias || user?.bizAlias || 'Alias';
+        const activeAlias = getActiveAlias();
+        const alias = s.billing_alias || activeAlias;
         const amount = Number(s.amount) || 0;
         const serviceName = (s.service_name === 'General' && s.sub_category) ? s.sub_category : (s.service_name || '');
         
+        let payLink = '';
+        if (s.payment_method === 'Mercado Pago' && isPro && user?.mpAccessToken) {
+            try {
+                const now = new Date();
+                const res = await api.createStudentPaymentLink({
+                    studentId: s.id,
+                    amount: amount,
+                    title: `Pago - ${s.name}`,
+                    year: now.getFullYear(),
+                    month: now.getMonth() + 1
+                });
+                payLink = res.init_point;
+            } catch (err) {
+                console.error('Error generating payment link:', err);
+            }
+        }
+
         const message = template
             .replace(/{alumno}/g, s.name || '')
             .replace(/{monto}/g, amount.toLocaleString('es-AR'))
@@ -61,6 +92,7 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
             .replace(/{metodo}/g, s.payment_method || '')
             .replace(/{vencimiento}/g, (s.deadline_day || '').toString())
             .replace(/{alias}/g, alias)
+            .replace(/{pago}/g, payLink || '')
             .replace(/{moneda}/g, user?.currency || '$');
             
         const cleanPhone = s.phone ? s.phone.replace(/\D/g, '') : '';
@@ -80,7 +112,8 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
     };
 
     const getPreviewMessage = (student: Student) => {
-        const alias = student.billing_alias || user?.bizAlias || 'Alias';
+        const activeAlias = getActiveAlias();
+        const alias = student.billing_alias || activeAlias;
         const amount = Number(student.amount) || 0;
         const serviceName = (student.service_name === 'General' && student.sub_category) ? student.sub_category : (student.service_name || '');
         
@@ -93,6 +126,7 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
             .replace(/{metodo}/g, student.payment_method || '')
             .replace(/{vencimiento}/g, (student.deadline_day || '').toString())
             .replace(/{alias}/g, alias)
+            .replace(/{pago}/g, (student.payment_method === 'Mercado Pago' && isPro && user?.mpAccessToken) ? 'https://mpago.la/...' : '')
             .replace(/{moneda}/g, user?.currency || '$');
     };
 
@@ -138,6 +172,39 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
                                         </p>
                                     </div>
 
+                                    {/* Account Selector */}
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Enviar pagos a:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {/* Legacy/Main Alias Option */}
+                                            <button
+                                                onClick={() => setSelectedAccountId('default')}
+                                                className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                                                    selectedAccountId === 'default'
+                                                    ? 'bg-primary-main/10 border-primary-main/50 text-primary-main shadow-sm ring-2 ring-primary-main/20'
+                                                    : 'bg-zinc-50 dark:bg-bg-soft/40 border-zinc-100 dark:border-white/5 text-text-muted hover:bg-zinc-100 dark:hover:bg-white/5'
+                                                }`}
+                                            >
+                                                Main: {user?.bizAlias || 'Alias Global'}
+                                            </button>
+
+                                            {/* Dynamic Account Options */}
+                                            {user?.paymentAccounts?.map((acc: any) => (
+                                                <button
+                                                    key={acc.id}
+                                                    onClick={() => setSelectedAccountId(acc.id)}
+                                                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                                                        selectedAccountId === acc.id
+                                                        ? 'bg-primary-main/10 border-primary-main/50 text-primary-main shadow-sm ring-2 ring-primary-main/20'
+                                                        : 'bg-zinc-50 dark:bg-bg-soft/40 border-zinc-100 dark:border-white/5 text-text-muted hover:bg-zinc-100 dark:hover:bg-white/5'
+                                                    }`}
+                                                >
+                                                    {acc.name}: {acc.alias}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-4">
                                         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Vista previa de mensajes</p>
                                         {students.map((student) => (
@@ -148,10 +215,24 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
                                                     </div>
                                                     <span className="font-bold text-text-main text-sm uppercase tracking-tight">{student.name}</span>
                                                 </div>
-                                                <div className="p-4 bg-white dark:bg-bg-dark rounded-xl border border-zinc-100 dark:border-white/5 shadow-inner">
+                                                <div className="p-4 bg-white dark:bg-bg-dark rounded-xl border border-zinc-100 dark:border-white/5 shadow-inner space-y-2">
                                                     <p className="text-xs text-text-muted leading-relaxed italic">
                                                         "{getPreviewMessage(student)}"
                                                     </p>
+                                                    
+                                                    {/* Warnings */}
+                                                    <div className="flex flex-wrap gap-2 pt-2 border-t border-zinc-50 dark:border-white/5">
+                                                        {(Number(student.amount) || 0) === 0 && (
+                                                            <span className="px-2 py-1 bg-red-500/10 text-red-500 text-[9px] font-black uppercase tracking-widest rounded-md border border-red-500/20">
+                                                                Monto $0
+                                                            </span>
+                                                        )}
+                                                        {(!student.billing_alias && !user?.bizAlias) && (
+                                                            <span className="px-2 py-1 bg-amber-500/10 text-amber-500 text-[9px] font-black uppercase tracking-widest rounded-md border border-amber-500/20">
+                                                                Configurá tu Alias en Ajustes
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}

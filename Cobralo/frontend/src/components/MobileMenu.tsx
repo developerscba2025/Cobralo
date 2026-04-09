@@ -1,18 +1,17 @@
 import React from 'react';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, LogOut, HelpCircle, ShieldCheck, Moon, Sun } from 'lucide-react';
+import { X, LogOut, Mail, ShieldCheck, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
 interface MobileMenuProps {
     isOpen: boolean;
     onClose: () => void;
-    onOpenSupport?: () => void;
     onOpenLegal?: (type: 'terms' | 'privacy') => void;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport, onOpenLegal }) => {
+const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenLegal }) => {
 
     const { logout, user } = useAuth();
     const { theme, toggleTheme } = useTheme();
@@ -42,7 +41,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport,
                         <div className="flex flex-col h-full">
                             {/* Header */}
                             <div className="flex items-center justify-between p-6 border-b border-border-emerald">
-                                <span className="text-xl font-black italic text-primary-main">COBRALO</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl font-black italic text-primary-main">COBRALO</span>
+                                    <span className="text-[8px] font-black px-1 py-0.5 bg-primary-main/10 text-primary-main rounded border border-primary-main/20">BETA</span>
+                                </div>
                                 <button
                                     onClick={onClose}
                                     className="p-3 rounded-2xl bg-bg-app text-text-muted hover:text-primary-main transition-colors"
@@ -88,12 +90,20 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenSupport,
                                     {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
                                 </button>
 
-                                <button 
-                                    onClick={() => { onOpenSupport?.(); onClose(); }}
+                                <div className="p-4 bg-primary-main/5 border border-primary-main/10 rounded-2xl mb-2">
+                                    <p className="text-[9px] font-black text-primary-main uppercase tracking-widest mb-1">Cobralo Beta</p>
+                                    <p className="text-[9px] text-text-muted font-medium leading-relaxed">
+                                        Si ves un error o algo no funciona, contactá con soporte.
+                                    </p>
+                                </div>
+
+                                <a 
+                                    href="mailto:Support@cobralo.info"
                                     className="w-full flex items-center gap-4 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:bg-primary-main/10 hover:text-primary-main"
+                                    onClick={onClose}
                                 >
-                                    <HelpCircle size={20} /> Soporte
-                                </button>
+                                    <Mail size={20} /> Soporte
+                                </a>
                                 <button 
                                     onClick={() => { onOpenLegal?.('terms'); onClose(); }}
                                     className="w-full flex items-center gap-4 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:bg-primary-main/10 hover:text-primary-main"

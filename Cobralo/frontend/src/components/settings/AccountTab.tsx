@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Shield, Save, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { User as UserIcon, Shield, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import type { User } from '../../services/api';
 import ConfirmModal from '../ConfirmModal';
 import { api } from '../../services/api';
@@ -9,8 +9,6 @@ import { useNavigate } from 'react-router-dom';
 interface AccountTabProps {
     user: Partial<User>;
     setUser: (u: Partial<User>) => void;
-    handleSave: () => void;
-    saving: boolean;
     passwordData: { currentPassword: string; newPassword: string; confirmPassword: string };
     setPasswordData: (d: any) => void;
     handleChangePassword: (e: React.FormEvent) => void;
@@ -24,7 +22,7 @@ interface AccountTabProps {
 }
 
 const AccountTab: React.FC<AccountTabProps> = ({
-    user, setUser, handleSave, saving,
+    user, setUser,
     passwordData, setPasswordData, handleChangePassword, changingPassword,
     showCurrentPassword, setShowCurrentPassword,
     showNewPassword, setShowNewPassword,
@@ -117,15 +115,6 @@ const AccountTab: React.FC<AccountTabProps> = ({
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="flex justify-end pt-2">
-                        <button
-                            onClick={() => handleSave()}
-                            disabled={saving}
-                            className="w-full lg:w-auto bg-primary-main text-white font-black py-4 px-8 lg:px-12 rounded-2xl shadow-xl shadow-primary-glow hover:bg-green-600 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest text-xs"
-                        >
-                            {saving ? <RefreshCw className="animate-spin" size={18} /> : <><Save size={18} /> Guardar</>}
-                        </button>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users2, Calendar, LibraryBig, Bell } from 'lucide-react';
+import { LayoutDashboard, Users2, Calendar, LibraryBig, Bell, Banknote } from 'lucide-react';
 
 interface BottomNavProps {
   active: string;
@@ -8,9 +8,9 @@ interface BottomNavProps {
 const ITEMS = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Inicio' },
   { id: 'students', icon: Users2, label: 'Alumnos' },
+  { id: 'payments', icon: Banknote, label: 'Cobros' },
   { id: 'calendar', icon: Calendar, label: 'Agenda' },
   { id: 'classes', icon: LibraryBig, label: 'Clases' },
-  { id: 'notifications', icon: Bell, label: 'Alertas' },
 ];
 
 const BottomNavMockup = ({ active, onTabChange }: BottomNavProps) => {

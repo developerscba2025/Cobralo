@@ -21,8 +21,6 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Students = lazy(() => import('./pages/Students'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Payments = lazy(() => import('./pages/Payments'));
-const History = lazy(() => import('./pages/History'));
-const Receipts = lazy(() => import('./pages/Receipts'));
 const Calendar = lazy(() => import('./pages/Calendar'));
 const Classes = lazy(() => import('./pages/Classes'));
 const RateTeacher = lazy(() => import('./pages/RateTeacher'));

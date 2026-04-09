@@ -1,5 +1,5 @@
-import React from 'react';
-import { Zap, Star, Save, Trash2, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Zap, Star, Save, Trash2, RefreshCw, Edit2, X, CheckCircle2, TrendingUp, TrendingDown } from 'lucide-react';
 import type { User } from '../../services/api';
 
 interface ServicesTabProps {
@@ -8,105 +8,206 @@ interface ServicesTabProps {
     newService: { name: string; defaultPrice: string };
     setNewService: (s: any) => void;
     handleAddService: () => void;
+    handleUpdateService: (id: number, data: any) => Promise<void>;
     handleDeleteService: (id: number) => void;
-    handleSave: () => void;
-    saving: boolean;
 }
 
 const ServicesTab: React.FC<ServicesTabProps> = ({
     user, userServices, newService, setNewService,
-    handleAddService, handleDeleteService, handleSave, saving,
-}) => (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-5xl">
-        <div>
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-emerald-50 flex items-center gap-3 mb-2 tracking-tight uppercase">
-                <Zap size={24} className="text-primary-main" /> Servicios
-            </h2>
-            <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Configurá las clases y aranceles que ofrecés.</p>
-        </div>
+    handleAddService, handleUpdateService, handleDeleteService,
+}) => {
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editName, setEditName] = useState('');
+    const [editPrice, setEditPrice] = useState('');
+    const [updateStudents, setUpdateStudents] = useState(false);
+    const [internalSaving, setInternalSaving] = useState(false);
 
-        {/* Add service form */}
-        <div className="p-1 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-border-emerald/30 dark:to-emerald-500/10 rounded-[24px] lg:rounded-[3.5rem] shadow-sm">
-            <div className="bg-surface rounded-[22px] lg:rounded-[3.4rem] p-4 lg:p-10 space-y-8">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 items-start">
-                    <div className="space-y-4">
-                        <div className="w-14 h-14 rounded-3xl bg-primary-main/10 flex items-center justify-center text-primary-main rotate-3"><Zap size={28} /></div>
-                        <div>
-                            <h3 className="text-xl font-black text-zinc-800 dark:text-emerald-50 uppercase tracking-tighter">Servicios Ofrecidos</h3>
-                            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Configurá tus clases y aranceles</p>
-                        </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row items-end gap-3 w-full lg:w-auto flex-1 max-w-2xl">
-                        <div className="flex-1 w-full min-w-[140px]">
-                            <label className="block lg:hidden text-[10px] font-black text-zinc-400 uppercase mb-2 ml-2 tracking-widest">Nombre del Servicio</label>
-                            <input 
-                                type="text" 
-                                placeholder="Ej: Clase de Yoga" 
-                                className="w-full h-14 bg-bg-app px-6 rounded-2xl text-sm font-bold border border-transparent focus:border-primary-main/30 focus:ring-4 focus:ring-primary-main/5 transition-all outline-none text-text-main" 
-                                value={newService.name} 
-                                onChange={e => setNewService({ ...newService, name: e.target.value })} 
-                            />
-                        </div>
-                        <div className="w-full sm:w-32 shrink-0">
-                            <label className="block lg:hidden text-[10px] font-black text-zinc-400 uppercase mb-2 ml-2 tracking-widest">Precio</label>
-                            <div className="relative h-14">
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold text-sm">
-                                    {user.currency || '$'}
+    const startEditing = (service: any) => {
+        setEditingId(service.id);
+        setEditName(service.name);
+        setEditPrice(service.defaultPrice.toString());
+        setUpdateStudents(false);
+    };
+
+    const cancelEditing = () => {
+        setEditingId(null);
+        setUpdateStudents(false);
+    };
+
+    const confirmUpdate = async (id: number) => {
+        setInternalSaving(true);
+        try {
+            await handleUpdateService(id, {
+                name: editName,
+                defaultPrice: parseFloat(editPrice) || 0,
+                updateStudents
+            });
+            setEditingId(null);
+        } finally {
+            setInternalSaving(false);
+        }
+    };
+
+    return (
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-5xl transition-all">
+            <div>
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-emerald-50 flex items-center gap-3 mb-2 tracking-tight uppercase">
+                    <Zap size={24} className="text-primary-main" /> Servicios
+                </h2>
+                <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Configurá las clases y aranceles que ofrecés.</p>
+            </div>
+
+            {/* Add service form */}
+            <div className="p-1 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-border-emerald/30 dark:to-emerald-500/10 rounded-[24px] lg:rounded-[3.5rem] shadow-sm">
+                <div className="bg-surface rounded-[22px] lg:rounded-[3.4rem] p-4 lg:p-10 space-y-8 transition-all">
+                        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 items-start w-full">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full items-end">
+                                <div className="md:col-span-6 lg:col-span-7 space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase ml-2 tracking-widest flex items-center gap-2">
+                                        <Star size={12} className="text-primary-main" /> Nombre del Servicio
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Ej: Clases de Inglés" 
+                                        className="w-full h-16 bg-bg-app px-6 rounded-2xl text-sm font-bold border border-border-main/50 focus:border-primary-main/50 focus:ring-4 focus:ring-primary-main/5 transition-all outline-none text-text-main" 
+                                        value={newService.name} 
+                                        onChange={e => setNewService({ ...newService, name: e.target.value })} 
+                                    />
                                 </div>
-                                <input 
-                                    type="number" 
-                                    placeholder="0" 
-                                    className="w-full h-full bg-bg-app pl-8 pr-6 rounded-2xl text-sm font-bold border border-transparent focus:border-primary-main/30 focus:ring-4 focus:ring-primary-main/5 transition-all outline-none text-text-main font-mono" 
-                                    value={newService.defaultPrice} 
-                                    onChange={e => setNewService({ ...newService, defaultPrice: e.target.value })} 
-                                />
+                                <div className="md:col-span-3 lg:col-span-3 space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase ml-2 tracking-widest flex items-center gap-2">
+                                        <Star size={12} className="text-primary-main" /> Precio Base
+                                    </label>
+                                    <div className="relative h-16">
+                                        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-primary-main font-black text-lg">
+                                            {user.currency || '$'}
+                                        </div>
+                                        <input 
+                                            type="number" 
+                                            placeholder="0" 
+                                            className="w-full h-full bg-bg-app pl-10 pr-6 rounded-2xl text-lg font-black border border-border-main/50 focus:border-primary-main/50 focus:ring-4 focus:ring-primary-main/5 transition-all outline-none text-text-main font-mono" 
+                                            value={newService.defaultPrice} 
+                                            onChange={e => setNewService({ ...newService, defaultPrice: e.target.value })} 
+                                        />
+                                    </div>
+                                </div>
+                                <div className="md:col-span-3 lg:col-span-2">
+                                    <button 
+                                        onClick={handleAddService} 
+                                        className="w-full h-16 bg-primary-main text-white px-8 rounded-2xl hover:bg-green-600 transition-all shadow-xl shadow-primary-glow flex items-center justify-center gap-2.5 active:scale-95 group whitespace-nowrap"
+                                    >
+                                        <Zap size={18} className="group-hover:rotate-12 transition-transform" />
+                                        <span className="text-[11px] font-black uppercase tracking-[0.1em]">Agregar</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <button 
-                            onClick={handleAddService} 
-                            className="w-full sm:w-auto h-14 bg-primary-main text-white px-8 rounded-2xl hover:bg-green-600 transition-all shadow-xl shadow-primary-glow flex items-center justify-center gap-2.5 active:scale-95 group whitespace-nowrap shrink-0"
-                        >
-                            <Zap size={16} className="group-hover:rotate-12 transition-transform" />
-                            <span className="text-[11px] font-black uppercase tracking-[0.1em]">Agregar</span>
-                        </button>
-                    </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {userServices.length === 0 ? (
-                        <div className="md:col-span-2 py-10 border-2 border-dashed border-border-main/20 rounded-[32px] text-center">
-                            <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.2em]">No tenés servicios cargados</p>
-                        </div>
-                    ) : (
-                        userServices.map(service => (
-                            <div key={service.id} className="flex items-center justify-between p-5 bg-zinc-50/50 dark:bg-bg-dark/40 rounded-[28px] border border-border-main/10 group hover:border-primary-main/20 hover:bg-zinc-50 dark:hover:bg-bg-dark transition-all">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-surface flex items-center justify-center text-primary-main shadow-sm border border-border-main/30 group-hover:scale-110 transition-transform">
-                                        <Star size={20} className="fill-primary-main/10" />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-zinc-800 dark:text-emerald-50 text-sm tracking-tight">{service.name}</p>
-                                        <span className="text-[10px] font-black text-primary-main uppercase tracking-widest bg-primary-main/10 px-2 py-0.5 rounded-lg">
-                                            {user.currency}{Number(service.defaultPrice).toLocaleString('es-AR')}
-                                        </span>
-                                    </div>
-                                </div>
-                                <button onClick={() => handleDeleteService(service.id)} className="p-3 text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all" title="Eliminar servicio">
-                                    <Trash2 size={18} />
-                                </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {userServices.length === 0 ? (
+                            <div className="md:col-span-2 py-10 border-2 border-dashed border-border-main/20 rounded-[32px] text-center">
+                                <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.2em]">No tenés servicios cargados</p>
                             </div>
-                        ))
-                    )}
+                        ) : (
+                            userServices.map(service => {
+                                const isEditing = editingId === service.id;
+                                const priceDiff = isEditing ? (parseFloat(editPrice) || 0) - service.defaultPrice : 0;
+                                const percentDiff = service.defaultPrice > 0 ? (priceDiff / service.defaultPrice) * 100 : 0;
+
+                                return (
+                                    <div key={service.id} className={`p-6 rounded-[32px] border transition-all duration-300 ${isEditing ? 'bg-surface border-primary-main shadow-lg ring-4 ring-primary-main/5 scale-[1.02]' : 'bg-zinc-50/50 dark:bg-bg-dark/40 border-border-main/10 hover:border-primary-main/20 hover:bg-zinc-50 dark:hover:bg-bg-dark'}`}>
+                                        {isEditing ? (
+                                            <div className="space-y-6">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div className="flex-1 space-y-2">
+                                                        <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Editar Nombre</label>
+                                                        <input 
+                                                            autoFocus
+                                                            className="w-full bg-bg-app border border-border-main/50 p-3 rounded-xl text-xs font-bold outline-none focus:border-primary-main/30"
+                                                            value={editName}
+                                                            onChange={e => setEditName(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="w-1/3 space-y-2">
+                                                        <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Nuevo Precio</label>
+                                                        <input 
+                                                            type="number"
+                                                            className="w-full bg-bg-app border border-border-main/50 p-3 rounded-xl text-xs font-black outline-none focus:border-primary-main/30 font-mono"
+                                                            value={editPrice}
+                                                            onChange={e => setEditPrice(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Price change indicator */}
+                                                {priceDiff !== 0 && (
+                                                    <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-wider p-2 px-3 rounded-lg w-fit ${priceDiff > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                                                        {priceDiff > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                                                        {priceDiff > 0 ? 'Aumento' : 'Descuento'} del {Math.abs(percentDiff).toFixed(1)}% ({user.currency}{Math.abs(priceDiff)})
+                                                    </div>
+                                                )}
+
+                                                {/* Propagation Toggle */}
+                                                <div className="flex items-center gap-3 p-4 bg-primary-main/5 rounded-2xl border border-primary-main/10 cursor-pointer hover:bg-primary-main/10 transition-colors" onClick={() => setUpdateStudents(!updateStudents)}>
+                                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${updateStudents ? 'bg-primary-main border-primary-main text-white' : 'border-primary-main/30'}`}>
+                                                        {updateStudents && <CheckCircle2 size={14} strokeWidth={3} />}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-[10px] font-black text-zinc-700 dark:text-emerald-50 uppercase tracking-tight">Aplicar a alumnos actuales</p>
+                                                        <p className="text-[9px] font-bold text-zinc-400 mt-0.5">Esto actualizará el arancel de todos los alumnos de {service.name}.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={() => confirmUpdate(service.id)} 
+                                                        disabled={internalSaving}
+                                                        className="flex-1 bg-primary-main text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                                                    >
+                                                        {internalSaving ? <RefreshCw className="animate-spin" size={12} /> : <><Save size={14} /> Guardar</>}
+                                                    </button>
+                                                    <button 
+                                                        onClick={cancelEditing}
+                                                        className="px-4 py-3 bg-zinc-100 dark:bg-white/5 text-zinc-400 rounded-xl hover:bg-zinc-200 transition-colors"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between group">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-14 h-14 rounded-2xl bg-surface flex items-center justify-center text-primary-main shadow-sm border border-border-main/30 group-hover:scale-110 transition-all duration-300">
+                                                        <Star size={24} className="fill-primary-main/10" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-zinc-800 dark:text-white text-base tracking-tight">{service.name}</p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-[10px] font-black text-primary-main uppercase tracking-widest bg-primary-main/10 px-2 py-0.5 rounded-lg border border-primary-main/10">
+                                                                {user.currency}{Number(service.defaultPrice).toLocaleString('es-AR')}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => startEditing(service)} className="p-3 text-zinc-300 hover:text-primary-main hover:bg-primary-main/5 rounded-xl transition-all" title="Editar">
+                                                        <Edit2 size={18} />
+                                                    </button>
+                                                    <button onClick={() => handleDeleteService(service.id)} className="p-3 text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all" title="Eliminar">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div className="flex justify-end pt-4">
-            <button onClick={() => handleSave()} disabled={saving} className="w-full lg:w-auto bg-primary-main text-white font-black py-4 px-8 lg:py-5 lg:px-14 rounded-2xl lg:rounded-[28px] shadow-xl shadow-primary-glow flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
-                {saving ? <RefreshCw className="animate-spin" size={20} /> : <><Save size={20} /> Guardar Cambios</>}
-            </button>
-        </div>
-    </div>
-);
+    );
+};
 
 export default ServicesTab;

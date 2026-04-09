@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { showToast } from '../components/Toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Loader2, Building2, Briefcase, ChevronLeft, Sparkles, Smartphone, Eye, EyeOff, Check } from 'lucide-react';
+import LegalModal from '../components/LegalModal';
 
 const Login = () => {
 
@@ -18,6 +19,10 @@ const Login = () => {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    
+    // Legal Modal state
+    const [showLegalModal, setShowLegalModal] = useState(false);
+    const [legalType, setLegalType] = useState<'terms' | 'privacy'>('terms');
     
     const [formData, setFormData] = useState({
         name: '',
@@ -400,25 +405,12 @@ const Login = () => {
                                             </div>
 
                                             <div className="space-y-1.5 pt-1">
-                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">¿Qué tipo de academia tenés?</label>
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">¿A qué te dedicás?</label>
                                                 <div className="relative">
                                                     <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
-                                                    <input type="text" placeholder="Ej: Clases de Guitarra" value={formData.businessCategory}
+                                                    <input type="text" placeholder="Ej: Profesor de Matemáticas" value={formData.businessCategory}
                                                         onChange={e => setFormData({ ...formData, businessCategory: e.target.value })}
                                                         className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
-                                                </div>
-                                                <div className="flex flex-wrap gap-2 mt-3 pl-1">
-                                                    {['Música', 'Idiomas', 'Deportes', 'Tutoría', 'Arte', 'Danza'].map(cat => (
-                                                        <button key={cat} type="button"
-                                                            onClick={() => setFormData({ ...formData, businessCategory: cat })}
-                                                            className={`text-[10px] font-black px-3 py-1.5 rounded-full border transition ${
-                                                                formData.businessCategory === cat
-                                                                    ? 'bg-primary-main/20 border-primary-main/40 text-primary-main'
-                                                                    : 'bg-white/[0.03] border-white/[0.08] text-zinc-500 hover:border-white/15 hover:text-zinc-300'
-                                                            }`}>
-                                                            {cat}
-                                                        </button>
-                                                    ))}
                                                 </div>
                                             </div>
 
@@ -427,9 +419,9 @@ const Login = () => {
                                                     className="mt-0.5 w-4 h-4 rounded appearance-none border border-white/20 checked:bg-primary-main checked:border-primary-main flex items-center justify-center relative after:content-[''] after:absolute after:w-1.5 after:h-2.5 after:border-r-2 after:border-b-2 after:border-black after:rotate-45 after:-translate-y-0.5 checked:after:block after:hidden transition-colors" />
                                                 <span className="text-xs text-zinc-500 leading-relaxed max-w-[280px]">
                                                     Acepto los{' '}
-                                                    <a href="/app/settings?tab=legal" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Términos de uso</a>
+                                                    <button type="button" onClick={() => { setLegalType('terms'); setShowLegalModal(true); }} className="text-zinc-300 hover:text-primary-main font-bold outline-none">Términos de uso</button>
                                                     {' '}y{' '}
-                                                    <a href="/app/settings?tab=legal" target="_blank" rel="noopener noreferrer" className="text-zinc-300 hover:text-primary-main font-bold">Privacidad</a>.
+                                                    <button type="button" onClick={() => { setLegalType('privacy'); setShowLegalModal(true); }} className="text-zinc-300 hover:text-primary-main font-bold outline-none">Privacidad</button>.
                                                 </span>
                                             </label>
                                         </motion.div>
@@ -476,6 +468,13 @@ const Login = () => {
 
                 </div>
             </div>
+
+            {/* Legal Modals */}
+            <LegalModal 
+                isOpen={showLegalModal} 
+                onClose={() => setShowLegalModal(false)} 
+                type={legalType} 
+            />
         </div>
     );
 };

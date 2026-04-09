@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, AlertCircle, ShoppingBag } from 'lucide-react';
+import { TrendingUp, ShoppingBag } from 'lucide-react';
 import { useStudents } from '../hooks/useStudents';
 import { api, type Student, type UserService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -60,23 +60,27 @@ const Students = () => {
     const [modals, setModals] = useState({
         create: false,
         edit: { isOpen: false, student: null as Student | null },
-        qr: { isOpen: false, student: null as Student | null },
         schedule: { isOpen: false, student: null as Student | null },
         history: { isOpen: false, student: null as Student | null },
         notes: { isOpen: false, student: null as Student | null },
         delete: { isOpen: false, student: null as Student | null },
-        whatsapp: false,
+        renew: { isOpen: false, student: null as Student | null },
+        whatsapp: { isOpen: false, student: null as Student | null },
         adjustment: false,
         upsell: false
     });
 
     const openModal = (type: string, student: Student | null = null) => {
-        if (type === 'whatsapp' || type === 'adjustment') {
+        if (type === 'adjustment') {
             if (selectedIds.length === 0) return;
         }
-        
-        if (type === 'create') setModals(prev => ({ ...prev, create: true }));
-        else if (type === 'whatsapp') setModals(prev => ({ ...prev, whatsapp: true }));
+
+        if (type === 'whatsapp') {
+            // If it's a mass action (no student passed), check selection
+            if (!student && selectedIds.length === 0) return;
+            setModals(prev => ({ ...prev, whatsapp: { isOpen: true, student } }));
+            return;
+        }
         else if (type === 'adjustment') {
             if (user?.plan === 'BÁSICO') setModals(prev => ({ ...prev, upsell: true }));
             else setModals(prev => ({ ...prev, adjustment: true }));
@@ -88,7 +92,6 @@ const Students = () => {
 
     const closeModal = (type: string) => {
         if (type === 'create') setModals(prev => ({ ...prev, create: false }));
-        else if (type === 'whatsapp') setModals(prev => ({ ...prev, whatsapp: false }));
         else if (type === 'adjustment') setModals(prev => ({ ...prev, adjustment: false }));
         else if (type === 'upsell') setModals(prev => ({ ...prev, upsell: false }));
         else {
@@ -117,19 +120,17 @@ const Students = () => {
 
     // Stats
     const totalStudents = students.length;
-    const pendingCount = students.filter(s => s.status === 'pending').length;
-    const activeIncome = students.filter(s => s.status === 'paid').reduce((acc, s) => acc + Number(s.amount || 0), 0);
 
     return (
         <Layout>
             <div className="space-y-6 w-full">
                 {/* Header / Stats */}
                 <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase flex items-center gap-3">
-                            ALUMNOS <span className="text-sm font-bold text-text-muted px-2 py-0.5 bg-black/5 dark:bg-white/5 rounded-lg">{totalStudents}</span>
+                    <div className="space-y-2">
+                        <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic flex items-center gap-4">
+                            ALUMNOS <span className="text-xs font-black px-2 py-1 bg-primary-main/10 text-primary-main rounded-lg not-italic shadow-lg shadow-primary-main/5 animate-pulse">{totalStudents}</span>
                         </h1>
-                        <p className="text-sm font-bold text-text-muted mt-1">Gestioná la información de tus alumnos y tu academia.</p>
+                        <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">Gestioná tu academia con precisión PRO</p>
                     </div>
                 </div>
 
@@ -191,8 +192,9 @@ const Students = () => {
                 <StudentModalsContainer 
                     modals={modals}
                     onClose={closeModal}
-                    onAction={() => { fetchData(); closeModal('create'); closeModal('edit'); closeModal('delete'); closeModal('notes'); }}
+                    onAction={fetchData}
                     selectedStudents={selectedStudents}
+                    allStudents={students}
                     user={user}
                     userServices={userServices}
                 />

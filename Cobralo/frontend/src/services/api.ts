@@ -58,6 +58,8 @@ export interface Student {
     sub_category?: string | null;
     billing_alias?: string | null;
     makeup_classes?: number;
+    isFlexible?: boolean;
+    notes?: string;
 }
 
 export interface ClassSchedule {
@@ -88,8 +90,6 @@ export interface Payment {
         service_name: string;
     };
 }
-
-
 
 export interface UnifiedSchedule extends ClassSchedule {
     student: {
@@ -226,7 +226,7 @@ export const api = {
 
     // GET /api/students
     async getStudents(): Promise<Student[]> {
-        const res = await fetchWithTimeout(`${API_URL}/students`, {
+        const res = await fetchWithTimeout(`${API_URL}/students?all=true`, {
             headers: { ...getAuthHeader() }
         });
         return res.json();
@@ -297,8 +297,8 @@ export const api = {
 
     // GET /api/payments/stats
     async getPaymentStats(year?: number): Promise<PaymentStats> {
-        const params = year ? `?year=${year}` : '';
-        const res = await fetchWithTimeout(`${API_URL}/payments/stats${params}`, {
+        const y = year || new Date().getFullYear();
+        const res = await fetchWithTimeout(`${API_URL}/payments/stats?year=${y}`, {
             headers: { ...getAuthHeader() }
         });
         return res.json();
@@ -757,13 +757,18 @@ export const api = {
     },
 
     // ============ STUDENT PAYMENTS ============
-    async createStudentPaymentLink(data: { studentId: number, amount: number, title?: string }): Promise<{ checkoutUrl: string }> {
+    async createStudentPaymentLink(data: { studentId: number, amount: number, title?: string, year?: number, month?: number }): Promise<{ checkoutUrl: string; init_point: string }> {
         const res = await fetchWithTimeout(`${API_URL}/payments/create-link`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
-        return res.json();
+        const result = await res.json();
+        // Ensure both fields exist for compatibility
+        return {
+            checkoutUrl: result.checkoutUrl || result.init_point,
+            init_point: result.init_point || result.checkoutUrl
+        };
     },
 
     // ============ SUPPORT ============

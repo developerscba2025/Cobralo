@@ -2,29 +2,30 @@ import React from 'react';
 import type { Student } from '../../services/api';
 import StudentFormModal from './StudentFormModal';
 import ExtraPaymentModal from './ExtraPaymentModal';
-import QRPayment from '../QRPayment';
 import ScheduleModal from '../ScheduleModal';
 import AttendanceModal from '../AttendanceModal';
 import ConfirmModal from '../ConfirmModal';
 import StudentNotes from '../StudentNotes';
 import WhatsAppPreviewModal from '../WhatsAppPreviewModal';
+import RenewPackModal from './RenewPackModal';
 
 interface StudentModalsContainerProps {
     modals: {
         create: boolean;
         edit: { isOpen: boolean; student: Student | null };
-        qr: { isOpen: boolean; student: Student | null };
         schedule: { isOpen: boolean; student: Student | null };
         history: { isOpen: boolean; student: Student | null };
         notes: { isOpen: boolean; student: Student | null };
         delete: { isOpen: boolean; student: Student | null };
-        whatsapp: boolean;
+        renew: { isOpen: boolean; student: Student | null };
+        whatsapp: { isOpen: boolean; student: Student | null };
         adjustment: boolean;
         upsell: boolean;
     };
     onClose: (type: string) => void;
     onAction: () => void;
     selectedStudents: Student[];
+    allStudents?: Student[];
     user: any;
     userServices: any[];
 }
@@ -34,9 +35,16 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
     onClose,
     onAction,
     selectedStudents,
+    allStudents = [],
     user,
     userServices
 }) => {
+    // Helper to get fresh student data from the main list
+    const getFreshStudent = (s: Student | null) => {
+        if (!s) return null;
+        return allStudents.find(item => item.id === s.id) || s;
+    };
+
     return (
         <>
             {/* Create Student */}
@@ -53,22 +61,11 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
                 isOpen={modals.edit.isOpen}
                 onClose={() => onClose('edit')}
                 onSuccess={() => { onAction(); onClose('edit'); }}
-                student={modals.edit.student}
+                student={getFreshStudent(modals.edit.student)}
                 user={user}
                 userServices={userServices}
             />
 
-            {/* QR Payment */}
-            {modals.qr.student && (
-                <QRPayment
-                    isOpen={modals.qr.isOpen}
-                    onClose={() => onClose('qr')}
-                    studentName={modals.qr.student.name}
-                    amount={Number(modals.qr.student.amount)}
-                    alias={modals.qr.student.billing_alias || user?.bizAlias || 'Sin alias'}
-                    paymentMethod={modals.qr.student.payment_method || 'Efectivo'}
-                />
-            )}
 
             {/* Schedule Modal */}
             <ScheduleModal 
@@ -82,7 +79,7 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
             {modals.history.isOpen && modals.history.student && (
                 <AttendanceModal 
                     onClose={() => onClose('history')}
-                    student={modals.history.student}
+                    student={getFreshStudent(modals.history.student)!}
                     onUpdate={onAction}
                 />
             )}
@@ -108,9 +105,9 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
 
             {/* WhatsApp Mass Message */}
             <WhatsAppPreviewModal 
-                isOpen={modals.whatsapp}
+                isOpen={modals.whatsapp.isOpen}
                 onClose={() => onClose('whatsapp')}
-                students={selectedStudents}
+                students={modals.whatsapp.student ? [getFreshStudent(modals.whatsapp.student)!] : selectedStudents}
                 user={user}
                 isPro={user?.plan === 'PRO'}
             />
@@ -122,6 +119,14 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
                 onSuccess={onAction}
                 student={selectedStudents.length === 1 ? selectedStudents[0] : null}
                 currency={user?.currency || '$'}
+            />
+
+            {/* Renew Pack Modal */}
+            <RenewPackModal 
+                isOpen={modals.renew.isOpen}
+                onClose={() => onClose('renew')}
+                student={getFreshStudent(modals.renew.student)}
+                onSuccess={onAction}
             />
 
             {/* TODO: Implement Billing Adjustment Modal for multiple selection if needed */}

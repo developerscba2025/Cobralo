@@ -3,6 +3,7 @@ import { Zap, Activity, TrendingUp, Users2, DollarSign, Clock, CheckCircle2, Ale
 import { Link } from 'react-router-dom';
 import type { Student } from '../services/api';
 import EmptyState from '../components/EmptyState';
+import TiltCard from '../components/TiltCard';
 
 interface BasicDashboardProps {
     stats: {
@@ -33,12 +34,33 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
     const collectionRate = stats.totalStudents > 0 ? Math.round((paid.length / Math.max(recentActivity.length, 1)) * 100) : 0;
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
             className="space-y-6"
         >
+            {/* ── Header ── */}
+            <div className="space-y-2 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic">
+                        {(() => {
+                            const hour = new Date().getHours();
+                            let greeting = 'HOLA';
+                            let icon = '👋';
+                            if (hour >= 20 || hour < 5) {
+                                greeting = 'BUENAS NOCHES';
+                                icon = '🌙';
+                            } else if (hour >= 5 && hour < 12) {
+                                greeting = 'BUEN DÍA';
+                                icon = '🌅';
+                            }
+                            const name = user?.name ? user.name.split(' ')[0].toUpperCase() : 'USUARIO';
+                            return <>{greeting}, {name} <span className={icon === '👋' ? 'animate-bounce inline-block' : ''} style={icon === '👋' ? { animationDuration: '3s' } : {}}>{icon}</span></>;
+                        })()}
+                    </h1>
+                </div>
+                <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">Resumen de tu academia hoy</p>
+            </div>
             {/* IPC Notice Banner */}
             {pendingAdjustment && (
                 <motion.div
@@ -71,93 +93,99 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
                 {/* Ingresos del mes - Large */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 }}
-                    className="col-span-1 sm:col-span-2 p-5 sm:p-6 md:p-8 flex flex-col justify-between min-h-[140px]"
-                    style={{ ...bentoBase, background: 'linear-gradient(165deg, var(--color-surface) 0%, var(--color-bg-app) 100%)' }}
-                >
-                    <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-primary-main/20 text-[9px] font-black text-primary-main uppercase tracking-widest"
-                             style={{ background: 'rgba(34,197,94,0.06)' }}>
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary-main animate-pulse" />
-                            Mes actual
+                <TiltCard intensity={3} className="col-span-1 sm:col-span-2">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="p-5 sm:p-6 md:p-8 flex flex-col justify-between min-h-[140px] h-full w-full"
+                        style={{ ...bentoBase, background: 'linear-gradient(165deg, var(--color-surface) 0%, var(--color-bg-app) 100%)' }}
+                    >
+                        <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-primary-main/20 text-[9px] font-black text-primary-main uppercase tracking-widest"
+                                 style={{ background: 'rgba(34,197,94,0.06)' }}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary-main animate-pulse" />
+                                Mes actual
+                            </div>
+                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-primary-main border border-primary-main/20"
+                                 style={{ background: 'rgba(34,197,94,0.08)' }}>
+                                <DollarSign size={18} />
+                            </div>
                         </div>
-                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-primary-main border border-primary-main/20"
-                             style={{ background: 'rgba(34,197,94,0.08)' }}>
-                            <DollarSign size={18} />
-                        </div>
-                    </div>
-                    <div className="mt-6">
-                        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">Ingresos Cobrados</p>
-                        {stats.paid === 0 && stats.pending === 0 && stats.totalStudents === 0 ? (
-                            <p className="text-[11px] font-black text-text-muted mt-2 italic">
-                                Tu próximo ingreso aparecerá acá ✨
-                            </p>
-                        ) : (
-                            <>
-                                <p className="text-4xl md:text-5xl font-black text-text-main tracking-tighter">
-                                    {currency}{stats.paid.toLocaleString('es-AR')}
+                        <div className="mt-6">
+                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 italic">Ingresos (Mes Actual)</p>
+                            {stats.paid === 0 && stats.pending === 0 && stats.totalStudents === 0 ? (
+                                <p className="text-[11px] font-black text-text-muted mt-2 italic">
+                                    Tu próximo ingreso aparecerá acá ✨
                                 </p>
-                                {stats.pending > 0 && (
-                                    <p className="text-[10px] font-bold text-amber-500/90 uppercase tracking-wider mt-2">
-                                        {currency}{stats.pending.toLocaleString('es-AR')} pendiente
+                            ) : (
+                                <>
+                                    <p className="text-4xl md:text-5xl font-black text-text-main tracking-tighter">
+                                        {currency}{stats.paid.toLocaleString('es-AR')}
                                     </p>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </motion.div>
+                                    {stats.pending > 0 && (
+                                        <p className="text-[10px] font-bold text-amber-500/90 uppercase tracking-wider mt-2">
+                                            {currency}{stats.pending.toLocaleString('es-AR')} pendiente
+                                        </p>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </motion.div>
+                </TiltCard>
 
                 {/* Alumnos Activos */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="p-5 sm:p-6 flex flex-col justify-between min-h-[120px]"
-                    style={bentoBase}
-                >
-                    <div className="flex justify-between items-start">
-                        <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Alumnos</h3>
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-border-main"
-                             style={{ background: 'rgba(255,255,255,0.03)' }}>
-                            <Users2 size={16} className="text-text-muted" />
+                <TiltCard intensity={5}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="p-5 sm:p-6 flex flex-col justify-between min-h-[120px] h-full w-full"
+                        style={bentoBase}
+                    >
+                        <div className="flex justify-between items-start">
+                            <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Alumnos</h3>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-border-main"
+                                 style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                <Users2 size={16} className="text-text-muted" />
+                            </div>
                         </div>
-                    </div>
-                    <div className="mt-4">
-                        <p className="text-4xl font-black text-text-main tracking-tighter">{stats.totalStudents}</p>
-                        <p className="text-[9px] text-text-muted font-black uppercase mt-1 tracking-widest">Activos</p>
-                    </div>
-                </motion.div>
+                        <div className="mt-4">
+                            <p className="text-4xl font-black text-text-main tracking-tighter">{stats.totalStudents}</p>
+                            <p className="text-[10px] text-text-muted font-black uppercase mt-2 tracking-widest">Alumnos Activos</p>
+                        </div>
+                    </motion.div>
+                </TiltCard>
 
                 {/* Tasa de cobro */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="p-5 sm:p-6 flex flex-col justify-between min-h-[120px]"
-                    style={bentoBase}
-                >
-                    <div className="flex justify-between items-start">
-                        <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Cobrado</h3>
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-primary-main/20"
-                             style={{ background: 'rgba(34,197,94,0.06)' }}>
-                            <TrendingUp size={16} className="text-primary-main" />
+                <TiltCard intensity={5}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="p-5 sm:p-6 flex flex-col justify-between min-h-[120px] h-full w-full"
+                        style={bentoBase}
+                    >
+                        <div className="flex justify-between items-start">
+                            <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Cobrado</h3>
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-primary-main/20"
+                                 style={{ background: 'rgba(34,197,94,0.06)' }}>
+                                <TrendingUp size={16} className="text-primary-main" />
+                            </div>
                         </div>
-                    </div>
-                    <div className="mt-4">
-                        <p className="text-4xl font-black text-primary-main tracking-tighter">{collectionRate}%</p>
-                        <p className="text-[9px] text-text-muted font-black uppercase mt-1 tracking-widest">Tasa de cobro</p>
-                    </div>
-                    {/* Progress bar */}
-                    <div className="mt-3 h-1 rounded-full bg-border-main overflow-hidden">
-                        <div
-                            className="h-full rounded-full bg-primary-main transition-all"
-                            style={{ width: `${collectionRate}%` }}
-                        />
-                    </div>
-                </motion.div>
+                        <div className="mt-4">
+                            <p className="text-4xl font-black text-primary-main tracking-tighter">{collectionRate}%</p>
+                            <p className="text-[10px] text-text-muted font-black uppercase mt-2 tracking-widest">Eficiencia de Cobro</p>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="mt-3 h-1 rounded-full bg-border-main overflow-hidden">
+                            <div
+                                className="h-full rounded-full bg-primary-main transition-all"
+                                style={{ width: `${collectionRate}%` }}
+                            />
+                        </div>
+                    </motion.div>
+                </TiltCard>
                 
                 {/* Agenda Mini Widget (si hay clases hoy) */}
                 {todaysSchedules.length > 0 && (

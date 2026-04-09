@@ -8,11 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface PaymentAccountsTabProps {
     user: Partial<User>;
     setUser: (u: Partial<User>) => void;
-    handleSave: () => void;
-    saving: boolean;
 }
 
-const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser, handleSave, saving }) => {
+const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser }) => {
     const [accounts, setAccounts] = useState<BusinessPaymentAccount[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
@@ -28,6 +26,7 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser, 
             setLoading(true);
             const data = await api.getPaymentAccounts();
             setAccounts(data);
+            setUser({ ...user, paymentAccounts: data });
         } catch (error: any) {
             console.error('Error loading accounts:', error);
         } finally {
@@ -50,7 +49,9 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser, 
             });
             if (!res.ok) throw new Error('Error creating account');
             const created = await res.json();
-            setAccounts([...accounts, created]);
+            const updatedAccounts = [...accounts, created];
+            setAccounts(updatedAccounts);
+            setUser({ ...user, paymentAccounts: updatedAccounts });
             setNewAccount({ name: '', alias: '' });
             setIsCreating(false);
             showToast.success('Cuenta guardada');
@@ -70,7 +71,9 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser, 
                 }
             });
             if (!res.ok) throw new Error('Error deleting account');
-            setAccounts(accounts.filter(a => a.id !== id));
+            const updatedAccounts = accounts.filter(a => a.id !== id);
+            setAccounts(updatedAccounts);
+            setUser({ ...user, paymentAccounts: updatedAccounts });
             showToast.success('Cuenta eliminada');
         } catch (error: any) {
             showToast.error('Error al eliminar');
@@ -209,11 +212,6 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser, 
                         <label className="block text-[10px] font-black text-zinc-400 dark:text-blue-500/40 uppercase ml-4 tracking-widest">Public Key</label>
                         <input type="text" className="w-full p-5 bg-surface text-text-main rounded-[20px] border-none font-bold text-text-main shadow-sm focus:ring-2 focus:ring-blue-400/20 outline-none" value={user.mpPublicKey || ''} onChange={e => setUser({ ...user, mpPublicKey: e.target.value })} placeholder="APP_USR-..." />
                     </div>
-                </div>
-                <div className="flex justify-end">
-                    <button onClick={() => handleSave()} disabled={saving} className="w-full lg:w-auto bg-primary-main text-white font-black py-4 px-8 lg:py-5 lg:px-14 rounded-2xl lg:rounded-[28px] shadow-xl shadow-primary-glow flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
-                        {saving ? <span className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full inline-block" /> : 'Guardar Cambios'}
-                    </button>
                 </div>
             </div>
         </div>

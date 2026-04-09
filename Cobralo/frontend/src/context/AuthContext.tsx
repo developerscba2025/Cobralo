@@ -27,6 +27,8 @@ interface User {
         alias: string;
         isDefault: boolean;
     }[];
+    mpAccessToken?: string;
+    mpPublicKey?: string;
 }
 
 interface AuthContextType {

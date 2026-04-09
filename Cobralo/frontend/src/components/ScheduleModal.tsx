@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, Clock, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Plus, Trash2, Clock, Calendar, AlertCircle, Loader2, Check } from 'lucide-react';
 import { api } from '../services/api';
 import type { ClassSchedule } from '../services/api';
 import { showToast } from './Toast';
@@ -20,6 +20,10 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
 
     // New schedule form
     const [newDay, setNewDay] = useState(1); // Lunes default
+    const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
+    const [isRecurring, setIsRecurring] = useState(true);
+    const [useMakeupClass, setUseMakeupClass] = useState(false);
+    const [studentData, setStudentData] = useState<any>(null);
     const [newStart, setNewStart] = useState('14:00');
     const [duration] = useState(60);
 
@@ -29,6 +33,14 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
         try {
             const data = await api.getStudentSchedules(studentId);
             setSchedules(data);
+            
+            // Also fetch student data to see makeup classes
+            const students = await api.getStudents();
+            const current = students.find(s => s.id === studentId);
+            setStudentData(current);
+            if (current && (current.makeup_classes || 0) > 0) {
+                setUseMakeupClass(true);
+            }
         } catch (error) {
             console.error('Error loading schedules:', error);
             showToast.error('Error al cargar horarios');
@@ -54,12 +66,22 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
 
             await api.createSchedule({
                 studentId,
-                dayOfWeek: Number(newDay),
+                dayOfWeek: isRecurring ? Number(newDay) : new Date(newDate).getDay(),
                 startTime: newStart,
                 endTime: newEnd,
-                isRecurring: true
+                isRecurring,
+                date: isRecurring ? undefined : newDate
             });
-            showToast.success('Horario agregado');
+
+            // If it's a one-off and we used a makeup class, update student
+            if (!isRecurring && useMakeupClass && studentData && (studentData.makeup_classes || 0) > 0) {
+                await api.updateStudent(studentId, {
+                    makeup_classes: (studentData.makeup_classes || 0) - 1
+                });
+                showToast.success('Se descontó 1 clase de recuperación');
+            }
+
+            showToast.success(isRecurring ? 'Horario agregado' : 'Clase puntual agendada');
             loadSchedules();
         } catch (error) {
             showToast.error('Error al crear horario (posible conflicto)');
@@ -121,18 +143,32 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                             
                             <h3 className="text-[10px] font-black text-primary-main mb-4 uppercase tracking-[0.2em]">Nuevo Horario</h3>
                             
+                            <div className="bg-zinc-100 dark:bg-white/5 rounded-xl p-1 flex gap-1 mb-4">
+                                <button type="button" onClick={() => setIsRecurring(true)} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${isRecurring ? 'bg-white dark:bg-bg-soft text-primary-main shadow-sm' : 'text-text-muted'}`}>Semanales</button>
+                                <button type="button" onClick={() => setIsRecurring(false)} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${!isRecurring ? 'bg-white dark:bg-bg-soft text-primary-main shadow-sm' : 'text-text-muted'}`}>Una sola vez</button>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="text-[10px] label-premium opacity-50 ml-1 block mb-1.5">Día de la semana</label>
-                                    <select
-                                        value={newDay}
-                                        onChange={e => setNewDay(Number(e.target.value))}
-                                        className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all"
-                                    >
-                                        {DAYS.map((day, i) => (
-                                            <option key={i} value={i}>{day}</option>
-                                        ))}
-                                    </select>
+                                    <label className="text-[10px] label-premium opacity-50 ml-1 block mb-1.5">{isRecurring ? 'Día de la semana' : 'Fecha específica'}</label>
+                                    {isRecurring ? (
+                                        <select
+                                            value={newDay}
+                                            onChange={e => setNewDay(Number(e.target.value))}
+                                            className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all"
+                                        >
+                                            {DAYS.map((day, i) => (
+                                                <option key={i} value={i}>{day}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type="date"
+                                            value={newDate}
+                                            onChange={e => setNewDate(e.target.value)}
+                                            className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all"
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="text-[10px] label-premium opacity-50 ml-1 block mb-1.5">Hora de inicio</label>
@@ -144,6 +180,20 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                                     />
                                 </div>
                             </div>
+
+                            {!isRecurring && studentData && studentData.makeup_classes > 0 && (
+                                <button 
+                                    type="button"
+                                    onClick={() => setUseMakeupClass(!useMakeupClass)}
+                                    className={`w-full flex items-center justify-between p-3 rounded-xl border mb-4 transition-all ${useMakeupClass ? 'bg-primary-main/10 border-primary-main text-primary-main' : 'border-zinc-100 dark:border-border-emerald text-text-muted'}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Check size={14} className={useMakeupClass ? 'opacity-100' : 'opacity-20'} />
+                                        <span className="text-[10px] font-bold">Usar 1 clase de recuperación (le quedan {studentData.makeup_classes})</span>
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-tighter">Canjear</span>
+                                </button>
+                            )}
                             
                             <div className="flex justify-end">
                                 <button type="submit" className="btn btn-primary text-xs !py-2.5 shadow-lg shadow-primary-main/20 hover:scale-[1.02] active:scale-[0.98]">
@@ -181,7 +231,7 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                                                     {schedule.startTime} - {schedule.endTime}
                                                 </p>
                                                 <p className="text-[10px] label-premium opacity-50 mt-0.5">
-                                                    Todos los {DAYS[schedule.dayOfWeek]}s
+                                                    {schedule.isRecurring ? `Todos los ${DAYS[schedule.dayOfWeek]}s` : `Solo el ${new Date(schedule.date + 'T12:00:00Z').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}`}
                                                 </p>
                                             </div>
                                         </div>

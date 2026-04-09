@@ -4,14 +4,14 @@ import Layout from '../components/Layout';
 import { api, type Student, type Payment, type ReceiptData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Calendar, DollarSign, User, Trash2, Filter, 
+  Calendar, DollarSign, Trash2, Filter, 
   Download, Receipt as ReceiptIcon, Clock, CheckCircle2, 
   Search, Share2, CreditCard, Wallet, Banknote
 } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { staggerContainerVariants, listItemVariants } from '../utils/motion';
+
 import confetti from 'canvas-confetti';
 import { toast } from 'react-hot-toast';
 
@@ -116,7 +116,7 @@ const Payments = () => {
             zIndex: 9999
         });
 
-        const toastId = toast(
+        toast(
             (t) => (
                 <div className="flex items-center gap-4 w-full justify-between">
                     <span className="font-bold text-sm">¡Cobro de {student.name} registrado!</span>
@@ -146,7 +146,6 @@ const Payments = () => {
                 await api.createPayment({
                     studentId: student.id,
                     amount: Number(student.amount || 0),
-                    paidAt: now.toISOString(),
                     month: now.getMonth() + 1,
                     year: now.getFullYear()
                 });
@@ -227,7 +226,6 @@ const Payments = () => {
     }, [receipts, searchTerm]);
 
     const totalCollected = payments.reduce((acc, p) => acc + Number(p.amount), 0);
-    const totalPending = pendingStudents.reduce((acc, s) => acc + Number(s.amount || 0), 0);
 
     const handleExportMonthlyClosing = () => {
         if (filteredHistory.length === 0) {
@@ -266,12 +264,12 @@ const Payments = () => {
     return (
         <Layout>
                 <div className="w-full">
-                    <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div>
-                            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase mb-2">
-                                Cobros
+                    <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="space-y-2">
+                            <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic">
+                                COBROS
                             </h1>
-                            <p className="text-text-muted font-bold uppercase tracking-widest text-[11px] ml-1">
+                            <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">
                                 Organizá tus ingresos y gestioná recibos en un solo lugar.
                             </p>
                         </div>
@@ -295,7 +293,6 @@ const Payments = () => {
                         {[
                             { id: 'pending', label: 'Pendientes', icon: Clock },
                             { id: 'history', label: 'Historial', icon: Banknote },
-                            { id: 'receipts', label: 'Recibos', icon: ReceiptIcon },
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -467,7 +464,7 @@ const Payments = () => {
                                                         <tr>
                                                             <th className="p-5 label-premium">Alumno</th>
                                                             <th className="p-5 label-premium text-center">Monto</th>
-                                                            <th className="p-5 label-premium hidden md:table-cell">Período</th>
+                                                            <th className="p-5 label-premium hidden md:table-cell text-center">Confirmación</th>
                                                             <th className="p-5 label-premium text-right">Acciones</th>
                                                         </tr>
                                                     </thead>
@@ -488,13 +485,23 @@ const Payments = () => {
                                                                 <td className="p-4 text-center">
                                                                     <p className="font-black text-primary-main">{user?.currency || '$'}{Number(payment.amount).toLocaleString('es-AR')}</p>
                                                                 </td>
-                                                                <td className="p-4 hidden md:table-cell text-text-muted text-xs font-bold uppercase tracking-widest">
-                                                                    {MONTHS[payment.month - 1]} {payment.year}
+                                                                <td className="p-4 hidden md:table-cell text-center">
+                                                                    <p className="text-text-main text-[11px] font-black uppercase tracking-tight leading-none mb-1">
+                                                                        {new Date(payment.paidAt).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                    </p>
+                                                                    <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest leading-none">
+                                                                        {new Date(payment.paidAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} HS
+                                                                    </p>
                                                                 </td>
                                                                 <td className="p-4 text-right">
                                                                     <div className="flex items-center justify-end gap-2">
-                                                                        <button onClick={() => handleDownloadReceipt(payment.id)} className="p-2.5 rounded-xl hover:bg-primary-main/10 text-text-muted hover:text-primary-main transition-all">
-                                                                            <Download size={18} />
+                                                                        <button 
+                                                                            onClick={() => handleShareReceipt(payment.id)} 
+                                                                            className="flex items-center gap-2 px-4 py-2 bg-primary-main/10 text-primary-main hover:bg-primary-main hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+                                                                            title="Confirmar por WhatsApp"
+                                                                        >
+                                                                            <Share2 size={16} />
+                                                                            Confirmar
                                                                         </button>
                                                                         <button onClick={() => setDeleteModal({ isOpen: true, paymentId: payment.id })} className="p-2.5 rounded-xl hover:bg-red-500/10 text-text-muted hover:text-red-500 transition-all">
                                                                             <Trash2 size={18} />
@@ -530,8 +537,12 @@ const Payments = () => {
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <h3 className="font-black text-text-main text-lg leading-tight truncate">{receipt.studentName}</h3>
-                                                                <div className="flex items-center gap-2 mt-1">
+                                                                <div className="flex flex-wrap items-center gap-2 mt-1">
                                                                     <p className="label-premium !text-[9px] truncate">{receipt.receiptNumber}</p>
+                                                                    <span className="w-1 h-1 rounded-full bg-border-main" />
+                                                                    <p className="label-premium !text-[9px]">
+                                                                        {new Date(receipt.paidAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} HS
+                                                                    </p>
                                                                     <span className="w-1 h-1 rounded-full bg-border-main" />
                                                                     <p className="label-premium !text-[9px]">{user?.currency || '$'}{receipt.amount.toLocaleString()}</p>
                                                                 </div>

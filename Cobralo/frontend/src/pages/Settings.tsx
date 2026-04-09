@@ -5,10 +5,14 @@ import { api } from '../services/api';
 import type { User } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
-    User as UserIcon, Shield, CreditCard, Building2,
+    User as UserIcon, CreditCard, Building2,
     MessageSquare, Star, Zap, HelpCircle, FileText,
-    ChevronLeft
+    ChevronLeft,
+    Check,
+    RotateCcw,
+    RefreshCw
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { showToast } from '../components/Toast';
 
 // Settings sub-components
@@ -70,6 +74,9 @@ const Settings = () => {
     const [studentCount, setStudentCount] = useState(0);
     const [scheduleCount, setScheduleCount] = useState(0);
     const [hasRecentPayments, setHasRecentPayments] = useState(false);
+    const [originalUser, setOriginalUser] = useState<Partial<User>>({});
+
+    const isDirty = JSON.stringify(user) !== JSON.stringify(originalUser);
 
     const categories: Category[] = [
         { id: 'cuenta', label: 'Cuenta', icon: UserIcon, tabs: [
@@ -107,6 +114,7 @@ const Settings = () => {
             try {
                 const [u, services] = await Promise.all([api.getProfile(), api.getServices()]);
                 setUser(u);
+                setOriginalUser(u);
                 setUserServices(services);
             } catch { } finally { setLoading(false); }
         };
@@ -201,6 +209,7 @@ const Settings = () => {
             if (!isAuto) setSaving(true);
             const updated = await api.updateProfile(user);
             setUser(updated);
+            setOriginalUser(updated);
             updateAuthUser(updated);
             if (!isAuto) showToast.success('¡Cambios guardados!');
         } catch (err: any) {
@@ -257,8 +266,17 @@ const Settings = () => {
             const created = await api.createService({ name: newService.name, defaultPrice: parseFloat(newService.defaultPrice) || 0 });
             setUserServices(prev => [...prev, created]);
             setNewService({ name: '', defaultPrice: '' });
+            showToast.success('Servicio creado');
         } catch { showToast.error('Error al crear el servicio'); }
     };
+
+    const handleUpdateService = async (id: number, data: any) => {
+        try {
+            const updated = await api.updateService(id, data);
+            setUserServices(prev => prev.map(s => s.id === id ? updated : s));
+            showToast.success(data.updateStudents ? 'Servicio y alumnos actualizados' : 'Servicio actualizado');
+        } catch { showToast.error('Error al actualizar'); }
+    }
 
     const handleDeleteService = async (id: number) => {
         try {
@@ -299,6 +317,16 @@ const Settings = () => {
                     {/* ── CONTENT ── */}
                     <div className={`flex-1 min-w-0 lg:h-full lg:overflow-y-auto hide-scrollbar ${isNavOpen ? 'hidden lg:block' : 'block'}`}>
                         <div className="p-4 md:p-6 lg:p-8 xl:p-10 min-h-full">
+
+                            {/* Desktop Header */}
+                            <div className="hidden lg:block mb-10 space-y-2 animate-in fade-in slide-in-from-left-4 duration-700">
+                                <h2 className="text-4xl xl:text-5xl font-black text-text-main tracking-tighter uppercase italic">
+                                    {tab.label}
+                                </h2>
+                                <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">
+                                    {tab.description}
+                                </p>
+                            </div>
 
                             {/* Mobile back header */}
                             <div className="lg:hidden flex items-center justify-between mb-10 pb-6 border-b border-border-main">
@@ -347,12 +375,53 @@ const Settings = () => {
                                 subscriptionStatus={subscriptionStatus}
                                 ratings={ratings} ratingToken={ratingToken} ratingExpires={ratingExpires}
                                 handleGenerateLink={handleGenerateLink} handleToggleRatingVisibility={handleToggleRatingVisibility}
+                                handleUpdateService={handleUpdateService}
                             />
                         </div>
                     </div>
 
                 </div>
             </div>
+
+            {/* ── FLOATING SAVE BAR ── */}
+            <AnimatePresence>
+                {isDirty && (
+                    <motion.div 
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-2xl"
+                    >
+                        <div className="bg-zinc-900 dark:bg-zinc-800 border border-white/10 shadow-2xl rounded-[32px] p-4 lg:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-95">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-primary-main/20 flex items-center justify-center text-primary-main">
+                                    <RotateCcw size={24} className="animate-pulse" />
+                                </div>
+                                <div className="text-center sm:text-left">
+                                    <h4 className="text-white font-black text-sm uppercase tracking-tight">Cambios pendientes</h4>
+                                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">¿Deseás guardar la nueva configuración?</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <button 
+                                    onClick={() => setUser(originalUser)}
+                                    className="flex-1 sm:flex-none px-6 py-3 text-zinc-400 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors"
+                                >
+                                    Descartar
+                                </button>
+                                <button 
+                                    onClick={() => handleSave()}
+                                    disabled={saving}
+                                    className="flex-1 sm:flex-none px-8 py-4 bg-primary-main text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-primary-glow flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                                >
+                                    {saving ? <RefreshCw className="animate-spin" size={14} /> : <><Check size={14} /> Guardar Cambios</>}
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </Layout>
     );

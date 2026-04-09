@@ -1,4 +1,5 @@
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useState, useRef } from 'react';
 import { Star } from 'lucide-react';
 
@@ -9,7 +10,7 @@ import DashboardView from './mockup/DashboardView';
 import StudentsView from './mockup/StudentsView';
 import CalendarView from './mockup/CalendarView';
 import ClassesView from './mockup/ClassesView';
-import SettingsView from './mockup/SettingsView';
+import PaymentsView from './mockup/PaymentsView';
 import NotificationsView from './mockup/NotificationsView';
 
 
@@ -34,13 +35,17 @@ const DashboardMockup = () => {
     }
   });
 
-  const VIEWS: Record<string, React.ReactNode> = {
-    dashboard: <DashboardView />,
-    students: <StudentsView />,
-    calendar: <CalendarView />,
-    classes: <ClassesView />,
-    settings: <SettingsView />,
-    notifications: <NotificationsView />,
+  const renderView = (tab: string) => {
+    switch (tab) {
+      case 'dashboard': return <DashboardView plan="PRO" />;
+      case 'students': return <StudentsView />;
+      case 'calendar': return <CalendarView />;
+      case 'classes': return <ClassesView />;
+      case 'payments': return <PaymentsView plan="PRO" />;
+      case 'settings': return <SettingsView />;
+      case 'notifications': return <NotificationsView />;
+      default: return <DashboardView plan="PRO" />;
+    }
   };
   
   // 3D Motion Values
@@ -156,7 +161,7 @@ const DashboardMockup = () => {
 
               {/* Inner Content Area */}
               <div className="flex h-[580px] md:h-[680px] relative overflow-hidden pb-[64px] md:pb-0">
-                  <MiniSidebar active={activeTab} onTabChange={setActiveTab} />
+                  <MiniSidebar active={activeTab} onTabChange={setActiveTab} plan="PRO" />
                   <div className="flex-1 relative overflow-hidden h-full">
                       <AnimatePresence mode="wait">
                         <motion.div key={activeTab}
@@ -165,7 +170,7 @@ const DashboardMockup = () => {
                           exit={{ opacity: 0, filter: 'blur(10px)', scale: 0.98 }}
                           transition={{ duration: 0.5, ease: "easeInOut" }} 
                           className="w-full h-full">
-                          {VIEWS[activeTab]}
+                          {renderView(activeTab)}
                         </motion.div>
                       </AnimatePresence>
                   </div>

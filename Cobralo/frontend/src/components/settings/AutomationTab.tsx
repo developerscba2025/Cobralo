@@ -1,13 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { MessageSquare, Save, RefreshCw } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import type { User } from '../../services/api';
 import { ProFeature } from '../ProGuard';
 
 interface AutomationTabProps {
     user: Partial<User>;
     setUser: (u: Partial<User>) => void;
-    handleSave: () => void;
-    saving: boolean;
     isPro: boolean;
 }
 
@@ -22,7 +20,7 @@ const AutoResizeTextarea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElem
     return <textarea ref={ref} {...props} className={`${props.className} overflow-hidden resize-none`} />;
 };
 
-const AutomationTab: React.FC<AutomationTabProps> = ({ user, setUser, handleSave, saving, isPro }) => (
+const AutomationTab: React.FC<AutomationTabProps> = ({ user, setUser, isPro }) => (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div>
             <h2 className="text-2xl font-black text-zinc-900 dark:text-emerald-50 flex items-center gap-3 mb-2 tracking-tight uppercase">
@@ -137,11 +135,6 @@ const AutomationTab: React.FC<AutomationTabProps> = ({ user, setUser, handleSave
 
 
 
-            <div className="flex justify-end pt-4">
-                <button onClick={() => handleSave()} disabled={saving} className="w-full lg:w-auto bg-primary-main text-white font-black py-4 px-8 lg:py-5 lg:px-14 rounded-2xl lg:rounded-[28px] shadow-xl shadow-primary-glow flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
-                    {saving ? <RefreshCw className="animate-spin" size={20} /> : <><Save size={20} /> Guardar Cambios</>}
-                </button>
-            </div>
     </div>
 );
 

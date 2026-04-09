@@ -26,7 +26,35 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string; bg: str
     NEW_RATING: { icon: <Star size={18} />, color: 'text-purple-400', bg: 'bg-purple-400/10' },
     SUBSCRIPTION_RENEWED: { icon: <Zap size={18} />, color: 'text-primary-main', bg: 'bg-primary-main/10' },
     PRO_REMINDER_SENT: { icon: <Zap size={18} />, color: 'text-primary-main', bg: 'bg-primary-main/10' },
+    ANNOUNCEMENT: { icon: <Zap size={18} />, color: 'text-primary-main', bg: 'bg-primary-main/20' },
 };
+
+const SYSTEM_NOTIFICATIONS: AppNotification[] = [
+    {
+        id: -1,
+        type: 'ANNOUNCEMENT',
+        title: '🤖 Beta: Portal del Alumno',
+        body: 'Estamos construyendo un espacio de autogestión para tus alumnos. ¡Próximamente podrán ver sus créditos y pagos solos!',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+    },
+    {
+        id: -2,
+        type: 'ANNOUNCEMENT',
+        title: '📈 Próximamente: Gastos y AFIP',
+        body: 'Muy pronto vas a poder registrar tus gastos operativos y exportar reportes optimizados para tu contador.',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+    },
+    {
+        id: -3,
+        type: 'ANNOUNCEMENT',
+        title: '📱 Desarrollo: App Móvil Nativa',
+        body: 'Llevá Cobralo en tu bolsillo. Estamos terminando el desarrollo para iOS y Android con notificaciones push en tiempo real.',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+    }
+];
 
 function relativeTime(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -64,8 +92,11 @@ const NotificationsPage: React.FC = () => {
         try {
             const res = await fetch(`${API_URL}/notifications`, { headers: { ...getAuthHeader() } });
             const data = await res.json();
-            setNotifications(Array.isArray(data) ? data : []);
-        } catch (e) { /* ignore */ }
+            const fetched = Array.isArray(data) ? data : [];
+            setNotifications([...SYSTEM_NOTIFICATIONS, ...fetched]);
+        } catch (e) { 
+            setNotifications(SYSTEM_NOTIFICATIONS);
+        }
         setLoading(false);
     }, []);
 

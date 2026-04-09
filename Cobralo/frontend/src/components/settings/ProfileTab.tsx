@@ -1,15 +1,13 @@
 import React from 'react';
-import { Save, RefreshCw, User as UserIcon } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
 import type { User } from '../../services/api';
 
 interface ProfileTabProps {
     user: Partial<User>;
     setUser: (u: Partial<User>) => void;
-    handleSave: () => void;
-    saving: boolean;
     tab: { label: string; description?: string };
 }
-const ProfileTab: React.FC<ProfileTabProps> = ({ user, setUser, handleSave, saving, tab }) => {
+const ProfileTab: React.FC<ProfileTabProps> = ({ user, setUser, tab }) => {
 
     return (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -75,16 +73,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, setUser, handleSave, savi
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div className="flex justify-end pt-4">
-                <button
-                    onClick={() => handleSave()}
-                    disabled={saving}
-                    className="w-full lg:w-auto bg-primary-main text-white font-black py-4 px-8 lg:py-5 lg:px-14 rounded-2xl lg:rounded-[28px] shadow-xl shadow-primary-glow hover:bg-green-600 transition-all active:scale-95 flex items-center justify-center gap-3 uppercase tracking-widest text-xs"
-                >
-                    {saving ? <RefreshCw className="animate-spin" size={20} /> : <><Save size={20} /> Guardar Cambios</>}
-                </button>
             </div>
         </div>
     );

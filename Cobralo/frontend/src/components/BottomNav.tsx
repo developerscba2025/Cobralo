@@ -1,12 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  Users2, 
-  Calendar, 
-  Settings, 
-  LibraryBig,
-  Bell,
-  Banknote
+    LayoutDashboard, 
+    Users2, 
+    Calendar, 
+    Settings, 
+    Banknote,
+    LibraryBig
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -15,7 +14,7 @@ interface BottomNavProps {
     unreadNotifCount?: number;
 }
 
-const BottomNav: React.FC<BottomNavProps> = ({ pendingCount, unreadNotifCount = 0 }) => {
+const BottomNav: React.FC<BottomNavProps> = ({ pendingCount }) => {
     const location = useLocation();
 
     const menuItems = [
@@ -23,6 +22,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount, unreadNotifCount = 
         { path: '/app/students', icon: Users2, label: 'Alumnos' },
         { path: '/app/payments', icon: Banknote, label: 'Cobros' },
         { path: '/app/calendar', icon: Calendar, label: 'Calendario' },
+        { path: '/app/classes', icon: LibraryBig, label: 'Clases' },
         { path: '/app/settings', icon: Settings, label: 'Ajustes' },
     ];
 
@@ -34,7 +34,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount, unreadNotifCount = 
                 <Link
                     key={item.path}
                     to={item.path}
-                    className={`relative flex flex-col items-center justify-center gap-0.5 p-2 min-w-[64px] min-h-[56px] transition-all ${
+                    className={`relative flex flex-col items-center justify-center gap-0.5 p-1 min-w-[56px] min-h-[52px] transition-all ${
                         isActive(item.path)
                             ? 'text-primary-main'
                             : 'text-text-muted hover:text-text-main'

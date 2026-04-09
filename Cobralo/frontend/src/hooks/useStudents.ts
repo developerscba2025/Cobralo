@@ -93,19 +93,57 @@ export const useStudents = (initialStudents: Student[], onAction?: () => void) =
             return;
         }
 
-        const data = filteredStudents.map(s => ({
-            Nombre: s.name,
-            Teléfono: s.phone,
-            Servicio: s.service_name,
-            Monto: s.amount,
-            "Día de Pago": s.due_day,
-            Estado: s.status === 'paid' ? 'Al Día' : 'Pendiente'
-        }));
+        // Formatear datos para el Excel
+        const data = filteredStudents.map(s => {
+            const schedulesText = s.schedules?.map(sch => {
+                const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                return `${days[sch.dayOfWeek]} ${sch.startTime}-${sch.endTime}`;
+            }).join(', ') || 'Flexible / Sin horario';
+
+            return {
+                'NOMBRE COMPLETO': s.name.toUpperCase(),
+                'ESTADO': s.status === 'paid' ? 'AL DÍA' : s.status === 'paused' ? 'PAUSADO' : 'PENDIENTE',
+                'TELEFONO': s.phone || '',
+                'SERVICIO': s.service_name || '',
+                'PLAN': s.planType === 'PACK' ? 'Pack' : s.planType === 'PER_CLASS' ? 'Por Clase' : 'Mensual',
+                'MONTO ($)': Number(s.amount) || 0,
+                'DIA PAGO': s.due_day || '',
+                'CLASES DISP': s.planType === 'PACK' ? (s.credits || 0) : 'N/A',
+                'RECUPEROS': s.makeup_classes || 0,
+                'METODO PAGO': s.payment_method || '',
+                'HORARIOS': schedulesText,
+                'ALIAS/CBU': s.billing_alias || '',
+                'NOTAS': s.notes || ''
+            };
+        });
 
         const ws = XLSX.utils.json_to_sheet(data);
+        
+        // Ajustar anchos de columna (wch = width in characters)
+        const wscols = [
+            { wch: 30 }, // Nombre
+            { wch: 12 }, // Estado
+            { wch: 15 }, // Telefono
+            { wch: 20 }, // Servicio
+            { wch: 12 }, // Plan
+            { wch: 10 }, // Monto
+            { wch: 8 },  // Dia Pago
+            { wch: 10 }, // Clases Disp
+            { wch: 10 }, // Recuperos
+            { wch: 15 }, // Metodo Pago
+            { wch: 35 }, // Horarios
+            { wch: 20 }, // Alias
+            { wch: 40 }  // Notas
+        ];
+        ws['!cols'] = wscols;
+
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Alumnos");
-        XLSX.writeFile(wb, `Cobralo_Alumnos_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Lista de Alumnos");
+        
+        // Nombre del archivo con fecha legible
+        const date = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Cobralo_Alumnos_${date}.xlsx`);
+        
         showToast.success('Excel generado correctamente');
     };
 

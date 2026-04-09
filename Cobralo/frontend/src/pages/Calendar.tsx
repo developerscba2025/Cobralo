@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import type { UnifiedSchedule, Student } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
@@ -348,10 +348,10 @@ const Calendar = () => {
     return (
         <Layout>
             <div className="flex flex-col gap-4">
-                <header className="flex-shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                    <div>
-                        <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase">AGENDA SEMANAL</h1>
-                        <p className="text-text-muted mt-1 font-medium tracking-tight">Gestiona tus horarios con precisión pro</p>
+                <header className="flex-shrink-0 flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
+                    <div className="space-y-2">
+                        <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic">AGENDA SEMANAL</h1>
+                        <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">Gestioná tus horarios con precisión PRO</p>
                     </div>
                     
                     <div className="flex flex-col sm:flex-row items-center bg-surface border border-border-main rounded-2xl p-1 shadow-sm gap-2">
@@ -496,17 +496,28 @@ const Calendar = () => {
                                         {!s.isRecurring && <CalendarIcon size={12} className="text-primary-main mt-1 opacity-50" />}
                                     </div>
                                     <div className="w-px h-10 bg-border-main/50"></div>
-                                    <div className="flex-1 min-w-0" onClick={() => setAttendanceModal({ isOpen: true, schedule: { ...s, date: selectedDateObj?.dateStr } as any })}>
+                                    <div className="flex-1 min-w-0">
                                         <h4 className="text-base font-bold text-text-main truncate leading-tight">
                                             {s.students && s.students.length > 1 ? `${s.students[0].name} +${s.students.length - 1}` : (s.students?.[0]?.name || s.student?.name || 'Clase Grupal')}
                                         </h4>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mt-1 opacity-80 truncate">
-                                            {s.students && s.students.length > 1 ? `${s.students.length} alumnos` : (s.students?.[0]?.service_name || s.student?.service_name || 'General')}
-                                        </p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted opacity-80 truncate">
+                                                {s.students && s.students.length > 1 ? `${s.students.length} alumnos` : (s.students?.[0]?.service_name || s.student?.service_name || 'General')}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <span className="text-[9px] font-black text-text-muted uppercase tracking-widest bg-bg-app px-2 py-1 rounded-md">a {s.endTime}</span>
-                                        <button onClick={() => setDeleteModal({ isOpen: true, id: s.id })} className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10 transition"><Trash2 size={18} /></button>
+                                    <div className="flex flex-col items-end gap-2 shrink-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <button 
+                                                onClick={() => setAttendanceModal({ isOpen: true, schedule: { ...s, date: selectedDateObj?.dateStr } as any })}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-main/10 text-primary-main rounded-xl hover:bg-primary-main hover:text-white transition-all active:scale-95 group/btn"
+                                            >
+                                                <CheckCircle2 size={14} className="group-hover/btn:rotate-12 transition-transform" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest">Asistencia</span>
+                                            </button>
+                                            <button onClick={() => setDeleteModal({ isOpen: true, id: s.id })} className="p-1.5 rounded-xl text-zinc-300 hover:text-red-500 hover:bg-red-500/10 transition-all"><Trash2 size={16} /></button>
+                                        </div>
+                                        <span className="text-[9px] font-black text-white bg-primary-main px-2 py-0.5 rounded-full shadow-sm">a {s.endTime}</span>
                                     </div>
                                 </motion.div>
                             ));
