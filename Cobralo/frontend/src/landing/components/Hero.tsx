@@ -82,7 +82,7 @@ const HeroDashboardMockup = () => (
              </div>
              <div className="mt-8">
                <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2 italic">Ingresos (Mes Actual)</p>
-               <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">$36.000</p>
+               <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">$152.000</p>
              </div>
           </div>
 
@@ -93,7 +93,7 @@ const HeroDashboardMockup = () => (
                <Users2 size={14} className="text-zinc-600" />
              </div>
              <div className="mt-6">
-               <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">2</p>
+               <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">8</p>
                <p className="text-[9px] font-black text-zinc-600 uppercase mt-2 tracking-widest">Alumnos Activos</p>
              </div>
           </div>
@@ -107,11 +107,11 @@ const HeroDashboardMockup = () => (
                </div>
              </div>
              <div className="mt-6">
-               <p className="text-4xl md:text-5xl font-black text-green-500 tracking-tighter">100%</p>
+               <p className="text-4xl md:text-5xl font-black text-green-500 tracking-tighter">85%</p>
                <p className="text-[9px] font-black text-zinc-600 uppercase mt-2 tracking-widest">Eficiencia</p>
              </div>
              <div className="absolute bottom-0 left-0 right-0 h-1 bg-green-500/20">
-                <div className="h-full bg-green-500 w-full" />
+                <div className="h-full bg-green-500 w-[85%]" />
              </div>
           </div>
         </div>
@@ -131,8 +131,8 @@ const HeroDashboardMockup = () => (
           <table className="w-full text-left">
              <tbody className="divide-y divide-white/[0.02]">
                 {[
-                  { name: 'pedro', svc: 'Ingles', amount: '$36.000', ok: true },
-                  { name: 'pamela', svc: 'General', amount: '$0', ok: true },
+                  { name: 'roberto', svc: 'Plan Guitarra', amount: '$25.000', ok: true },
+                  { name: 'camila', svc: 'Ensayo Banda', amount: '$15.000', ok: true },
                 ].map((item, i) => (
                   <tr key={i} className="hover:bg-white/[0.01]">
                     <td className="px-6 py-4">
