@@ -85,7 +85,7 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser }
     }
 
     return (
-        <div className="space-y-6 max-w-2xl">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 transition-all">
             <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-black text-text-main">Cuentas de Pago</h2>
                 <p className="text-sm font-bold text-text-muted">

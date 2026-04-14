@@ -14,9 +14,10 @@ const SkeletonCard: React.FC<SkeletonProps> = ({ variant, count = 1 }) => {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full">
                 {skeletons.map((_, i) => (
-                    <div key={i} className="card-premium p-6 md:p-8">
-                        <div className="skeleton h-3 w-24 rounded-md mb-4"></div>
-                        <div className="skeleton h-10 w-32 rounded-lg"></div>
+                    <div key={i} className="card-premium p-8">
+                        <div className="skeleton h-3 w-20 rounded-md mb-6 opacity-30"></div>
+                        <div className="skeleton h-10 w-32 rounded-xl"></div>
+                        <div className="skeleton h-2 w-16 rounded-md mt-6 opacity-20"></div>
                     </div>
                 ))}
             </div>
@@ -25,19 +26,20 @@ const SkeletonCard: React.FC<SkeletonProps> = ({ variant, count = 1 }) => {
 
     if (variant === 'card') {
         return (
-            <div className="space-y-4 w-full">
+            <div className="space-y-6 w-full">
                 {skeletons.map((_, i) => (
-                    <div key={i} className="card-premium p-6 flex flex-col gap-6">
+                    <div key={i} className="card-premium p-8 flex flex-col gap-8">
                         <div className="flex justify-between items-start">
-                            <div className="space-y-3 flex-1 pt-1">
-                                <div className="skeleton h-5 w-48 rounded-lg"></div>
-                                <div className="skeleton h-4 w-24 rounded-md"></div>
+                            <div className="space-y-4 flex-1 pt-1">
+                                <div className="skeleton h-6 w-64 rounded-xl"></div>
+                                <div className="skeleton h-4 w-32 rounded-lg opacity-40"></div>
                             </div>
-                            <div className="skeleton h-8 w-20 rounded-lg"></div>
+                            <div className="skeleton h-10 w-24 rounded-2xl opacity-50"></div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="skeleton h-16 w-full rounded-xl"></div>
-                            <div className="skeleton h-16 w-full rounded-xl"></div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {[...Array(4)].map((_, j) => (
+                                <div key={j} className="skeleton h-20 w-full rounded-3xl opacity-30"></div>
+                            ))}
                         </div>
                     </div>
                 ))}
@@ -50,10 +52,10 @@ const SkeletonCard: React.FC<SkeletonProps> = ({ variant, count = 1 }) => {
             <>
                 {skeletons.map((_, i) => (
                     <tr key={i} className="border-b border-border-main/20">
-                        <td className="p-4"><div className="skeleton h-5 w-32 rounded-md"></div></td>
-                        <td className="p-4"><div className="skeleton h-5 w-24 rounded-md"></div></td>
-                        <td className="p-4"><div className="skeleton h-5 w-20 rounded-md"></div></td>
-                        <td className="p-4"><div className="skeleton h-8 w-8 rounded-lg ml-auto"></div></td>
+                        <td className="p-6"><div className="skeleton h-5 w-48 rounded-xl"></div></td>
+                        <td className="p-6"><div className="skeleton h-5 w-32 rounded-xl opacity-60"></div></td>
+                        <td className="p-6"><div className="skeleton h-8 w-24 rounded-2xl opacity-40"></div></td>
+                        <td className="p-6 text-right"><div className="skeleton h-10 w-10 rounded-xl ml-auto opacity-30"></div></td>
                     </tr>
                 ))}
             </>
@@ -62,9 +64,9 @@ const SkeletonCard: React.FC<SkeletonProps> = ({ variant, count = 1 }) => {
 
     if (variant === 'chart') {
         return (
-            <div className="card-premium p-6 md:p-8 w-full">
-                 <div className="skeleton h-5 w-40 rounded-lg mb-8"></div>
-                 <div className="skeleton h-48 md:h-64 w-full rounded-xl"></div>
+            <div className="card-premium p-8 w-full">
+                 <div className="skeleton h-6 w-48 rounded-xl mb-12"></div>
+                 <div className="skeleton h-72 w-full rounded-[2rem] opacity-20"></div>
             </div>
         );
     }

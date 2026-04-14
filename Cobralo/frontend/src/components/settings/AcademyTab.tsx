@@ -82,7 +82,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
     };
 
     return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-5xl transition-all">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 transition-all">
             {pendingAdjustment && (
                 <div className="p-6 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-[32px] flex flex-col md:flex-row items-center gap-6 shadow-sm">
                     <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 shrink-0"><Zap size={24} /></div>

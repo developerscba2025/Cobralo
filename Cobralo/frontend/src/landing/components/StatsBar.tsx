@@ -40,7 +40,7 @@ const StatsBar = () => {
         </div>
       </div>
 
-      <div className="container py-10 sm:py-14 relative z-10 px-4">
+      <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14 relative z-10 px-4">
         <div className="grid grid-cols-2 gap-y-10 sm:gap-y-12 md:grid-cols-4 md:gap-y-0 gap-x-2 md:gap-x-0">
           {STATS.map((s, i) => (
             <motion.div

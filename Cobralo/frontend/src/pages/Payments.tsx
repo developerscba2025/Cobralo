@@ -193,6 +193,10 @@ const Payments = () => {
     };
 
     const handleSendPaymentLink = async (student: Student) => {
+        if (!user?.mpAccessToken) {
+            showToast.error('Vinculá tu cuenta de Mercado Pago en Ajustes primero');
+            return;
+        }
         try {
             const { checkoutUrl } = await api.createStudentPaymentLink({
                 studentId: student.id,
@@ -315,7 +319,7 @@ const Payments = () => {
                     </div>
 
                     {/* Global Search for tabs */}
-                    <div className="relative group mb-8 max-w-md">
+                    <div className="relative group mb-8 max-w-2xl">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors" size={20} />
                         <input
                             type="text"
@@ -357,37 +361,40 @@ const Payments = () => {
                                                 <p className="text-text-muted font-bold text-xs uppercase tracking-widest">No hay alumnos con pagos pendientes por ahora.</p>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                                                 {pendingStudents.map(student => (
                                                     <div key={student.id} className="card-premium p-6 group hover:scale-[1.01] transition-all border border-border-main/60">
-                                                        <div className="flex justify-between items-start mb-6">
+                                                        <div className="flex flex-col gap-4 mb-6">
                                                             <div className="flex items-center gap-4">
-                                                                <div className="w-14 h-14 rounded-2xl bg-primary-main/10 flex items-center justify-center text-primary-main font-black text-xl">
+                                                                <div className="w-14 h-14 rounded-2xl bg-primary-main/10 flex items-center justify-center text-primary-main font-black text-xl shrink-0">
                                                                     {student.name.charAt(0)}
                                                                 </div>
-                                                                <div>
-                                                                    <h3 className="text-xl font-black text-text-main uppercase tracking-tighter">{student.name}</h3>
-                                                                    <p className="label-premium !text-[10px] mt-0.5">{student.service_name}</p>
+                                                                <div className="min-w-0">
+                                                                    <h3 className="text-xl font-black text-text-main uppercase tracking-tighter truncate">{student.name}</h3>
+                                                                    <p className="label-premium !text-[10px] mt-0.5 truncate">{student.service_name}</p>
                                                                 </div>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <p className="text-sm font-black text-text-muted uppercase tracking-widest leading-none mb-1">Deuda</p>
-                                                                <p className="text-2xl font-black text-primary-main leading-none">
-                                                                    {user?.currency || '$'}{Number(student.amount).toLocaleString('es-AR')}
-                                                                </p>
+                                                            
+                                                            <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-white/5 rounded-2xl border border-border-main/30">
+                                                                <div>
+                                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none mb-1 opacity-60 italic">Vencimiento</p>
+                                                                    <p className="text-sm font-black text-text-main">Día {student.deadline_day || 10}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none mb-1 opacity-60 italic">Total</p>
+                                                                    <p className="text-xl font-black text-primary-main leading-none">
+                                                                        {user?.currency || '$'}{Number(student.amount).toLocaleString('es-AR')}
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         
-                                                        <div className="flex items-center justify-between pt-4 border-t border-border-main/50">
-                                                            <div className="flex items-center gap-2 text-text-muted text-xs font-bold uppercase tracking-widest opacity-60">
-                                                                <Calendar size={14} className="text-primary-main" />
-                                                                Día {student.deadline_day || 10} del mes
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                {isPro ? (
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {isPro ? (
+                                                                user?.mpAccessToken ? (
                                                                     <button
                                                                         onClick={() => handleSendPaymentLink(student)}
-                                                                        className="flex items-center gap-2 px-4 py-3 bg-[#009EE3]/10 text-[#009EE3] border border-[#009EE3]/20 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#009EE3] hover:text-white hover:shadow-lg hover:shadow-[#009EE3]/20 active:scale-95 transition-all"
+                                                                        className="flex items-center justify-center gap-2 py-4 bg-[#009EE3]/10 text-[#009EE3] border border-[#009EE3]/20 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-[#009EE3] hover:text-white transition-all italic"
                                                                         title="Enviar link de pago por MP"
                                                                     >
                                                                         <CreditCard size={14} />
@@ -395,22 +402,31 @@ const Payments = () => {
                                                                     </button>
                                                                 ) : (
                                                                     <Link
-                                                                        to="/app/settings?tab=subscription"
-                                                                        className="flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-500/20 transition-all"
-                                                                        title="Función PRO: Link de pago con Mercado Pago"
+                                                                        to="/app/settings?tab=business"
+                                                                        className="flex items-center justify-center gap-2 py-4 bg-zinc-100 dark:bg-white/5 text-zinc-500 border border-zinc-200 dark:border-white/10 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-zinc-200 transition-all italic text-center"
+                                                                        title="Vincular Mercado Pago en Ajustes"
                                                                     >
-                                                                        <CreditCard size={12} />
-                                                                        Link MP ⚡ PRO
+                                                                        <CreditCard size={14} />
+                                                                        Vincular MP
                                                                     </Link>
-                                                                )}
-                                                                <button
-                                                                    onClick={() => handleRecordPayment(student)}
-                                                                    className="flex items-center gap-2 px-6 py-3 bg-primary-main text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary-main/20 hover:scale-[1.05] active:scale-95 transition-all"
+                                                                )
+                                                            ) : (
+                                                                <Link
+                                                                    to="/app/settings?tab=subscription"
+                                                                    className="flex items-center justify-center gap-1.5 py-4 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-amber-500/20 transition-all italic text-center"
+                                                                    title="Función PRO: Link de pago con Mercado Pago"
                                                                 >
-                                                                    <Wallet size={16} />
-                                                                    Registrar Cobro
-                                                                </button>
-                                                            </div>
+                                                                    <CreditCard size={12} />
+                                                                    PRO
+                                                                </Link>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleRecordPayment(student)}
+                                                                className="flex items-center justify-center gap-2 py-4 bg-primary-main text-white rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary-main/20 hover:scale-[1.03] active:scale-95 transition-all italic"
+                                                            >
+                                                                <Wallet size={16} />
+                                                                Registrar
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 ))}

@@ -37,35 +37,36 @@ const Navbar = () => {
 
       {/* ── Pill container ── */}
       <div
-        className="mx-auto max-w-6xl rounded-2xl flex items-center justify-between px-4 h-12 relative bg-[#0E1113]/85 backdrop-blur-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.04)]"
+        className="mx-auto max-w-6xl rounded-2xl flex items-center justify-between px-6 h-12 relative bg-[#0E1113]/80 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.02)]"
         style={{ zIndex: 50 }}
       >
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 group flex-shrink-0">
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center font-black italic text-[12px] bg-[#22c55e] text-[#0E1113] transition-transform duration-300 group-hover:scale-110"
+            className="w-7 h-7 rounded-lg flex items-center justify-center font-black italic text-[11px] bg-[#22c55e] border border-primary/20 text-[#0E1113] shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300 group-hover:scale-105"
           >
             C
           </div>
-          <span className="text-base font-black italic tracking-tighter text-[#4ade80]">
+          <span className="text-sm font-black italic tracking-tighter text-[#fafafa] font-accent uppercase">
             COBRALO
           </span>
         </a>
 
-        {/* Desktop links — center */}
-        <div className="hidden md:flex items-center gap-6">
+        {/* Desktop links — Improved spacing and font */}
+        <div className="hidden md:flex items-center gap-8">
           {isHome ? (
             NAV_LINKS.map(item => (
               <button
                 key={item.label}
                 onClick={() => scrollTo(item.href)}
-                className="text-[12px] font-bold uppercase tracking-wider transition-colors duration-200 text-zinc-400 hover:text-white cursor-pointer bg-transparent border-0 p-0"
+                className="text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 text-zinc-500 hover:text-primary cursor-pointer font-accent relative group"
               >
                 {item.label}
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
               </button>
             ))
           ) : (
-            <Link to="/" className="text-[12px] font-bold uppercase tracking-wider text-zinc-400 hover:text-zinc-50">
+            <Link to="/" className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500 hover:text-[#fafafa] font-accent">
               Inicio
             </Link>
           )}
@@ -75,14 +76,14 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           <Link
             to="/app/login"
-            className="text-[12px] font-bold transition-colors duration-200 px-3 py-1.5 text-zinc-400 hover:text-zinc-50"
+            className="text-[10px] font-black uppercase tracking-widest transition-colors duration-200 px-3 py-1.5 text-zinc-500 hover:text-zinc-50 font-accent"
           >
             Ingresar
           </Link>
 
           <Link to="/app/login?register=true">
             <button
-              className="px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 bg-[#22c55e] text-[#0E1113] hover:bg-[#4ade80] shadow-[0_4px_12px_rgba(34,197,94,0.3)]"
+              className="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 bg-[#22c55e] text-[#0E1113] hover:bg-[#4ade80] shadow-[0_4px_15px_rgba(34,197,94,0.3)] font-accent"
             >
               Probar gratis →
             </button>
@@ -91,7 +92,7 @@ const Navbar = () => {
 
         {/* Mobile menu button */}
         <button
-          className="md:hidden p-1.5 rounded-xl transition-colors text-[#fafafa] hover:bg-white/5"
+          className="md:hidden p-2.5 rounded-xl transition-colors text-[#fafafa] hover:bg-white/5 min-w-[44px] min-h-[44px] flex items-center justify-center"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Menú"
         >

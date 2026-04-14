@@ -1,5 +1,5 @@
-import React from 'react';
-import type { Student } from '../../services/api';
+import React, { useState } from 'react';
+import { api, type Student } from '../../services/api';
 import StudentFormModal from './StudentFormModal';
 import ExtraPaymentModal from './ExtraPaymentModal';
 import ScheduleModal from '../ScheduleModal';
@@ -8,6 +8,7 @@ import ConfirmModal from '../ConfirmModal';
 import StudentNotes from '../StudentNotes';
 import WhatsAppPreviewModal from '../WhatsAppPreviewModal';
 import RenewPackModal from './RenewPackModal';
+import { showToast } from '../Toast';
 
 interface StudentModalsContainerProps {
     modals: {
@@ -28,8 +29,8 @@ interface StudentModalsContainerProps {
     allStudents?: Student[];
     user: any;
     userServices: any[];
+    refreshServices: () => Promise<void>;
 }
-
 const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
     modals,
     onClose,
@@ -37,8 +38,11 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
     selectedStudents,
     allStudents = [],
     user,
-    userServices
+    userServices,
+    refreshServices
 }) => {
+    const [isDeleting, setIsDeleting] = useState(false);
+
     // Helper to get fresh student data from the main list
     const getFreshStudent = (s: Student | null) => {
         if (!s) return null;
@@ -54,6 +58,7 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
                 onSuccess={() => { onAction(); onClose('create'); }}
                 user={user}
                 userServices={userServices}
+                refreshServices={refreshServices}
             />
 
             {/* Edit Student */}
@@ -64,6 +69,7 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
                 student={getFreshStudent(modals.edit.student)}
                 user={user}
                 userServices={userServices}
+                refreshServices={refreshServices}
             />
 
 
@@ -98,7 +104,22 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
                 title="Eliminar Alumno"
                 message={`¿Estás seguro de eliminar a ${modals.delete.student?.name}? Esta acción no se puede deshacer.`}
                 confirmText="Eliminar"
-                onConfirm={onAction}
+                isLoading={isDeleting}
+                onConfirm={async () => {
+                    if (modals.delete.student) {
+                        setIsDeleting(true);
+                        try {
+                            await api.deleteStudent(modals.delete.student.id);
+                            showToast.success('Alumno eliminado correctamente');
+                            onAction();
+                            onClose('delete');
+                        } catch (error) {
+                            showToast.error('Error al eliminar alumno');
+                        } finally {
+                            setIsDeleting(false);
+                        }
+                    }
+                }}
                 onCancel={() => onClose('delete')}
                 variant="danger"
             />

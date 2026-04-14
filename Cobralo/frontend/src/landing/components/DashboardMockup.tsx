@@ -84,7 +84,7 @@ const DashboardMockup = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1100px] h-[700px] rounded-full pointer-events-none opacity-20 blur-[150px]"
         style={{ background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.1) 0%, transparent 70%)' }} />
 
-      <div className="container relative z-10 px-4">
+      <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 relative z-10 px-4">
         
         {/* Superior Header */}
         <div className="text-center mb-20">
@@ -93,7 +93,7 @@ const DashboardMockup = () => {
             <Star size={12} className="text-green-500 shrink-0" /> Tour Interactivo Pro
           </motion.div>
           
-          <h2 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 tracking-tighter" style={{ color: '#fafafa', lineHeight: 0.9 }}>
+          <h2 className="font-black mb-8 tracking-tighter" style={{ color: '#fafafa', lineHeight: 0.9, fontSize: 'clamp(2rem, 8vw, 6rem)' }}>
             La potencia de <br/>
             <span style={{
               background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #fafafa 100%)',

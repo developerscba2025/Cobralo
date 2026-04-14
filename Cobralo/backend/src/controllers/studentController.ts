@@ -111,29 +111,36 @@ export const getWhatsappDigest = async (req: AuthRequest, res: Response) => {
         }
 
         const currency = student.owner.currency || '$';
-        let amountText = 'Estás al día.';
+        const bizName = student.owner.bizName || student.owner.name;
+        const statusText = student.status === 'paid' ? 'Al día ✅' : 'Pendiente ⏳';
+        const debtAmount = Number(student.balance_due || student.amount).toLocaleString('es-AR');
         
+        let amountText = 'Estás al día. ¡Gracias!';
         if (student.status !== 'paid') {
-            amountText = `Tu deuda pendiente es de ${currency}${Number(student.balance_due || student.amount).toLocaleString('es-AR')}.`;
+            amountText = `${currency}${debtAmount}`;
         }
 
         // Recuperar si hay cuenta bancaria
         const bankData = await prisma.businessPaymentAccount.findFirst({
-            where: { ownerId: req.userId, isDefault: true } // Assuming they have one Default
+            where: { ownerId: req.userId, isDefault: true }
         });
 
-        const paymentOptions = bankData ? `Podes transferir al Alias/CBU: ${bankData.alias}` : '';
+        const paymentOptions = bankData 
+            ? `Podes transferir al Alias/CBU:\n*${bankData.alias}*` 
+            : 'Consultame por los medios de pago disponibles.';
 
         // Generate text
-        let message = `Hola ${student.name.split(' ')[0]},\nTe escribo de *${student.owner.bizName || student.owner.name}*.\n\n${amountText}\n`;
+        let message = `📊 *Resumen de Cuenta - ${bizName}*\n\n`;
+        message += `Hola *${student.name.split(' ')[0]}*, te envío tu estado actual:\n\n`;
+        message += `✅ *Estado:* ${statusText}\n`;
+        message += `💰 *Deuda Pendiente:* ${amountText}\n`;
         
         if (student.planType === 'PACK') {
-            message += `Te quedan ${student.credits} clases en tu pack.\n`;
+            message += `🎫 *Clases restantes:* ${student.credits}\n`;
         }
 
-        if (paymentOptions) {
-            message += `\n${paymentOptions}`;
-        }
+        message += `\n💳 *Opciones de Pago:*\n${paymentOptions}\n\n`;
+        message += `*Cualquier duda, avisame. ¡Saludos!*`;
 
         const link = `https://wa.me/${student.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(message)}`;
 
@@ -204,7 +211,7 @@ export const updateStudent = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const student = await prisma.student.update({
+        const result = await prisma.student.updateMany({
             where: { 
                 id: Number(id),
                 ownerId: req.userId
@@ -213,46 +220,30 @@ export const updateStudent = async (req: AuthRequest, res: Response) => {
                 name: req.body.name,
                 phone: req.body.phone,
                 service_name: req.body.service_name,
-                price_per_hour: req.body.price_per_hour ? parseFloat(String(req.body.price_per_hour)) : null,
-                class_duration_min: req.body.class_duration_min ? parseInt(String(req.body.class_duration_min)) : null,
-                classes_per_month: req.body.classes_per_month ? parseInt(String(req.body.classes_per_month)) : null,
-                amount: req.body.amount ? parseFloat(String(req.body.amount)) : null,
-                payment_method: req.body.payment_method || null,
-                surcharge_percentage: req.body.surcharge_percentage ? parseInt(String(req.body.surcharge_percentage)) : null,
-                deadline_day: req.body.deadline_day ? parseInt(String(req.body.deadline_day)) : null,
-                due_day: req.body.due_day ? parseInt(String(req.body.due_day)) : null,
+                price_per_hour: req.body.price_per_hour ? parseFloat(String(req.body.price_per_hour)) : undefined,
+                class_duration_min: req.body.class_duration_min ? parseInt(String(req.body.class_duration_min)) : undefined,
+                classes_per_month: req.body.classes_per_month ? parseInt(String(req.body.classes_per_month)) : undefined,
+                amount: req.body.amount ? parseFloat(String(req.body.amount)) : undefined,
+                payment_method: req.body.payment_method || undefined,
+                surcharge_percentage: req.body.surcharge_percentage ? parseInt(String(req.body.surcharge_percentage)) : undefined,
+                deadline_day: req.body.deadline_day ? parseInt(String(req.body.deadline_day)) : undefined,
+                due_day: req.body.due_day ? parseInt(String(req.body.due_day)) : undefined,
                 planType: req.body.planType || undefined,
-                credits: req.body.credits ? parseInt(String(req.body.credits)) : undefined,
+                credits: req.body.credits !== undefined ? parseInt(String(req.body.credits)) : undefined,
                 sub_category: req.body.sub_category !== undefined ? req.body.sub_category : undefined,
                 billing_alias: req.body.billing_alias !== undefined ? req.body.billing_alias : undefined,
                 status: req.body.status !== undefined ? req.body.status : undefined,
                 makeup_classes: req.body.makeup_classes !== undefined ? parseInt(String(req.body.makeup_classes)) : undefined,
-                schedules: req.body.schedules ? {
-                    deleteMany: {
-                        id: {
-                            notIn: req.body.schedules.filter((s: any) => s.id).map((s: any) => s.id)
-                        }
-                    },
-                    upsert: req.body.schedules.map((s: any) => ({
-                        where: { id: s.id || -1 },
-                        update: {
-                            dayOfWeek: s.dayOfWeek,
-                            startTime: s.startTime,
-                            endTime: s.endTime,
-                            isRecurring: s.isRecurring,
-                            date: s.date
-                        },
-                        create: {
-                            ownerId: req.userId,
-                            dayOfWeek: s.dayOfWeek,
-                            startTime: s.startTime,
-                            endTime: s.endTime,
-                            isRecurring: s.isRecurring,
-                            date: s.date
-                        }
-                    }))
-                } : undefined
-            },
+            }
+        });
+
+        // If updated, get the full student to return (optional, for compatibility)
+        if (result.count === 0) {
+            return res.status(404).json({ error: 'Estudiante no encontrado o no autorizado' });
+        }
+
+        const student = await prisma.student.findUnique({ 
+            where: { id: Number(id) },
             include: { schedules: true }
         });
 
@@ -275,13 +266,17 @@ export const deleteStudent = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        await prisma.student.update({
+        const result = await prisma.student.updateMany({
             where: { 
                 id: Number(id),
                 ownerId: req.userId
             },
             data: { isActive: false }
         });
+
+        if (result.count === 0) {
+            return res.status(404).json({ error: 'Alumno no encontrado o no autorizado' });
+        }
 
         res.json({ message: 'Student deleted' });
     } catch (error) {

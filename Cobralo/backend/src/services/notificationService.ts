@@ -12,19 +12,27 @@ export const notificationService = {
      */
     formatMessage(template: string | null, student: Student, user: any, type: NotificationType, extraData?: any): string {
         const defaultTemplates = {
-            UPCOMING: "Hola {alumno}, te recordamos que tu cuota de {servicio} vence en {dias} días. El monto es {monto}. ¡Saludos!",
-            OVERDUE: "Hola {alumno}, te escribo para recordarte que tenés pendiente el pago de {servicio} por {monto}. Avisame cualquier cosa. ¡Gracias!",
-            CLASS_REMINDER: "Hola {alumno}, te recuerdo que tenemos clase a las {hora_inicio}. Por favor, confirmame acá si venís: {url_confirmar}\n\nSi se te complica y necesitás cancelar, usá este enlace: {url_cancelar}. ¡Nos vemos!",
+            UPCOMING: "👋 Hola *{alumno}*,\n\nTe escribimos de *{negocio}* para recordarte que tu cuota de *{servicio}* vence pronto.\n\n📌 *Detalles:*\n💰 *Monto:* {monto}\n⏳ *Días restantes:* {dias}\n\n✅ Podés realizar tu pago de forma segura aquí:\n🔗 {pago_url}\n\n¡Muchas gracias!",
+            OVERDUE: "⚠️ Hola *{alumno}*,\n\nTe enviamos este recordatorio de *{negocio}* ya que tenés un pago pendiente de *{servicio}*.\n\n📌 *Detalles:*\n💵 *Monto:* {monto}\n\n✅ Si ya realizaste el pago, podés cargar el comprobante aquí:\n🔗 {pago_url}\n\nSi tenés alguna duda, estamos a tu disposición.\n¡Gracias!",
+            CLASS_REMINDER: "📅 *Recordatorio de Clase*\n\nHola *{alumno}*, te recordamos que tenemos clase hoy:\n⏰ *Hora:* {hora_inicio}\n🏢 *Servicio:* {servicio}\n\nPor favor, confirmá tu asistencia aquí:\n✅ Confirmar: {url_confirmar}\n❌ Cancelar: {url_cancelar}\n\n¡Te esperamos!",
             PRO_REMINDER_SENT: "✅ Recordatorio PRO enviado a {alumno}. Vence en 2 días ({monto}).",
-            PAYMENT_RECEIVED: "✅ ¡Pago recibido! Hola {alumno}, recibimos tu pago de {monto}. ¡Gracias!"
+            PAYMENT_RECEIVED: "✅ *¡Pago Recibido!*\n\nHola *{alumno}*, recibimos correctamente tu pago de *{monto}* por *{servicio}*.\n\n¡Muchísimas gracias por tu confianza en *{negocio}*!"
         };
 
         let message = template || defaultTemplates[type];
         
-        // Basic variable replacement (Supporting both EN and ES tags for backwards compatibility initially, but replacing ES)
+        const bizName = user.bizName || user.name || "Tu Profe";
+        const currency = user.currency || '$';
+        const amount = `${currency}${student.amount?.toString() || '0'}`;
+        const appBaseUrl = process.env.APP_BASE_URL || 'https://cobraloapp.com';
+        const pagoUrl = extraData?.paymentLink || `${appBaseUrl}/pago/${student.id}`;
+
+        // Basic variable replacement
         message = message.replace(/{student_name}/g, student.name).replace(/{alumno}/g, student.name);
         message = message.replace(/{service}/g, student.service_name || "clases").replace(/{servicio}/g, student.service_name || "clases");
-        message = message.replace(/{amount}/g, `${user.currency || '$'}${student.amount?.toString() || '0'}`).replace(/{monto}/g, `${user.currency || '$'}${student.amount?.toString() || '0'}`);
+        message = message.replace(/{amount}/g, amount).replace(/{monto}/g, amount);
+        message = message.replace(/{negocio}/g, bizName);
+        message = message.replace(/{pago_url}/g, pagoUrl);
         
         if (extraData?.start_time) {
             message = message.replace(/{start_time}/g, extraData.start_time).replace(/{hora_inicio}/g, extraData.start_time);
@@ -33,15 +41,12 @@ export const notificationService = {
         if (extraData?.confirmUrl) {
             message = message.replace(/{confirm_url}/g, extraData.confirmUrl).replace(/{url_confirmar}/g, extraData.confirmUrl);
             message = message.replace(/{cancel_url}/g, extraData.cancelUrl || '').replace(/{url_cancelar}/g, extraData.cancelUrl || '');
-            // Auto-append confirmation links if they're not already in the template
-            if (!message.includes(extraData.confirmUrl)) {
-                message += `\n\n✅ Confirmar asistencia: ${extraData.confirmUrl}\n❌ No voy a poder ir: ${extraData.cancelUrl}`;
-            }
         }
 
         if (type === 'UPCOMING') {
             const daysRemaining = student.deadline_day ? (student.deadline_day - new Date().getDate()) : 3;
-            message = message.replace(/{days}/g, Math.max(0, daysRemaining).toString()).replace(/{dias}/g, Math.max(0, daysRemaining).toString());
+            const days = Math.max(0, daysRemaining).toString();
+            message = message.replace(/{days}/g, days).replace(/{dias}/g, days);
         }
 
         return message;

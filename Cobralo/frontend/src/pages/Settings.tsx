@@ -10,7 +10,8 @@ import {
     ChevronLeft,
     Check,
     RotateCcw,
-    RefreshCw
+    RefreshCw,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast } from '../components/Toast';
@@ -37,7 +38,7 @@ interface Category {
 
 const Settings = () => {
     const { updateUser: updateAuthUser, isPro } = useAuth();
-    const [activeTab, setActiveTab] = useState<'account' | 'profile' | 'security' | 'academy' | 'services' | 'automation' | 'subscription' | 'ratings' | 'support' | 'legal' | 'payment-accounts'>('account');
+    const [activeTab, setActiveTab] = useState<'account' | 'profile' | 'security' | 'academy' | 'services' | 'automation' | 'subscription' | 'ratings' | 'support' | 'legal' | 'payment-accounts' | 'admin_panel'>('account');
 
     // Mobile toggle logic
     const [isNavOpen, setIsNavOpen] = useState(true);
@@ -56,7 +57,7 @@ const Settings = () => {
     const [user, setUser] = useState<Partial<User>>({
         name: '', email: '', bizName: '', businessCategory: '', phoneNumber: '', taxId: '',
         billingAddress: '', bizAlias: '', reminderTemplate: 'Hola {alumno}! Te escribo de {negocio} para recordarte tu clase de {servicio}. El monto es de ${monto}. Saludos!',
-        defaultPrice: 0, defaultService: 'General', defaultSurcharge: 10, currency: '$', receiptFooter: '',
+        defaultPrice: 0, defaultService: '', defaultSurcharge: 10, currency: '$', receiptFooter: '',
         mpAccessToken: '', mpPublicKey: '', notificationsEnabled: true, classRemindersEnabled: false, classReminderMinutes: 120, isPublicProfileVisible: true,
         biography: '', photoUrl: '', instagramUrl: '', facebookUrl: ''
     });
@@ -96,6 +97,11 @@ const Settings = () => {
             { id: 'support', label: 'Soporte', icon: HelpCircle, description: 'Escribinos tu consulta' },
             { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos de uso' }
         ]},
+        ...(user.email === 'ferrero1ferrero1@gmail.com' ? [{
+            id: 'admin', label: 'Admin', icon: Zap, tabs: [
+                { id: 'admin_panel', label: 'Super Admin', icon: Zap, description: 'Modo Dios (Solo vos)' }
+            ]
+        }] : []),
     ];
 
     const getAllTabs = () => categories.flatMap(c => c.tabs);
@@ -107,7 +113,7 @@ const Settings = () => {
         const hasParam = searchParams.get('checkout') || tabParam;
         if (tabParam) setActiveTab(tabParam as any);
         if (hasParam && window.innerWidth < 1024) setIsNavOpen(false);
-    }, []);
+    }, [searchParams]);
 
     useEffect(() => {
         const load = async () => {
@@ -180,28 +186,6 @@ const Settings = () => {
             await api.toggleRatingComment(ratingId);
             setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, isVisible: !r.isVisible } : r));
         } catch { showToast.error('Error al actualizar testimonio'); }
-    };
-
-    const [autoSaveEnabled, setAutoSaveEnabled] = useState(localStorage.getItem('cobralo_autosave') === 'true');
-
-    useEffect(() => {
-        if (!autoSaveEnabled || loading) return;
-        const timer = setTimeout(() => {
-            handleSave(true);
-        }, 1500);
-        return () => clearTimeout(timer);
-    }, [user, autoSaveEnabled]);
-
-    const toggleAutoSave = () => {
-        const newValue = !autoSaveEnabled;
-        setAutoSaveEnabled(newValue);
-        localStorage.setItem('cobralo_autosave', String(newValue));
-        if (newValue) {
-            showToast.success('Auto-guardado activado');
-            handleSave(true);
-        } else {
-            showToast.success('Auto-guardado desactivado');
-        }
     };
 
     const handleSave = async (isAuto = false) => {
@@ -300,7 +284,7 @@ const Settings = () => {
                 <div className="flex flex-col lg:flex-row h-full">
 
                     {/* ── SIDEBAR (Accordion Nav) ── */}
-                    <div className={`shrink-0 transition-all duration-500 ease-in-out lg:h-full lg:overflow-y-auto hide-scrollbar border-b lg:border-b-0 lg:border-r border-border-main lg:w-[30%] xl:w-[25%] min-w-[260px] max-w-[400px] ${
+                    <div className={`shrink-0 transition-all duration-500 ease-in-out lg:h-full lg:overflow-y-auto hide-scrollbar border-b lg:border-b-0 lg:border-r border-border-main w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] ${
                         isNavOpen ? 'block' : 'hidden lg:block'
                     }`}>
                         <div className="w-full p-4 md:p-6 lg:p-8 min-h-full">
@@ -316,7 +300,7 @@ const Settings = () => {
 
                     {/* ── CONTENT ── */}
                     <div className={`flex-1 min-w-0 lg:h-full lg:overflow-y-auto hide-scrollbar ${isNavOpen ? 'hidden lg:block' : 'block'}`}>
-                        <div className="p-4 md:p-6 lg:p-8 xl:p-10 min-h-full">
+                        <div className={`p-4 md:p-6 lg:p-8 xl:p-10 min-h-full ${isDirty ? 'pb-28' : ''}`}>
 
                             {/* Desktop Header */}
                             <div className="hidden lg:block mb-10 space-y-2 animate-in fade-in slide-in-from-left-4 duration-700">
@@ -336,25 +320,9 @@ const Settings = () => {
                                     </div>
                                     <span>Ajustes</span>
                                 </button>
-                                <label className="flex items-center gap-2 cursor-pointer group px-4 py-2 rounded-full bg-bg-app border border-border-main">
-                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-tighter">Auto-Guardar</span>
-                                    <div className={`relative w-8 h-4 rounded-full transition-colors ${autoSaveEnabled ? 'bg-primary-main' : 'bg-zinc-300 dark:bg-zinc-700'}`}>
-                                        <div className={`absolute top-[2px] left-[2px] w-3 h-3 bg-white rounded-full transition-transform ${autoSaveEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
-                                    </div>
-                                    <input type="checkbox" checked={autoSaveEnabled} onChange={toggleAutoSave} className="sr-only" />
-                                </label>
                             </div>
 
-                            {/* Desktop Auto-save Toggle */}
-                            <div className="hidden lg:flex items-center justify-end mb-6">
-                                <label className="flex items-center gap-3 cursor-pointer group">
-                                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest group-hover:text-primary-main transition-colors">Guardado Automático</span>
-                                    <div className={`relative w-10 h-5 rounded-full transition-colors ${autoSaveEnabled ? 'bg-primary-main' : 'bg-zinc-200 dark:bg-zinc-800'}`}>
-                                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${autoSaveEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                                    </div>
-                                    <input type="checkbox" checked={autoSaveEnabled} onChange={toggleAutoSave} className="sr-only" />
-                                </label>
-                            </div>
+                            <div className="hidden lg:block mb-6 h-6" />
 
                             <SettingsContent
                                 activeTab={activeTab}
@@ -387,35 +355,41 @@ const Settings = () => {
             <AnimatePresence>
                 {isDirty && (
                     <motion.div 
-                        initial={{ y: 100, opacity: 0 }}
+                        initial={{ y: 50, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-2xl"
+                        exit={{ y: 50, opacity: 0 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-2xl px-4"
                     >
-                        <div className="bg-zinc-900 dark:bg-zinc-800 border border-white/10 shadow-2xl rounded-[32px] p-4 lg:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl bg-opacity-95 dark:bg-opacity-95">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-primary-main/20 flex items-center justify-center text-primary-main">
-                                    <RotateCcw size={24} className="animate-pulse" />
+                        <div className="bg-zinc-900/90 dark:bg-zinc-900/95 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[40px] p-3 pl-6 pr-3 flex items-center justify-between gap-4 backdrop-blur-2xl">
+                            <div className="flex items-center gap-4 min-w-0">
+                                <div className="hidden sm:flex w-10 h-10 rounded-2xl bg-primary-main/20 items-center justify-center text-primary-main flex-shrink-0">
+                                    <RotateCcw size={20} className="animate-pulse" />
                                 </div>
-                                <div className="text-center sm:text-left">
-                                    <h4 className="text-white font-black text-sm uppercase tracking-tight">Cambios pendientes</h4>
-                                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">¿Deseás guardar la nueva configuración?</p>
+                                <div className="text-left min-w-0">
+                                    <h4 className="text-white font-black text-xs uppercase tracking-tight leading-none mb-1 truncate">Cambios pendientes</h4>
+                                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis opacity-80">Configuración sin guardar</p>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                 <button 
                                     onClick={() => setUser(originalUser)}
-                                    className="flex-1 sm:flex-none px-6 py-3 text-zinc-400 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors"
+                                    className="px-4 py-3 text-zinc-400 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors hidden sm:block"
                                 >
                                     Descartar
                                 </button>
                                 <button 
                                     onClick={() => handleSave()}
                                     disabled={saving}
-                                    className="flex-1 sm:flex-none px-8 py-4 bg-primary-main text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl shadow-primary-glow flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+                                    className="px-6 py-3.5 bg-primary-main text-white font-black text-[10px] uppercase tracking-widest rounded-[24px] shadow-xl shadow-primary-glow flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap"
                                 >
-                                    {saving ? <RefreshCw className="animate-spin" size={14} /> : <><Check size={14} /> Guardar Cambios</>}
+                                    {saving ? <RefreshCw className="animate-spin" size={14} /> : <><Check size={14} /> Guardar</>}
+                                </button>
+                                <button 
+                                    onClick={() => setUser(originalUser)}
+                                    className="w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-zinc-400 sm:hidden"
+                                >
+                                    <X size={18} />
                                 </button>
                             </div>
                         </div>

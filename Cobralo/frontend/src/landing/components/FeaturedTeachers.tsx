@@ -17,7 +17,7 @@ const FeaturedTeachers = () => (
       style={{ background: 'radial-gradient(circle at center, rgba(34,197,94,0.15) 0%, transparent 70%)' }}
     />
     
-    <div className="container relative z-10">
+    <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
       
       {/* ── Header ── */}
       <div className="text-center mb-20 max-w-2xl mx-auto">

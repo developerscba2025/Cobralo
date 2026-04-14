@@ -86,7 +86,7 @@ const RatingsTab: React.FC<RatingsTabProps> = ({ ratings, ratingToken, ratingExp
                     <p className="text-zinc-400 font-black uppercase tracking-tight">No hay Testimonios aún</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                     {ratings.map(r => (
                         <div key={r.id} className="p-5 md:p-8 bg-bg-app rounded-[32px] md:rounded-[40px] border border-border-main shadow-sm group relative overflow-hidden">
                             <div className="flex justify-between items-start mb-6">

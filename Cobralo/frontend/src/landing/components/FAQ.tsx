@@ -25,15 +25,11 @@ const faqs = [
   },
   {
     q: '¿Qué pasa si mis alumnos no tienen la app?',
-    a: 'No necesitan nada. Tus alumnos reciben un link por WhatsApp o email que abren desde el navegador para ver su estado de cuenta o pagar. Todo sin descargas ni registros.',
+    a: 'No necesitan nada. Tus alumnos reciben un link por WhatsApp o email que abren desde el navegador para ver su estado de cuenta o pagar. Todo sin descargas ni registros. Se tiene pensado que en el futuro se añada un portal para que cada alumno pueda ver sus clases.',
   },
   {
     q: '¿Los precios suben sin aviso?',
     a: 'Nunca. Nuestros precios se actualizan mensualmente al 50% de la inflación (IPC), siempre por debajo de la inflación real. Y te avisamos con anticipación en tu dashboard antes de cualquier ajuste.',
-  },
-  {
-    q: '¿Puedo importar mis alumnos existentes?',
-    a: 'Sí. Podés cargar tus alumnos manualmente, uno a uno, o importarlos desde un CSV. La configuración completa lleva menos de 2 minutos.',
   },
 ];
 
@@ -45,75 +41,59 @@ const FAQ = () => {
       {/* Top accent */}
       <div
         className="absolute top-0 inset-x-0 h-px"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(34,197,94,0.15), transparent)' }}
-      />
-      {/* Glow */}
-      <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at center bottom, rgba(34,197,94,0.07) 0%, transparent 70%)' }}
+        style={{ background: 'linear-gradient(90deg, transparent, rgba(34,197,94,0.1), transparent)' }}
       />
 
-      <div className="container max-w-3xl relative z-10">
-        <div className="text-center mb-16">
+      <div className="w-full max-w-[1200px] mx-auto px-6 relative z-10">
+        <div className="text-center mb-12">
           <div
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] mb-5 border"
-            style={{ background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.2)', color: '#4ade80' }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 border"
+            style={{ background: 'rgba(34,197,94,0.04)', borderColor: 'rgba(34,197,94,0.15)', color: '#4ade80' }}
           >
-            FAQ
+            Preguntas Frecuentes
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-5 tracking-tight" style={{ color: '#fafafa' }}>
-            Preguntas{' '}
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 50%, rgba(255,255,255,0.8) 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              frecuentes.
-            </span>
+          <h2 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight font-accent text-white">
+            Despejá tus dudas.
           </h2>
-          <p className="text-base font-medium" style={{ color: '#a1a1aa' }}>
-            Todo lo que necesitás saber para empezar hoy mismo.
+          <p className="text-sm font-medium text-zinc-500 max-w-xl mx-auto">
+            Todo lo que necesitás saber sobre la gestión de tus alumnos con Cobralo.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="max-w-3xl mx-auto space-y-3">
           {faqs.map((faq, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-30px' }}
-              transition={{ delay: i * 0.04, duration: 0.4 }}
-              className="rounded-2xl overflow-hidden transition-colors duration-200 h-fit"
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="rounded-2xl overflow-hidden border border-white/[0.05] transition-all duration-300"
               style={{
-                background: '#171A1D',
-                border: openIndex === i
-                  ? '1px solid rgba(34,197,94,0.25)'
-                  : '1px solid rgba(255,255,255,0.07)',
+                background: openIndex === i ? 'rgba(255,255,255,0.02)' : 'transparent',
+                borderColor: openIndex === i ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
               }}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 outline-none"
               >
                 <span
-                  className="font-bold text-[14px] leading-snug"
-                  style={{ color: openIndex === i ? '#4ade80' : '#fafafa' }}
+                  className="font-bold text-[14px] leading-snug transition-colors duration-300"
+                  style={{ color: openIndex === i ? '#4ade80' : '#d4d4d8' }}
                 >
                   {faq.q}
                 </span>
                 <div
-                  className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
+                  className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 border border-zinc-800"
                   style={{
-                    background: openIndex === i ? '#22c55e' : 'rgba(255,255,255,0.06)',
+                    background: openIndex === i ? '#22c55e' : 'transparent',
+                    borderColor: openIndex === i ? '#22c55e' : 'rgba(255,255,255,0.1)',
                   }}
                 >
                   {openIndex === i
-                    ? <Minus size={14} style={{ color: '#0E1113' }} />
-                    : <Plus size={14} style={{ color: '#a1a1aa' }} />
+                    ? <Minus size={12} style={{ color: '#0E1113' }} />
+                    : <Plus size={12} style={{ color: '#a1a1aa' }} />
                   }
                 </div>
               </button>
@@ -124,9 +104,9 @@ const FAQ = () => {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as any }}
                   >
-                    <div className="px-6 pb-5 text-[13px] leading-relaxed font-medium" style={{ color: '#a1a1aa' }}>
+                    <div className="px-6 pb-6 text-[13.5px] leading-relaxed text-zinc-500 font-medium">
                       {faq.a}
                     </div>
                   </motion.div>
@@ -135,8 +115,6 @@ const FAQ = () => {
             </motion.div>
           ))}
         </div>
-
-        {/* CTA removed for cleaner layout */}
       </div>
     </section>
   );

@@ -48,7 +48,7 @@ const Testimonials = () => (
       style={{ background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.15) 0%, transparent 65%)' }}
     />
 
-    <div className="container relative z-10 pt-10">
+    <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 relative z-10 pt-10">
       
       {/* ── Integrations Row ── */}
       <div className="flex flex-col items-center mb-24">

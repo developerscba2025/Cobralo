@@ -38,7 +38,7 @@ const Directory = () => {
         <Navbar />
       </header>
 
-      <main className="pt-32 pb-20 container">
+      <main className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 pt-32 pb-20">
         <div className="max-w-4xl mx-auto text-center mb-16 px-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black text-primary-light uppercase mb-6 tracking-widest">
             Comunidad Profesional

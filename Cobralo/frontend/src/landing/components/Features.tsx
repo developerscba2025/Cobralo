@@ -97,7 +97,7 @@ const Features = () => (
       }}
     />
 
-    <div className="container relative z-10">
+    <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
       
       {/* ── Section Header ── */}
       <div className="text-center mb-12 md:mb-24 max-w-3xl mx-auto">

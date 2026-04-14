@@ -151,6 +151,8 @@ export interface User {
     instagramUrl?: string;
     facebookUrl?: string;
     classReminderTemplate?: string;
+    welcomeTemplate?: string;
+    generalTemplate?: string;
     classRemindersEnabled?: boolean;
     classReminderMinutes?: number;
 }
@@ -518,6 +520,16 @@ export const api = {
         const res = await fetchWithTimeout(`${API_URL}/auth/me`, {
             method: 'DELETE',
             headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
+    // POST /api/auth/admin/make-pro
+    async makeAnyUserPro(targetEmail: string): Promise<{ message: string }> {
+        const res = await fetchWithTimeout(`${API_URL}/auth/admin/make-pro`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            body: JSON.stringify({ targetEmail })
         });
         return res.json();
     },

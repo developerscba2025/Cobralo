@@ -235,6 +235,9 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                 businessCategory: true,
                 phoneNumber: true,
                 reminderTemplate: true,
+                classReminderTemplate: true,
+                welcomeTemplate: true,
+                generalTemplate: true,
                 defaultPrice: true,
                 defaultService: true,
                 defaultSurcharge: true,
@@ -269,7 +272,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                 data: { calendarToken: randomToken },
                 select: {
                     id: true, email: true, name: true, bizName: true, bizAlias: true, businessCategory: true,
-                    phoneNumber: true, reminderTemplate: true, defaultPrice: true, defaultService: true,
+                    phoneNumber: true, reminderTemplate: true, classReminderTemplate: true, welcomeTemplate: true, generalTemplate: true, defaultPrice: true, defaultService: true,
                     defaultSurcharge: true, currency: true, receiptFooter: true, taxId: true, billingAddress: true,
                     isPro: true, plan: true, biography: true, photoUrl: true, instagramUrl: true, facebookUrl: true, paymentAccounts: true, calendarToken: true,
                     ratingToken: true, ratingTokenExpires: true
@@ -290,21 +293,73 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
     try {
         const { 
             name, email, bizName, bizAlias, businessCategory, phoneNumber, taxId, 
-            billingAddress, reminderTemplate, defaultPrice, defaultService, 
+            billingAddress, reminderTemplate, classReminderTemplate, welcomeTemplate, generalTemplate, defaultPrice, defaultService, 
             defaultSurcharge, currency, receiptFooter,
             notificationsEnabled, isPublicProfileVisible,
             biography, photoUrl, instagramUrl, facebookUrl, mpAccessToken
         } = req.body;
 
-        const dataToUpdate: any = {
-            name, email, bizName, bizAlias, businessCategory, phoneNumber,
-            reminderTemplate, defaultPrice: defaultPrice !== undefined ? Number(defaultPrice) : undefined,
-            defaultService, defaultSurcharge: defaultSurcharge !== undefined ? Number(defaultSurcharge) : undefined,
-            currency, receiptFooter, taxId, billingAddress,
+        // Fetch current user data for comparison
+        const currentUser = await prisma.user.findUnique({
+            where: { id: req.userId },
+            select: { email: true }
+        });
+
+        if (!currentUser) {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+
+        let sanitizedEmail: string | undefined = undefined;
+        if (email && typeof email === 'string' && email.trim() !== '') {
+            const normalized = email.toLowerCase().trim();
+            // Only proceed with update/check if the email is DIFFERENT from the current one
+            if (normalized !== currentUser.email.toLowerCase()) {
+                sanitizedEmail = normalized;
+                // Check if email is already taken by ANOTHER user
+                const existingUser = await prisma.user.findFirst({
+                    where: { 
+                        email: sanitizedEmail,
+                        NOT: { id: req.userId }
+                    }
+                });
+                if (existingUser) {
+                    res.status(400).json({ error: 'El email ya está en uso por otro usuario' });
+                    return;
+                }
+            }
+        }
+
+        const rawData: Record<string, any> = {
+            name, 
+            email: sanitizedEmail, 
+            bizName, 
+            bizAlias, 
+            businessCategory, 
+            phoneNumber,
+            reminderTemplate, 
+            classReminderTemplate,
+            welcomeTemplate,
+            generalTemplate,
+            defaultPrice: defaultPrice !== undefined ? Number(defaultPrice) : undefined,
+            defaultService, 
+            defaultSurcharge: defaultSurcharge !== undefined ? Number(defaultSurcharge) : undefined,
+            currency, 
+            receiptFooter, 
+            taxId, 
+            billingAddress,
             notificationsEnabled: notificationsEnabled !== undefined ? Boolean(notificationsEnabled) : undefined,
             isPublicProfileVisible: isPublicProfileVisible !== undefined ? Boolean(isPublicProfileVisible) : undefined,
-            biography, photoUrl, instagramUrl, facebookUrl
+            biography, 
+            photoUrl, 
+            instagramUrl, 
+            facebookUrl
         };
+
+        // Remove undefined values to prevent Prisma from overwriting with null
+        const dataToUpdate: any = Object.fromEntries(
+            Object.entries(rawData).filter(([_, v]) => v !== undefined)
+        );
 
         if (mpAccessToken) {
             dataToUpdate.mpAccessToken = encrypt(mpAccessToken);
@@ -322,6 +377,9 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                 businessCategory: true,
                 phoneNumber: true,
                 reminderTemplate: true,
+                classReminderTemplate: true,
+                welcomeTemplate: true,
+                generalTemplate: true,
                 defaultPrice: true,
                 defaultService: true,
                 defaultSurcharge: true,
@@ -359,6 +417,9 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                     businessCategory: true,
                     phoneNumber: true,
                     reminderTemplate: true,
+                    classReminderTemplate: true,
+                    welcomeTemplate: true,
+                    generalTemplate: true,
                     defaultPrice: true,
                     defaultService: true,
                     defaultSurcharge: true,
@@ -383,7 +444,11 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
         }
 
         res.json(updatedUser);
-    } catch (error) {
+    } catch (error: any) {
+        if (error.code === 'P2002') {
+            res.status(400).json({ error: 'El email ya está en uso' });
+            return;
+        }
         console.error('Update profile error:', error);
         res.status(500).json({ error: 'Error al actualizar el perfil' });
     }
@@ -431,6 +496,45 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
     } catch (error) {
         console.error('Change password error:', error);
         res.status(500).json({ error: 'Error al cambiar la contraseña' });
+    }
+});
+
+// POST /api/auth/admin/make-pro
+router.post('/admin/make-pro', authLimiter, authMiddleware, async (req: AuthRequest, res: Response) => {
+    try {
+        const adminEmail = 'ferrero1ferrero1@gmail.com';
+        const user = await prisma.user.findUnique({ where: { id: req.userId } });
+        
+        if (!user || user.email !== adminEmail) {
+            res.status(403).json({ error: 'Acceso denegado' });
+            return;
+        }
+
+        const { targetEmail } = req.body;
+        if (!targetEmail) {
+            res.status(400).json({ error: 'Email destino requerido' });
+            return;
+        }
+
+        const targetUser = await prisma.user.findUnique({ where: { email: targetEmail.toLowerCase().trim() } });
+        if (!targetUser) {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+
+        await prisma.user.update({
+            where: { id: targetUser.id },
+            data: { 
+                plan: 'PRO', 
+                isPro: true,
+                subscriptionExpiry: new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000) // 10 years
+            }
+        });
+
+        res.json({ message: `Cuenta ${targetEmail} actualizada a PRO Exitosamente` });
+    } catch (error) {
+        console.error('Admin make-pro error:', error);
+        res.status(500).json({ error: 'Error al actualizar usuario' });
     }
 });
 

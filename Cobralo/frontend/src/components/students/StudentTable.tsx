@@ -177,46 +177,50 @@ const StudentTable: React.FC<StudentTableProps> = ({
         if (currentPage > 1) setCurrentPage(prev => prev - 1);
     };
 
-    return (
-        <div className="bg-surface dark:bg-bg-soft border border-border-main rounded-[28px] overflow-visible shadow-sm">
-            <div className="overflow-x-auto min-h-[600px]">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="border-b border-border-main/50 bg-black/5 dark:bg-white/[0.02]">
-                            <th className="py-4 pl-4 pr-3 w-10">
-                                <input 
-                                    type="checkbox"
-                                    checked={allSelected}
-                                    onChange={onToggleAll}
-                                    className="w-4 h-4 rounded border-border-main text-primary-main focus:ring-primary-main/20 cursor-pointer"
-                                />
-                            </th>
-                            <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest">Alumno</th>
-                            <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden sm:table-cell">Estado Pago</th>
-                            <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Monto / Venc.</th>
-                            <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Teléfono</th>
-                            <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest text-right pr-4">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <AnimatePresence mode="popLayout">
-                            {paginatedStudents.map((student) => (
-                                <StudentRow 
-                                    key={student.id}
-                                    student={student}
-                                    isSelected={selectedIds.includes(student.id)}
-                                    onToggleSelect={onToggleSelect}
-                                    onTogglePayment={onTogglePayment}
-                                    onOpenModals={onOpenModals}
-                                    currency={currency}
-                                />
-                            ))}
-                        </AnimatePresence>
-                    </tbody>
-                </table>
+    return (        <div className="bg-surface dark:bg-bg-soft border border-border-main rounded-[28px] overflow-hidden shadow-sm relative flex flex-col">
+            <div className="relative flex-1">
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-border-main/50 bg-black/5 dark:bg-white/[0.02] sticky top-0 z-10 bg-surface dark:bg-bg-soft">
+                                <th className="py-4 pl-4 pr-3 w-10">
+                                    <input 
+                                        type="checkbox"
+                                        checked={allSelected}
+                                        onChange={onToggleAll}
+                                        className="w-4 h-4 rounded border-border-main text-primary-main focus:ring-primary-main/20 cursor-pointer"
+                                    />
+                                </th>
+                                <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest">Alumno</th>
+                                <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden sm:table-cell">Estado Pago</th>
+                                <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Monto / Venc.</th>
+                                <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest hidden md:table-cell">Teléfono</th>
+                                <th className="py-4 px-3 text-[10px] font-black text-text-muted uppercase tracking-widest text-right pr-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <AnimatePresence mode="popLayout">
+                                {paginatedStudents.map((student) => (
+                                    <StudentRow 
+                                        key={student.id}
+                                        student={student}
+                                        isSelected={selectedIds.includes(student.id)}
+                                        onToggleSelect={onToggleSelect}
+                                        onTogglePayment={onTogglePayment}
+                                        onOpenModals={onOpenModals}
+                                        currency={currency}
+                                    />
+                                ))}
+                            </AnimatePresence>
+                        </tbody>
+                    </table>
+                </div>
+                
+                {/* Bottom Scroll Fade Removed */}
             </div>
+
             {students.length > 0 && (
-                <div className="p-4 border-t border-border-main/50 flex items-center justify-between bg-black/5 dark:bg-white/[0.02]">
+                <div className="relative z-20 p-4 border-t border-border-main/50 flex items-center justify-between bg-black/5 dark:bg-white/[0.02]">
                     <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
                         Mostrando {startIndex + 1}-{Math.min(startIndex + itemsPerPage, students.length)} de {students.length}
                     </p>

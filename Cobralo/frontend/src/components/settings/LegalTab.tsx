@@ -127,7 +127,7 @@ const LegalTab: React.FC = () => {
     const current = content[activeSection];
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-4xl transition-all h-full flex flex-col">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 transition-all h-full flex flex-col">
             {/* Header */}
             <div>
                 <h2 className="text-xl lg:text-2xl font-black text-zinc-900 dark:text-white flex items-center gap-3 mb-2 tracking-tight uppercase">

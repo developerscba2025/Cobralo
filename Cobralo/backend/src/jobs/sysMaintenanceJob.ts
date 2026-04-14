@@ -8,13 +8,12 @@ export const initSysMaintenanceCron = () => {
         try {
             console.log('Iniciando limpieza de base de datos (Cron Job semanal)...');
             
-            const thirtyDaysAgo = dayjs().subtract(30, 'days').toDate();
+            const sevenDaysAgo = dayjs().subtract(7, 'days').toDate();
 
-            // 1. Limpiar notificaciones leídas de más de 30 días
+            // 1. Limpiar notificaciones de más de 7 días (todas)
             const deletedNotifications = await prisma.notification.deleteMany({
                 where: {
-                    isRead: true,
-                    createdAt: { lt: thirtyDaysAgo }
+                    createdAt: { lt: sevenDaysAgo }
                 }
             });
 

@@ -14,6 +14,7 @@ import MobileMenu from './MobileMenu';
 import SearchModal from './SearchModal';
 import BottomNav from './BottomNav';
 import { api } from '../services/api';
+import Container from './ui/Container';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -66,8 +67,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             } catch { /* silent */ }
         };
         fetchUnread();
+
+        // Listen for manual updates
+        const handleManualUpdate = () => fetchUnread();
+        window.addEventListener('notifications-updated', handleManualUpdate);
+
         const interval = setInterval(fetchUnread, 60000);
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('notifications-updated', handleManualUpdate);
+        };
     }, [user]);
 
     // Global keyboard shortcut Ctrl+K
@@ -181,7 +190,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             { to: '/app/students', icon: Users2, label: 'Alumnos' },
                             { to: '/app/payments', icon: Banknote, label: 'Cobros' },
                             { to: '/app/calendar', icon: Calendar, label: 'Calendario' },
-                            { to: '/app/classes', icon: LibraryBig, label: 'Clases' },
+                            { to: '/app/classes', icon: LibraryBig, label: 'Grupos' },
                             { to: '/app/settings', icon: Settings, label: 'Ajustes' },
                         ].map((item) => {
                             const active = location.pathname === item.to;
@@ -256,8 +265,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                         const profileId = (user as any)?.bizAlias || user?.id;
                                         if (profileId) {
                                           const profileUrl = `${window.location.origin}/profile/${profileId}`;
+                                          
+                                          // Open in new tab
+                                          window.open(profileUrl, '_blank');
+                                          
+                                          // Also copy to clipboard for convenience
                                           navigator.clipboard.writeText(profileUrl);
-                                          showToast.success('¡Link de perfil público copiado!');
+                                          showToast.success('Perfil abierto en nueva pestaña y link copiado.');
                                         } else {
                                           showToast.error('Cargando perfil... reintenta en un momento.');
                                         }
@@ -350,15 +364,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                 </div>
 
-                <div className="p-4 sm:p-6 md:p-8 lg:p-8 2xl:p-12 flex-1 overflow-x-hidden transition-all duration-300">
+                <div className="flex-1 overflow-x-hidden transition-all duration-300">
                     <motion.div 
                         key={location.pathname}
                         initial={{ opacity: 0, filter: 'blur(10px)', scale: 1.02 }}
                         animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
                         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        className="w-full h-full"
+                        className="w-full h-full py-4 sm:py-6 md:py-8 lg:py-8 2xl:py-12"
                     >
-                        {children}
+                        <Container>
+                            {children}
+                        </Container>
                     </motion.div>
                 </div>
 

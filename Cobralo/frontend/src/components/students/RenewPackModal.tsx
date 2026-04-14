@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Plus, Minus, Check, X, CreditCard } from 'lucide-react';
 import { api, type Student } from '../../services/api';
+import Portal from '../Portal';
 
 interface RenewPackModalProps {
     isOpen: boolean;
@@ -40,16 +41,17 @@ const RenewPackModal: React.FC<RenewPackModalProps> = ({ isOpen, onClose, studen
     };
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                    />
+        <Portal>
+            <AnimatePresence>
+                {isOpen && (
+                    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={onClose}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        />
                     
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -155,6 +157,7 @@ const RenewPackModal: React.FC<RenewPackModalProps> = ({ isOpen, onClose, studen
                 </div>
             )}
         </AnimatePresence>
+        </Portal>
     );
 };
 

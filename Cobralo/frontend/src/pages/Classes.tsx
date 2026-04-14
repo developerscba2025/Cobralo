@@ -53,7 +53,7 @@ const Classes = () => {
             setClasses(data);
         } catch (error) {
             console.error('Error loading classes:', error);
-            showToast.error('Error al cargar las clases');
+            showToast.error('Error al cargar los grupos');
         } finally {
             setIsLoading(false);
         }
@@ -64,7 +64,7 @@ const Classes = () => {
         if (participants.length === 0) return;
 
         const time = schedule.startTime;
-        const msg = `Hola {alumno}! Te recuerdo nuestra clase de {servicio} hoy a las ${time} hs. ¡Nos vemos!`;
+        const msg = `Hola {alumno}! Te recuerdo nuestro grupo de {servicio} hoy a las ${time} hs. ¡Nos vemos!`;
         
         setWhatsappModal({
             isOpen: true,
@@ -77,7 +77,7 @@ const Classes = () => {
         if (!deleteModal.id) return;
         try {
             await api.deleteSchedule(deleteModal.id);
-            showToast.success('Clase eliminada');
+            showToast.success('Grupo eliminado');
             loadClasses();
         } catch {
             showToast.error('Error al eliminar');
@@ -117,7 +117,7 @@ const Classes = () => {
         <Layout>
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
                 <div>
-                    <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase">Mis Clases</h1>
+                    <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase">Mis Grupos</h1>
                     <p className="text-text-muted font-medium tracking-tight">
                         Gestiona tus horarios grupales y asistencia centralizada
                     </p>
@@ -127,7 +127,7 @@ const Classes = () => {
                         onClick={() => navigate('/app/calendar', { state: { openModal: true } })}
                         className="w-full md:w-auto bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition items-center gap-2 flex justify-center"
                     >
-                        <Plus size={18} /> Nueva Clase en Agenda
+                        <Plus size={18} /> Nuevo Grupo en Agenda
                     </button>
                 </div>
             </header>
@@ -147,19 +147,19 @@ const Classes = () => {
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center p-20 gap-4">
                         <Loader2 className="animate-spin text-primary-main" size={40} />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Cargando tus clases...</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Cargando tus grupos...</p>
                     </div>
                 ) : sortedDays.length === 0 ? (
                     <div className="text-center p-8 md:p-20 bg-surface dark:bg-bg-soft rounded-[40px] border-2 border-dashed border-border-main">
                         <BookOpen className="mx-auto mb-4 text-zinc-300 dark:text-emerald-500/20" size={60} />
-                        <h3 className="text-xl font-bold text-text-main mb-2">No se encontraron clases</h3>
-                        <p className="text-text-muted max-w-xs mx-auto mb-8">Prueba ajustando tu búsqueda o crea una nueva clase desde la Agenda.</p>
+                        <h3 className="text-xl font-bold text-text-main mb-2">No se encontraron grupos</h3>
+                        <p className="text-text-muted max-w-xs mx-auto mb-8">Prueba ajustando tu búsqueda o crea un nuevo grupo desde la Agenda.</p>
                         
                         <button
                             onClick={() => navigate('/app/calendar', { state: { openModal: true } })}
                             className="inline-flex items-center gap-2 bg-primary-main hover:bg-green-600 text-white px-8 py-4 rounded-[20px] font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary-glow/40 transition-all hover:-translate-y-0.5 active:scale-95"
                         >
-                            <Plus size={20} /> Crear Nueva Clase
+                            <Plus size={20} /> Crear Nuevo Grupo
                         </button>
                     </div>
                 ) : (
@@ -168,7 +168,7 @@ const Classes = () => {
                             <h2 className="text-[10px] font-black text-primary-main uppercase tracking-[0.3em] ml-4 flex items-center gap-2">
                                 <CalendarIcon size={14} /> {DAYS[dayNum]}
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                                 {groupedByDay[dayNum].sort((a,b) => {
                                     const timeA = (a.startTime || '').replace(/^(\d:)/, '0$1');
                                     const timeB = (b.startTime || '').replace(/^(\d:)/, '0$1');
@@ -215,7 +215,7 @@ const Classes = () => {
                                                     <button 
                                                         onClick={() => setDeleteModal({ isOpen: true, id: schedule.id })}
                                                         className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-xl transition-all"
-                                                        title="Eliminar Clase"
+                                                        title="Eliminar Grupo"
                                                     >
                                                         <Trash2 size={18} />
                                                     </button>
@@ -282,9 +282,9 @@ const Classes = () => {
 
             <ConfirmModal
                 isOpen={deleteModal.isOpen}
-                title="Eliminar Clase"
-                message="¿Estás seguro de eliminar esta clase para todos los alumnos? Esta acción no se puede deshacer."
-                confirmText="Eliminar Clase"
+                title="Eliminar Grupo"
+                message="¿Estás seguro de eliminar este grupo para todos los alumnos? Esta acción no se puede deshacer."
+                confirmText="Eliminar Grupo"
                 onConfirm={handleDelete}
                 onCancel={() => setDeleteModal({ isOpen: false, id: null })}
                 variant="danger"

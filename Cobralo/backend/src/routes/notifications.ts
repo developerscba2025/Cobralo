@@ -52,7 +52,7 @@ router.patch('/read-all', authMiddleware, async (req: Request, res: Response) =>
 // PATCH /api/notifications/:id/read - Mark one as read
 router.patch('/:id/read', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.id;
+        const userId = (req as any).userId;
         const id = parseInt(req.params.id as string);
         await prisma.notification.update({
             where: { id, ownerId: userId },

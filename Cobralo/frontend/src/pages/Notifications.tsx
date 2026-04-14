@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Bell, CheckCheck, Calendar, DollarSign, Star, Zap, RefreshCw, X } from 'lucide-react';
+import { Bell, CheckCheck, Calendar, DollarSign, Star, Zap, RefreshCw, X, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -26,7 +27,7 @@ const typeConfig: Record<string, { icon: React.ReactNode; color: string; bg: str
     NEW_RATING: { icon: <Star size={18} />, color: 'text-purple-400', bg: 'bg-purple-400/10' },
     SUBSCRIPTION_RENEWED: { icon: <Zap size={18} />, color: 'text-primary-main', bg: 'bg-primary-main/10' },
     PRO_REMINDER_SENT: { icon: <Zap size={18} />, color: 'text-primary-main', bg: 'bg-primary-main/10' },
-    ANNOUNCEMENT: { icon: <Zap size={18} />, color: 'text-primary-main', bg: 'bg-primary-main/20' },
+    ANNOUNCEMENT: { icon: <Zap size={18} />, color: 'text-emerald-400', bg: 'bg-emerald-400/20' },
 };
 
 const SYSTEM_NOTIFICATIONS: AppNotification[] = [
@@ -60,11 +61,11 @@ function relativeTime(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return 'ahora';
-    if (mins < 60) return `hace ${mins}m`;
+    if (mins < 60) return `${mins}m`;
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `hace ${hrs}h`;
+    if (hrs < 24) return `${hrs}h`;
     const days = Math.floor(hrs / 24);
-    return `hace ${days}d`;
+    return `${days}d`;
 }
 
 function groupByDate(notifications: AppNotification[]) {
@@ -93,21 +94,62 @@ const NotificationsPage: React.FC = () => {
             const res = await fetch(`${API_URL}/notifications`, { headers: { ...getAuthHeader() } });
             const data = await res.json();
             const fetched = Array.isArray(data) ? data : [];
-            setNotifications([...SYSTEM_NOTIFICATIONS, ...fetched]);
+            
+            const readSystemIds = JSON.parse(localStorage.getItem('read-system-notifications') || '[]');
+            const systemWithReadState = SYSTEM_NOTIFICATIONS.map(n => ({
+                ...n,
+                isRead: readSystemIds.includes(n.id)
+            }));
+
+            const all = [...systemWithReadState, ...fetched].sort((a,b) => 
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            setNotifications(all);
         } catch (e) { 
-            setNotifications(SYSTEM_NOTIFICATIONS);
+            const readSystemIds = JSON.parse(localStorage.getItem('read-system-notifications') || '[]');
+            const systemWithReadState = SYSTEM_NOTIFICATIONS.map(n => ({
+                ...n,
+                isRead: readSystemIds.includes(n.id)
+            }));
+            setNotifications(systemWithReadState);
         }
         setLoading(false);
     }, []);
 
     const markAllRead = async () => {
-        await fetch(`${API_URL}/notifications/read-all`, { method: 'PATCH', headers: { ...getAuthHeader() } });
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        try {
+            await fetch(`${API_URL}/notifications/read-all`, { method: 'PATCH', headers: { ...getAuthHeader() } });
+            const systemIds = SYSTEM_NOTIFICATIONS.map(n => n.id);
+            localStorage.setItem('read-system-notifications', JSON.stringify(systemIds));
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            
+            // Sync count
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     const markRead = async (id: number) => {
-        await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PATCH', headers: { ...getAuthHeader() } });
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+        try {
+            if (id < 0) {
+                const readSystemIds = JSON.parse(localStorage.getItem('read-system-notifications') || '[]');
+                if (!readSystemIds.includes(id)) {
+                    readSystemIds.push(id);
+                    localStorage.setItem('read-system-notifications', JSON.stringify(readSystemIds));
+                }
+            } else {
+                await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PATCH', headers: { ...getAuthHeader() } });
+            }
+            
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+            
+            // Sync count
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     useEffect(() => { load(); }, [load]);
@@ -117,28 +159,32 @@ const NotificationsPage: React.FC = () => {
 
     return (
         <Layout>
-            <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase flex items-center gap-3">
-                            <Bell size={24} className="text-primary-main" />
-                            Notificaciones
+            <div className="w-full space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 uppercase">
+                {/* Premium Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-2">
+                        <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic flex items-center gap-4">
+                            Centro de Alertas <span className="text-xs font-black px-2 py-1 bg-primary-main/10 text-primary-main rounded-lg not-italic shadow-lg shadow-primary-main/5 animate-pulse">LIVE</span>
                         </h1>
-                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">
-                            {unreadCount > 0 ? `${unreadCount} sin leer` : 'Todo al día'}
+                        <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">
+                            {unreadCount > 0 ? `Tenés ${unreadCount} novedades sin revisar` : 'Estás al día con tu academia'}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button onClick={load} className="p-2 rounded-xl text-text-muted hover:text-text-main hover:bg-surface transition-all">
-                            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                    
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={load} 
+                            disabled={loading}
+                            className="p-3.5 rounded-2xl bg-surface border border-border-main text-text-muted hover:text-primary-main hover:border-primary-main/30 transition-all active:scale-95"
+                        >
+                            <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                         </button>
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllRead}
-                                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-main rounded-xl text-[10px] font-black text-text-muted hover:text-primary-main hover:border-primary-main/30 transition-all uppercase tracking-widest"
+                                className="flex items-center gap-3 px-6 py-3.5 bg-primary-main text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary-glow hover:scale-[1.02] active:scale-95 transition-all"
                             >
-                                <CheckCheck size={14} />
+                                <CheckCheck size={16} />
                                 Marcar todo leído
                             </button>
                         )}
@@ -146,53 +192,83 @@ const NotificationsPage: React.FC = () => {
                 </div>
 
                 {/* Notifications List */}
-                {loading ? (
-                    <div className="space-y-3">
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="h-20 bg-surface rounded-2xl animate-pulse" />
-                        ))}
-                    </div>
-                ) : notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-32 bg-surface/30 rounded-[2rem] border border-dashed border-border-main/50">
-                        <div className="w-20 h-20 bg-primary-main/10 rounded-3xl flex items-center justify-center mb-6 animate-bounce duration-[3s]">
-                            <Bell size={40} className="text-primary-main" />
+                <div className="space-y-12">
+                    {loading ? (
+                        <div className="space-y-4">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="h-24 bg-surface/50 rounded-[2.5rem] border border-border-main animate-pulse" />
+                            ))}
                         </div>
-                        <h3 className="text-2xl font-black text-text-main uppercase tracking-tight">No hay ninguna notificación</h3>
-                        <p className="text-sm text-text-muted mt-2 font-medium">Te avisaremos cuando ocurra algo importante en tu academia.</p>
-                    </div>
-                ) : (
-                    Object.entries(groups).map(([date, items]) => (
-                        <div key={date} className="space-y-2">
-                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2">{date}</p>
-                            <div className="space-y-2">
-                                {items.map(n => {
-                                    const cfg = typeConfig[n.type] ?? { icon: <Bell size={18} />, color: 'text-zinc-400', bg: 'bg-zinc-400/10' };
-                                    return (
-                                        <button
-                                            key={n.id}
-                                            onClick={() => !n.isRead && markRead(n.id)}
-                                            className={`w-full text-left flex items-start gap-4 p-4 rounded-2xl border transition-all ${n.isRead ? 'bg-bg-app border-border-main opacity-60' : 'bg-surface border-border-main shadow-sm'}`}
-                                        >
-                                            <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${cfg.bg} ${cfg.color}`}>
-                                                {cfg.icon}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-black text-text-main leading-tight truncate">{n.title}</p>
-                                                    {!n.isRead && <div className="shrink-0 w-2 h-2 rounded-full bg-primary-main" />}
-                                                </div>
-                                                <p className="text-xs text-text-muted mt-1 leading-relaxed">{n.body}</p>
-                                            </div>
-                                            <span className="shrink-0 text-[10px] font-bold text-text-muted uppercase tracking-widest whitespace-nowrap">
-                                                {relativeTime(n.createdAt)}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
+                    ) : notifications.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-32 bg-surface/30 rounded-[3rem] border border-dashed border-border-main/50 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-primary-main/5 blur-[120px] rounded-full" />
+                            <div className="w-24 h-24 bg-primary-main/10 rounded-[2rem] flex items-center justify-center mb-8 relative z-10">
+                                <Bell size={48} className="text-primary-main" />
                             </div>
+                            <h3 className="text-2xl font-black text-text-main uppercase tracking-tight relative z-10">¡Todo en Orden!</h3>
+                            <p className="text-sm text-text-muted mt-2 font-medium relative z-10">No hay novedades por el momento.</p>
                         </div>
-                    ))
-                )}
+                    ) : (
+                        Object.entries(groups).map(([date, items]) => (
+                            <div key={date} className="space-y-4">
+                                <div className="flex items-center gap-4 ml-4">
+                                    <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] italic opacity-40">{date}</span>
+                                    <div className="h-px flex-1 bg-border-main/50" />
+                                </div>
+                                <div className="grid gap-3">
+                                    <AnimatePresence mode="popLayout">
+                                        {items.map(n => {
+                                            const cfg = typeConfig[n.type] ?? { icon: <Bell size={18} />, color: 'text-zinc-400', bg: 'bg-zinc-400/10' };
+                                            return (
+                                                <motion.button
+                                                    layout
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    key={n.id}
+                                                    onClick={() => !n.isRead && markRead(n.id)}
+                                                    className={`group w-full text-left flex items-center gap-6 p-6 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden ${
+                                                        n.isRead 
+                                                        ? 'bg-transparent border-border-main opacity-60 backdrop-blur-sm grayscale' 
+                                                        : 'bg-surface border-border-main shadow-xl hover:border-primary-main/30'
+                                                    }`}
+                                                >
+                                                    {!n.isRead && (
+                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-main/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 -z-10" />
+                                                    )}
+                                                    
+                                                    <div className={`shrink-0 w-14 h-14 rounded-3xl flex items-center justify-center transition-transform group-hover:scale-110 ${cfg.bg} ${cfg.color}`}>
+                                                        {cfg.icon}
+                                                    </div>
+                                                    
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-3 mb-1">
+                                                            <p className="text-sm font-black text-text-main uppercase tracking-tight truncate">{n.title}</p>
+                                                            {!n.isRead && (
+                                                                <span className="shrink-0 w-2 h-2 rounded-full bg-primary-main shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs font-bold text-text-muted/80 leading-relaxed font-accent">{n.body}</p>
+                                                    </div>
+                                                    
+                                                    <div className="shrink-0 flex flex-col items-end gap-2">
+                                                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg">
+                                                            {relativeTime(n.createdAt)}
+                                                        </span>
+                                                        {!n.isRead && (
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-[10px] font-black text-primary-main uppercase tracking-[0.2em] italic">
+                                                                Leer <ArrowRight size={10} />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </motion.button>
+                                            );
+                                        })}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
         </Layout>
     );

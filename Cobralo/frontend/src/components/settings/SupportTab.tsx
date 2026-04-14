@@ -31,7 +31,7 @@ const SupportTab: React.FC = () => {
     };
 
     return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-700 max-w-5xl mx-auto">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-700 transition-all">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">

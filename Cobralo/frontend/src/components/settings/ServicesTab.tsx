@@ -49,7 +49,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
     };
 
     return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-5xl transition-all">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-500 transition-all">
             <div>
                 <h2 className="text-2xl font-black text-zinc-900 dark:text-emerald-50 flex items-center gap-3 mb-2 tracking-tight uppercase">
                     <Zap size={24} className="text-primary-main" /> Servicios
@@ -103,7 +103,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
                             </div>
                         </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
                         {userServices.length === 0 ? (
                             <div className="md:col-span-2 py-10 border-2 border-dashed border-border-main/20 rounded-[32px] text-center">
                                 <p className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.2em]">No tenés servicios cargados</p>

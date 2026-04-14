@@ -31,7 +31,7 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
     return (
         <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-                <div className="relative w-full md:w-96">
+                <div className="relative w-full md:w-full md:max-w-2xl">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                     <input 
                         type="text"

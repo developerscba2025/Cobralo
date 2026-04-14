@@ -30,18 +30,23 @@ const Students = () => {
         }
     };
 
+    const loadExtras = async () => {
+        try {
+            const [s] = await Promise.all([api.getServices()]);
+            setUserServices(Array.isArray(s) ? s : []);
+        } catch (err) {
+            console.error('Error loading extras', err);
+        }
+    };
+
     useEffect(() => {
-        const loadExtras = async () => {
-            try {
-                const [s] = await Promise.all([api.getServices()]);
-                setUserServices(Array.isArray(s) ? s : []);
-            } catch (err) {
-                console.error('Error loading extras', err);
-            }
-        };
         loadExtras();
         fetchData();
     }, []);
+
+    const refreshServices = async () => {
+        await loadExtras();
+    };
 
     const {
         searchTerm, setSearchTerm,
@@ -197,6 +202,7 @@ const Students = () => {
                     allStudents={students}
                     user={user}
                     userServices={userServices}
+                    refreshServices={refreshServices}
                 />
             </div>
         </Layout>

@@ -219,7 +219,7 @@ const Hero = () => {
         }}
       />
 
-      <div className="container relative z-10 flex flex-col items-center text-center">
+      <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 relative z-10 flex flex-col items-center text-center">
 
         {/* Badge */}
         <motion.div

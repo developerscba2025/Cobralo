@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, X } from 'lucide-react';
+import Portal from './Portal';
 
 interface ConfirmModalProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface ConfirmModalProps {
     onConfirm: () => void;
     onCancel: () => void;
     variant?: 'danger' | 'warning' | 'info';
+    isLoading?: boolean;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -21,7 +23,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     cancelText = 'Cancelar',
     onConfirm,
     onCancel,
-    variant = 'danger'
+    variant = 'danger',
+    isLoading = false
 }) => {
     const variantStyles = {
         danger: {
@@ -41,15 +44,16 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     const styles = variantStyles[variant];
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-                    onClick={onCancel}
-                >
+        <Portal>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[2000] p-4 backdrop-blur-sm"
+                        onClick={onCancel}
+                    >
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -87,9 +91,15 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                                 </button>
                                 <button
                                     onClick={onConfirm}
-                                    className={`flex-1 py-4 px-6 rounded-2xl font-bold text-white ${styles.button} transition`}
+                                    disabled={isLoading}
+                                    className={`flex-1 py-4 px-6 rounded-2xl font-bold text-white ${styles.button} transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                                 >
-                                    {confirmText}
+                                    {isLoading ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>Borrando...</span>
+                                        </>
+                                    ) : confirmText}
                                 </button>
                             </div>
                         </div>
@@ -97,6 +107,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 </motion.div>
             )}
         </AnimatePresence>
+        </Portal>
     );
 };
 

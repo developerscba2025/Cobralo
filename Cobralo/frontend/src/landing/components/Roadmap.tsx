@@ -156,7 +156,7 @@ const Roadmap = () => {
       <div className="absolute top-1/3 right-0 translate-x-1/3 w-[500px] h-[500px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.06) 0%, transparent 70%)' }} />
 
-      <div className="container relative z-10">
+      <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] mb-5 border"

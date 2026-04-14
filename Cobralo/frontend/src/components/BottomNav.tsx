@@ -22,7 +22,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ pendingCount }) => {
         { path: '/app/students', icon: Users2, label: 'Alumnos' },
         { path: '/app/payments', icon: Banknote, label: 'Cobros' },
         { path: '/app/calendar', icon: Calendar, label: 'Calendario' },
-        { path: '/app/classes', icon: LibraryBig, label: 'Clases' },
+        { path: '/app/classes', icon: LibraryBig, label: 'Grupos' },
         { path: '/app/settings', icon: Settings, label: 'Ajustes' },
     ];
 
