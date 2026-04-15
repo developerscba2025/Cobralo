@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Instagram, Youtube } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 
 interface FooterProps {

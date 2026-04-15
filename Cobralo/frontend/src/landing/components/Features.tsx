@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
-import { Clock, MessageSquare, Smartphone, Users, Zap, BarChart3, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { Clock, MessageSquare, Users, Zap, BarChart3, CheckCircle2, ArrowRight } from 'lucide-react';
 
 const MAIN_FEATURES = [
   {
@@ -54,35 +55,18 @@ const MAIN_FEATURES = [
   },
   {
     icon: Clock,
-    label: 'FUTURO',
+    label: 'PRO',
     title: 'Clases Grupales Pro',
-    description: 'Subimos de nivel la gestión de grupos. Control de cupos dinámicos, listas de espera y inscripciones automáticas desde tu perfil público.',
+    description: 'Subimos de nivel la gestión de grupos. Control de cupos dinámicos, listas de espera e inscripciones automáticas desde tu perfil público.',
     bullets: ['Control de cupos limitado', 'Listas de espera automáticas', 'Inscripción vía landing page'],
     image: '/assets/calendar_mockup.png', 
     accentColor: '#4ade80',
-    isFuture: true,
+    isFuture: false, // Ahora es una realidad
   },
 ];
 
 
 
-const SECONDARY_FEATURES = [
-  {
-    icon: Clock,
-    title: 'Chau planillas',
-    description: 'Asistencia individual y grupal con un clic. Descuento automático de créditos por clase.',
-  },
-  {
-    icon: Smartphone,
-    title: 'Mobile Premium',
-    description: 'Gestión diseñada para usar en movimiento con gestos nativos y accesos rápidos.',
-  },
-  {
-    icon: Users,
-    title: 'Perfiles Premium',
-    description: 'Personalizá tu marca con fotos, bios y links directos a tus redes sociales.',
-  },
-];
 
 const Features = () => (
   <section id="funciones" className="section-padding relative overflow-hidden" style={{ background: '#0E1113' }}>
@@ -127,95 +111,137 @@ const Features = () => (
           transition={{ delay: 0.2 }}
           className="text-lg font-medium opacity-60 max-w-xl mx-auto" style={{ color: '#a1a1aa' }}
         >
-          Diseñamos Cobralo para que sea el asistente que siempre quisiste tener: invisible, eficiente y profesional.
         </motion.p>
       </div>
 
       {/* ── Main Feature Grid (Bento Style) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-16 md:mb-32">
         {MAIN_FEATURES.map((f, i) => (
-          <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] as any }}
-              className="flex flex-col p-8 rounded-[32px] border transition-all duration-500 relative overflow-hidden group"
-              style={{ 
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', 
-                  borderColor: 'rgba(255,255,255,0.08)' 
-              }}
-          >
-              {/* Hover Glow */}
-              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              
-              {/* Header */}
-              <div className="flex items-start justify-between mb-8 relative z-10">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110"
-                       style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                     <f.icon size={26} className="text-primary" />
-                  </div>
-                  
-                  {(f.label === 'PRO' || f.isFuture) && (
-                      <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border ${
-                          f.isFuture ? 'bg-zinc-800/80 text-zinc-400 border-zinc-700' : 'bg-primary/10 text-primary border-primary/20'
-                      }`}>
-                          {f.isFuture ? 'PRÓXIMAMENTE' : 'PRO'}
-                      </span>
-                  )}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 relative z-10">
-                  <h3 className="text-2xl font-bold tracking-tight mb-4 text-zinc-100 group-hover:text-primary transition-colors duration-300">
-                      {f.title}
-                  </h3>
-                  <p className="text-zinc-400 leading-relaxed mb-8">
-                      {f.description}
-                  </p>
-
-                  <div className="space-y-3 mb-8">
-                      {f.bullets.map((bullet, j) => (
-                          <div key={j} className="flex items-start gap-3">
-                              <CheckCircle2 size={18} className="text-primary shrink-0 mt-0.5" />
-                              <span className="text-sm font-semibold text-zinc-300 leading-snug">{bullet}</span>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-
-              {/* Action */}
-              <div className="mt-auto pt-6 border-t border-white/10 relative z-10">
-                  <button className="flex items-center gap-2 text-zinc-400 group-hover:text-primary font-black uppercase text-[11px] tracking-widest transition-colors duration-300">
-                      Saber más <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-              </div>
-          </motion.div>
+          <FeatureCardItem key={i} f={f} i={i} />
         ))}
       </div>
-
-      {/* ── Secondary Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 border-t border-white/5">
-        {SECONDARY_FEATURES.map((f, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1, duration: 0.6 }}
-            className="p-8 rounded-[32px] border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.04] transition-all hover:border-white/[0.08]"
-          >
-            <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center mb-6">
-              <f.icon size={18} className="text-zinc-400" />
-            </div>
-            <h4 className="text-lg font-bold mb-3 text-zinc-100">{f.title}</h4>
-            <p className="text-sm leading-relaxed text-zinc-500 font-medium">{f.description}</p>
-          </motion.div>
-        ))}
-      </div>
-
     </div>
   </section>
 );
+
+const FeatureCardItem = ({ f, i }: { f: any; i: number }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 20, stiffness: 300 };
+  const springX = useSpring(mouseX, springConfig);
+  const springY = useSpring(mouseY, springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    mouseX.set(e.clientX - rect.left);
+    mouseY.set(e.clientY - rect.top);
+  };
+
+  return (
+    <motion.div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] as any }}
+        className="flex flex-col p-8 rounded-[32px] border transition-all duration-500 relative overflow-hidden group"
+        style={{ 
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', 
+            borderColor: isHovered ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.08)',
+            transform: isHovered ? 'translateY(-4px)' : 'none'
+        }}
+    >
+        {/* Animated Gradient Border Beam */}
+        {isHovered && (
+             <motion.div 
+                className="absolute inset-0 opacity-100 transition-opacity duration-1000"
+                style={{
+                    background: `radial-gradient(600px circle at ${springX}px ${springY}px, rgba(34,197,94,0.15), transparent 40%)`
+                }}
+             />
+        )}
+
+        {/* Dynamic Glow Effect following cursor */}
+        <motion.div
+            className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{
+                background: `radial-gradient(circle at ${springX}px ${springY}px, rgba(34,197,94,0.08) 0%, transparent 70%)`
+            }}
+        />
+        
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8 relative z-10">
+            <motion.div 
+                animate={isHovered ? { scale: 1.1, rotate: 5 } : { scale: 1, rotate: 0 }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center border transition-colors duration-500"
+                style={{ 
+                    background: isHovered ? 'rgba(34,197,94,0.15)' : 'rgba(34,197,94,0.08)', 
+                    borderColor: isHovered ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.2)' 
+                }}>
+               <f.icon size={26} className={isHovered ? "text-primary-light" : "text-primary"} />
+            </motion.div>
+            
+            {(f.label === 'PRO' || f.isFuture) && (
+                <motion.span 
+                    animate={f.isFuture ? { scale: [1, 1.05, 1] } : {}}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm ${
+                        f.isFuture ? 'bg-zinc-800/80 text-zinc-400 border-zinc-700' : 'bg-primary/20 text-primary-light border-primary/30'
+                    }`}
+                >
+                    {f.isFuture ? 'PRÓXIMAMENTE' : 'DISPONIBLE'}
+                </motion.span>
+            )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 relative z-10">
+            <h3 className="text-2xl font-bold tracking-tight mb-4 text-zinc-100 group-hover:text-primary-light transition-colors duration-300">
+                {f.title}
+            </h3>
+            <p className="text-zinc-400 leading-relaxed mb-8 font-medium">
+                {f.description}
+            </p>
+
+            <div className="space-y-4 mb-8">
+                {f.bullets.map((bullet: string, j: number) => (
+                    <motion.div 
+                        key={j} 
+                        initial={false}
+                        animate={isHovered ? { x: 4 } : { x: 0 }}
+                        transition={{ delay: j * 0.05 }}
+                        className="flex items-start gap-3"
+                    >
+                        <div className="mt-1">
+                            <CheckCircle2 size={16} className="text-primary-light" />
+                        </div>
+                        <span className="text-sm font-semibold text-zinc-300 leading-snug">{bullet}</span>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+
+        {/* Action */}
+        <div className="mt-auto pt-6 border-t border-white/10 relative z-10">
+            <button className="flex items-center gap-2 text-zinc-400 group-hover:text-primary-light font-black uppercase text-[11px] tracking-widest transition-all duration-300">
+                Saber más 
+                <motion.div
+                    animate={isHovered ? { x: 5 } : { x: 0 }}
+                >
+                    <ArrowRight size={14} />
+                </motion.div>
+            </button>
+        </div>
+    </motion.div>
+  );
+};
 
 export default Features;

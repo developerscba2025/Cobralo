@@ -91,20 +91,7 @@ app.get('/api/debug/copy-assets', (req, res) => {
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-
-    // Handle multiple origins in one string (common with some proxies)
-    const origins = origin.split(',').map(o => o.trim());
-    
-    const isAllowed = origins.some(o => 
-      allowedOrigins.includes(o) || 
-      !!o.match(/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)(:\d+)?$/)
-    );
-
-    if (isAllowed) {
+    if (!origin || allowedOrigins.includes(origin) || !!origin.match(/^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+)(:\d+)?$/)) {
       callback(null, true);
     } else {
       console.error(`Blocked by CORS: origin='${origin}', allowedOrigins=[${allowedOrigins.join(', ')}]`);
