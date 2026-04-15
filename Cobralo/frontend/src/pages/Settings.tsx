@@ -96,7 +96,7 @@ const Settings = () => {
         { id: 'ayuda', label: 'Ayuda', icon: HelpCircle, tabs: [
             { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos de uso' }
         ]},
-        ...(user.email === 'developerscba2025@gmail.com' ? [{
+        ...(user.isAdmin ? [{
             id: 'admin', label: 'Admin', icon: Zap, tabs: [
                 { id: 'admin_panel', label: 'Super Admin', icon: Zap, description: 'Modo Dios (Solo vos)' }
             ]

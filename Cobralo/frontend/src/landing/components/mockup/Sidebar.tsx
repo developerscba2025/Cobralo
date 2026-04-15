@@ -23,11 +23,11 @@ const SIDEBAR_ITEMS = [
 ];
 
 const MiniSidebar = ({ active, onTabChange, plan = 'PRO' }: SidebarProps) => (
-  <div className="w-[240px] flex-shrink-0 hidden md:flex flex-col p-6 border-r relative z-10"
+  <div className="w-[220px] lg:w-[240px] flex-shrink-0 hidden md:flex flex-col p-4 border-r relative z-10"
     style={{ background: '#090B0D', borderColor: 'rgba(255,255,255,0.03)' }}>
     
     {/* Logo Area */}
-    <div className="flex items-center justify-between mb-8 px-2">
+    <div className="flex items-center justify-between mb-5 px-2">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl flex items-center justify-center font-black italic text-[12px] shadow-lg shadow-green-500/20"
           style={{ background: '#22c55e', color: '#090B0D' }}>C</div>
@@ -42,7 +42,7 @@ const MiniSidebar = ({ active, onTabChange, plan = 'PRO' }: SidebarProps) => (
     </div>
 
     {/* Search Box */}
-    <div className="px-2 mb-8">
+    <div className="px-2 mb-5">
        <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-700" size={14} />
           <input 
@@ -58,20 +58,20 @@ const MiniSidebar = ({ active, onTabChange, plan = 'PRO' }: SidebarProps) => (
       {SIDEBAR_ITEMS.map((item) => (
         <div key={item.id}
           onClick={() => onTabChange(item.id)}
-          className={`flex items-center gap-4 px-5 py-4 rounded-[20px] text-[11px] font-black uppercase tracking-widest transition-all relative overflow-hidden group cursor-pointer ${
+          className={`flex items-center gap-3 px-4 py-2.5 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all relative overflow-hidden group cursor-pointer ${
             item.id === active ? 'bg-[#22c55e] text-black shadow-lg shadow-green-500/10' : 'text-zinc-600 hover:text-zinc-300'
           }`}
         >
-          <item.icon size={18} className={item.id === active ? 'text-black' : 'group-hover:text-zinc-300'} />
+          <item.icon size={16} className={item.id === active ? 'text-black' : 'group-hover:text-zinc-300'} />
           {item.label}
         </div>
       ))}
     </nav>
     
-    <div className="mt-auto pt-8 space-y-6">
+    <div className="mt-auto pt-4 space-y-4">
        {/* Support Box */}
-       <div className="px-2">
-          <div className="p-5 rounded-[24px] bg-green-500/5 border border-green-500/10 space-y-4">
+       <div className="px-1">
+          <div className="p-4 rounded-[20px] bg-green-500/5 border border-green-500/10 space-y-3">
              <div>
                 <p className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em] mb-1">SOPORTE COBRALO</p>
                 <p className="text-[9px] font-medium text-zinc-500 leading-relaxed">
@@ -86,20 +86,20 @@ const MiniSidebar = ({ active, onTabChange, plan = 'PRO' }: SidebarProps) => (
 
        {/* User Info */}
        <div className="px-2 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-2xl bg-[#0E1113] border border-white/5 flex items-center justify-center text-[12px] font-black text-green-500">U</div>
+          <div className="flex items-center gap-3 min-w-0">
+             <div className="w-8 h-8 rounded-xl bg-[#0E1113] border border-white/5 flex items-center justify-center text-[10px] font-black text-green-500 shrink-0">U</div>
              <div className="min-w-0">
-                <p className="text-[11px] font-black text-white truncate uppercase tracking-tighter">{plan === 'PRO' ? 'USUARIO PRO' : 'USUARIO BÁSICO'}</p>
-                <p className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">{plan === 'PRO' ? '+ PRO' : '+ FREE'}</p>
+                <p className="text-[10px] font-black text-white truncate uppercase tracking-tighter">{plan === 'PRO' ? 'USUARIO PRO' : 'USUARIO BÁSICO'}</p>
+                <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest">{plan === 'PRO' ? '+ PRO' : '+ FREE'}</p>
              </div>
           </div>
-          <LogOut size={18} className="text-zinc-800 hover:text-red-500 cursor-pointer transition-colors" />
+          <LogOut size={16} className="text-zinc-800 hover:text-red-500 cursor-pointer transition-colors shrink-0" />
        </div>
 
-       <div className="px-2 flex items-center justify-between border-t border-white/5 pt-4 pb-2">
-          <Sun size={18} className="text-zinc-800 hover:text-zinc-300 cursor-pointer" />
-          <div className="flex items-center gap-2 text-zinc-800 text-[9px] font-black uppercase tracking-widest hover:text-green-500 cursor-pointer transition-colors group">
-             ENLACE PÚBLICO <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+       <div className="px-2 flex items-center justify-between border-t border-white/5 pt-3 pb-2">
+          <Sun size={16} className="text-zinc-800 hover:text-zinc-300 cursor-pointer" />
+          <div className="flex items-center gap-2 text-zinc-800 text-[8px] font-black uppercase tracking-widest hover:text-green-500 cursor-pointer transition-colors group">
+             ENLACE PÚBLICO <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
        </div>
     </div>

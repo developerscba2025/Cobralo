@@ -21,6 +21,7 @@ interface User {
     calendarToken?: string;
     ratingToken?: string;
     ratingTokenExpires?: string | null;
+    isAdmin?: boolean;
     paymentAccounts?: {
         id: number;
         name: string;

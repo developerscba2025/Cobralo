@@ -1,11 +1,11 @@
 import { CheckCheck, MessageCircle, LibraryBig, Plus, Search, ChevronRight, MoreHorizontal } from 'lucide-react';
 
 const STUDENTS = [
-  { n: 'Lucía Fernández', p: '54117822941', s: 'Matemática CBC', t: ['LUN 14:00', 'MIE 14:00'], c: '$15.000', ok: true, init: 'L' },
-  { n: 'Tomás Quiroga', p: '54116523091', s: 'Inglés para Adultos', t: ['MAR 18:00'], c: '$12.000', ok: false, init: 'T' },
-  { n: 'Valentina Ríos', p: '54113309228', s: 'Piano Individual', t: ['VIE 15:30'], c: '$8.500', ok: true, init: 'V' },
-  { n: 'Juan Pérez', p: '54115240638', s: 'Matemática Primaria', t: ['LUN 16:00', 'MIE 14:00', 'VIE 16:00'], c: '$24.000', ok: true, init: 'J' },
-  { n: 'Mateo López', p: '54119920112', s: 'Guitarra Eléctrica', t: ['JUE 11:00'], c: '$10.000', ok: false, init: 'M' },
+  { n: 'Milagros López', p: '54117822941', s: 'Clase Individual', t: ['LUN 14:00', 'MIE 14:00'], c: '$15.000', ok: true, init: 'M' },
+  { n: 'Facundo García', p: '54116523091', s: 'Grupo Avanzado', t: ['MAR 18:00'], c: '$12.000', ok: false, init: 'F' },
+  { n: 'Valentina Ríos', p: '54113309228', s: 'Nivel Inicial', t: ['VIE 15:30'], c: '$8.500', ok: true, init: 'V' },
+  { n: 'Santiago Rocha', p: '54115240638', s: 'Turno Mañana', t: ['LUN 16:00', 'MIE 14:00', 'VIE 16:00'], c: '$24.000', ok: true, init: 'S' },
+  { n: 'Mateo López', p: '54119920112', s: 'Membresía PRO', t: ['JUE 11:00'], c: '$10.000', ok: false, init: 'M' },
 ];
 
 const StudentsView = () => (

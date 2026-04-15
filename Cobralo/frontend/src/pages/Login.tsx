@@ -368,7 +368,7 @@ const Login = () => {
                                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Tu Nombre</label>
                                                 <div className="relative">
                                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
-                                                    <input type="text" placeholder="Ej: Juan Pérez" required value={formData.name}
+                                                    <input type="text" placeholder="Ej: Tu Nombre Completo" required value={formData.name}
                                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
                                                         className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
                                                 </div>
@@ -377,7 +377,7 @@ const Login = () => {
                                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">Nombre de tu Academia</label>
                                                 <div className="relative">
                                                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
-                                                    <input type="text" placeholder="Ej: English Studio" required value={formData.bizName}
+                                                    <input type="text" placeholder="Ej: Mi Academia, Mi Negocio..." required value={formData.bizName}
                                                         onChange={e => setFormData({ ...formData, bizName: e.target.value })}
                                                         className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
                                                 </div>
@@ -408,7 +408,7 @@ const Login = () => {
                                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest pl-1">¿A qué te dedicás?</label>
                                                 <div className="relative">
                                                     <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={15} />
-                                                    <input type="text" placeholder="Ej: Profesor de Matemáticas" value={formData.businessCategory}
+                                                    <input type="text" placeholder="Ej: Profesor, Instructor, Coach..." value={formData.businessCategory}
                                                         onChange={e => setFormData({ ...formData, businessCategory: e.target.value })}
                                                         className="w-full pl-10 pr-4 py-3.5 bg-white/[0.03] border border-white/[0.08] rounded-2xl text-white placeholder:text-zinc-600 focus:ring-1 focus:ring-primary-main/50 focus:border-primary-main/50 outline-none transition text-sm font-medium" />
                                                 </div>

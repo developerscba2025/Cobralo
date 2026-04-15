@@ -110,6 +110,8 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         // Generate token
         const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
+        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'developerscba2025@gmail.com';
+
         res.json({
             message: 'Login exitoso',
             token,
@@ -118,7 +120,8 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
                 email: user.email,
                 name: user.name,
                 isPro: user.isPro,
-                plan: user.plan
+                plan: user.plan,
+                isAdmin: user.email === ADMIN_EMAIL
             }
         });
     } catch (error) {
@@ -264,6 +267,8 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
             return;
         }
 
+        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'developerscba2025@gmail.com';
+
         // Generate calendarToken if it doesn't exist
         if (!user.calendarToken) {
             const randomToken = require('crypto').randomBytes(20).toString('hex');
@@ -278,11 +283,11 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                     ratingToken: true, ratingTokenExpires: true
                 }
             });
-            res.json(userWithToken);
+            res.json({ ...userWithToken, isAdmin: userWithToken.email === ADMIN_EMAIL });
             return;
         }
 
-        res.json(user);
+        res.json({ ...user, isAdmin: user.email === ADMIN_EMAIL });
     } catch (error) {
         res.status(401).json({ error: 'Token inválido' });
     }

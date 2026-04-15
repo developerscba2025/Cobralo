@@ -153,7 +153,7 @@ const RateTeacher = () => {
                             <input
                                 type="text"
                                 className="w-full bg-slate-50 dark:bg-slate-800 dark:text-white border-none focus:ring-2 focus:ring-green-600 rounded-2xl p-4 font-bold text-slate-700 outline-none placeholder-slate-300"
-                                placeholder="Ej: Juan Pérez"
+                                placeholder="Ej: Tu nombre"
                                 value={studentName}
                                 onChange={(e) => setStudentName(e.target.value)}
                             />

@@ -34,14 +34,14 @@ const CalendarView = () => (
                        <div key={d} className={`h-[80px] md:h-[100px] border-b border-l border-white/5 relative bg-white/[0.005] ${d===3 ? 'bg-zinc-800/10' : ''}`}>
                           {d === 0 && h === 14 && (
                              <div className="absolute inset-x-1 top-0 bottom-0 bg-green-500/20 border-l-2 md:border-l-4 border-green-500 rounded-lg md:rounded-xl p-2 md:p-3 shadow-xl backdrop-blur-sm cursor-pointer hover:bg-green-500/30 transition-all z-10">
-                                <p className="text-[10px] md:text-[12px] font-black text-white truncate">Juan Pérez</p>
-                                <p className="text-[8px] md:text-[9px] font-bold text-green-400 uppercase tracking-tighter mt-0.5">Matemática</p>
+                                <p className="text-[10px] md:text-[12px] font-black text-white truncate">Santiago G.</p>
+                                <p className="text-[8px] md:text-[9px] font-bold text-green-400 uppercase tracking-tighter mt-0.5">Clase</p>
                              </div>
                           )}
                           {d === 2 && h === 14 && (
                              <div className="absolute inset-x-1 top-0 bottom-0 bg-blue-500/20 border-l-2 md:border-l-4 border-blue-500 rounded-lg md:rounded-xl p-2 md:p-3 shadow-xl backdrop-blur-sm cursor-pointer hover:bg-blue-500/30 transition-all z-10">
-                                <p className="text-[10px] md:text-[12px] font-black text-white truncate">Lucía F.</p>
-                                <p className="text-[8px] md:text-[9px] font-bold text-blue-400 uppercase tracking-tighter mt-0.5">Inglés</p>
+                                <p className="text-[10px] md:text-[12px] font-black text-white truncate">Valentina R.</p>
+                                <p className="text-[8px] md:text-[9px] font-bold text-blue-400 uppercase tracking-tighter mt-0.5">Sesión</p>
                              </div>
                           )}
                        </div>

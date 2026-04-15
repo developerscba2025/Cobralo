@@ -106,7 +106,7 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                         initial={{ opacity: 0, scale: 0.95, y: 30 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 30 }}
-                        className="relative bg-surface/90 dark:bg-bg-soft/90 backdrop-blur-md w-full max-w-2xl rounded-[40px] p-6 sm:p-10 shadow-[0_32px_80px_rgba(0,0,0,0.4)] border border-white/10 overflow-hidden"
+                        className="relative bg-surface/90 dark:bg-bg-soft/90 backdrop-blur-md w-full max-w-xl rounded-[40px] p-6 sm:p-8 shadow-[0_32px_80px_rgba(0,0,0,0.4)] border border-white/10 overflow-hidden"
                     >
                         {/* Decorative background elements */}
                         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-main/10 blur-[120px] -z-10 group-hover:bg-primary-main/20 transition-colors" />
@@ -119,12 +119,12 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                             <X size={20} />
                         </button>
 
-                        <div className="mb-10 sm:mb-12">
+                        <div className="mb-8 sm:mb-10">
                             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary-main/10 border border-primary-main/20 rounded-full mb-4">
                                 <Zap className="text-primary-main" size={14} fill="currentColor" />
                                 <span className="text-[10px] font-black text-primary-main uppercase tracking-[0.2em]">Registro Rápido</span>
                             </div>
-                            <h2 className="text-3xl sm:text-5xl font-black text-text-main tracking-tighter uppercase italic leading-none block">
+                            <h2 className="text-3xl sm:text-4xl font-black text-text-main tracking-tighter uppercase italic leading-none block">
                                 Control de <span className="text-primary-main">Asistencia</span>
                             </h2>
                             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -169,12 +169,7 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                                     const currentStatus = attRecords[student.id] || 'PRESENT';
                                     
                                     return (
-                                        <motion.div 
-                                            key={student.id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            className="relative group p-4 sm:p-5 rounded-[32px] bg-bg-app/30 dark:bg-black/20 border border-border-main/50 hover:border-primary-main/30 transition-all flex flex-col sm:row items-center gap-4 hover:shadow-lg hover:shadow-primary-main/5"
+                                            className="relative group p-3 sm:p-4 rounded-[28px] bg-bg-app/30 dark:bg-black/20 border border-border-main/50 hover:border-primary-main/30 transition-all flex items-center gap-4 hover:shadow-lg hover:shadow-primary-main/5"
                                         >
                                             <div className="flex-1 min-w-0 pr-2 w-full sm:w-auto">
                                                 <div className="flex items-center gap-3 mb-1 justify-center sm:justify-start">
@@ -233,13 +228,13 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                         {/* Footer Section with Legend & Action */}
                         <div className="mt-8 sm:mt-10 space-y-6">
                             {/* Legend / Info Section */}
-                            <div className="p-6 sm:p-8 bg-black/5 dark:bg-white/5 rounded-[32px] border border-border-main/50 space-y-6">
+                            <div className="p-5 sm:p-6 bg-black/5 dark:bg-white/5 rounded-[32px] border border-border-main/50 space-y-4">
                                 <div className="flex items-center gap-3">
                                     <AlertCircle size={18} className="text-primary-main" />
                                     <span className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Guía de Referencia</span>
                                 </div>
                                 
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <div className="space-y-1.5 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
                                         <p className="text-[11px] font-black text-emerald-500 uppercase tracking-tight">P — Presente</p>
                                         <p className="text-[9px] font-bold text-text-muted leading-relaxed opacity-80 uppercase tracking-tighter">Asistió a clase. Descuenta 1 crédito.</p>

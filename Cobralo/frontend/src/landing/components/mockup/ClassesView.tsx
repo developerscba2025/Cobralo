@@ -27,7 +27,7 @@ const ClassesView = () => (
                                 <Clock size={14} className="text-green-500" />
                                 <span className="text-lg font-black text-white tabular-nums tracking-tighter">14:00 - 14:45</span>
                              </div>
-                             <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Matemática Primaria</p>
+                             <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Clase Individual</p>
                           </div>
                        </div>
                        <div className="grid grid-cols-2 gap-3 mt-8">

@@ -68,7 +68,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
                                     </label>
                                     <input 
                                         type="text" 
-                                        placeholder="Ej: Clases de Inglés" 
+                                        placeholder="Ej: Clase Individual, Grupo, Turno Mañana..." 
                                         className="w-full h-16 bg-bg-app px-6 rounded-2xl text-sm font-bold border border-border-main/50 focus:border-primary-main/50 focus:ring-4 focus:ring-primary-main/5 transition-all outline-none text-text-main" 
                                         value={newService.name} 
                                         onChange={e => setNewService({ ...newService, name: e.target.value })} 
