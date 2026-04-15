@@ -7,7 +7,6 @@ import ServicesTab from './ServicesTab';
 import AutomationTab from './AutomationTab';
 import RatingsTab from './RatingsTab';
 import SubscriptionTab from './SubscriptionTab';
-import SupportTab from './SupportTab';
 import LegalTab from './LegalTab';
 import PaymentAccountsTab from './PaymentAccountsTab';
 import AdminPanelTab from './AdminPanelTab';
@@ -143,8 +142,6 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     subscriptionStatus={props.subscriptionStatus}
                 />
             );
-        case 'support':
-            return <SupportTab />;
         case 'legal':
             return <LegalTab />;
         case 'admin_panel':

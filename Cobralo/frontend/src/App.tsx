@@ -31,6 +31,7 @@ const DirectoryPage = lazy(() => import('./landing/DirectoryPage'));
 const NotificationsPage = lazy(() => import('./pages/Notifications'));
 const AttendanceConfirmPage = lazy(() => import('./pages/AttendanceConfirmPage'));
 const StudentPaymentSuccess = lazy(() => import('./pages/StudentPaymentSuccess'));
+const Support = lazy(() => import('./pages/Support'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -127,6 +128,11 @@ function App() {
                   <Route path="subscription-callback" element={
                     <PrivateRoute>
                       <SubscriptionCallback />
+                    </PrivateRoute>
+                  } />
+                  <Route path="support" element={
+                    <PrivateRoute>
+                      <Support />
                     </PrivateRoute>
                   } />
                   <Route path="*" element={<NotFound />} />

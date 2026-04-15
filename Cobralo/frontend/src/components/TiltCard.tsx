@@ -29,9 +29,8 @@ const TiltCard: React.FC<TiltCardProps> = ({ children, className = "", intensity
     const rotateX = useSpring(useTransform(y, [-100, 100], [intensity, -intensity]), springConfig);
     const rotateY = useSpring(useTransform(x, [-100, 100], [-intensity, intensity]), springConfig);
 
-    // Glow/Glint effect
-    const glintX = useSpring(useTransform(x, [-100, 100], ['0%', '100%']), springConfig);
-    const glintY = useSpring(useTransform(y, [-100, 100], ['0%', '100%']), springConfig);
+
+
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!containerRef.current || isMobile) return;
@@ -77,12 +76,13 @@ const TiltCard: React.FC<TiltCardProps> = ({ children, className = "", intensity
                 {!isMobile && (
                     <motion.div 
                         style={{
-                            left: glintX,
-                            top: glintY,
-                            background: 'radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, transparent 80%)',
-                            transform: 'translateZ(20px)',
+                            x: useTransform(x, [-100, 100], ['-50%', '50%']),
+                            y: useTransform(y, [-100, 100], ['-50%', '50%']),
+                            background: 'radial-gradient(circle at center, rgba(255,255,255,0.12) 0%, transparent 80%)',
+                            transformStyle: 'preserve-3d',
+                            translateZ: '20px',
                         }}
-                        className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
+                        className="absolute inset-[-50%] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl z-20"
                     />
                 )}
             </motion.div>

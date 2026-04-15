@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, CreditCard, Calendar, Check, Plus, Minus, ArrowRight, ArrowLeft, Target, Wallet, Clock, Sparkles, MessageCircle, Banknote } from 'lucide-react';
+import { X, User, CreditCard, Calendar, Check, Plus, Minus, ArrowRight, ArrowLeft, Target, Wallet, Clock, Sparkles, MessageCircle, Banknote, Lock, Unlock } from 'lucide-react';
 import { api, type Student, type UserService, type BusinessPaymentAccount } from '../../services/api';
 import { showToast } from '../Toast';
 
@@ -47,6 +47,9 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
     const [formSchedules, setFormSchedules] = useState<{ dayOfWeek: number; startTime: string; endTime: string }[]>([]);
     const [paymentAccounts, setPaymentAccounts] = useState<BusinessPaymentAccount[]>([]);
     const [showManualAlias, setShowManualAlias] = useState(false);
+    const [newDay, setNewDay] = useState(1);
+    const [newTime, setNewTime] = useState('18:00');
+    const [isSpecialPrice, setIsSpecialPrice] = useState(false);
 
     useEffect(() => {
         if (student) {
@@ -104,12 +107,20 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                     const def = accounts.find(a => a.isDefault);
                     if (def) setFormData(prev => ({ ...prev, billing_alias: def.alias }));
                 }
+
+                // Check for special price status
+                if (student) {
+                    const svc = userServices.find(s => s.name === student.service_name);
+                    if (svc && Number(svc.defaultPrice) > 0 && Number(student.price_per_hour) !== Number(svc.defaultPrice)) {
+                        setIsSpecialPrice(true);
+                    }
+                }
             } catch (err) {
                 console.error("Error fetching accounts:", err);
             }
         };
         fetchAccounts();
-    }, [student, user, isOpen]); // Removido userServices para evitar que el form se limpie al añadir una actividad
+    }, [student, user, isOpen, userServices.length]); // Removido userServices para evitar que el form se limpie al añadir una actividad
 
     const calculateAmount = () => {
         const pph = Number(formData.price_per_hour) || 0;
@@ -391,11 +402,51 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                                                     </div>
                                                 )}
 
-                                                <div>
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block opacity-60">Precio x Hora Base</label>
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center justify-between px-4">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-text-muted opacity-60">
+                                                            Precio {isSpecialPrice ? 'Especial' : 'por Hora'}
+                                                        </label>
+                                                        {Number(userServices.find(s => s.name === formData.service_name)?.defaultPrice) > 0 && (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[8px] font-bold text-text-muted uppercase tracking-tighter">Especial</span>
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const newSpecial = !isSpecialPrice;
+                                                                        setIsSpecialPrice(newSpecial);
+                                                                        if (!newSpecial) {
+                                                                            const svc = userServices.find(s => s.name === formData.service_name);
+                                                                            if (svc) setFormData(prev => ({ ...prev, price_per_hour: Number(svc.defaultPrice) }));
+                                                                        }
+                                                                    }}
+                                                                    className={`w-8 h-4 rounded-full relative transition-all ${isSpecialPrice ? 'bg-primary-main' : 'bg-zinc-200 dark:bg-white/10'}`}
+                                                                >
+                                                                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isSpecialPrice ? 'left-4.5' : 'left-0.5'}`} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <div className="relative group">
-                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted font-black group-focus-within:text-primary-main transition-colors text-lg">{user?.currency || '$'}</div>
-                                                        <input required type="number" className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all italic" placeholder="Importe total" value={formData.price_per_hour || ''} onChange={e => setFormData({ ...formData, price_per_hour: Number(e.target.value) })} />
+                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors">
+                                                            {isSpecialPrice ? <Unlock size={18} /> : <Lock size={18} />}
+                                                        </div>
+                                                        <input 
+                                                            required 
+                                                            type="number" 
+                                                            readOnly={Number(userServices.find(s => s.name === formData.service_name)?.defaultPrice) > 0 && !isSpecialPrice}
+                                                            className={`w-full pl-16 pr-20 py-4 rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all italic ${
+                                                                !isSpecialPrice && Number(userServices.find(s => s.name === formData.service_name)?.defaultPrice) > 0 
+                                                                ? 'bg-zinc-100/50 dark:bg-bg-dark/50 text-text-muted/50 cursor-not-allowed' 
+                                                                : 'bg-zinc-50 dark:bg-bg-dark dark:text-white'
+                                                            }`} 
+                                                            placeholder="Precio" 
+                                                            value={formData.price_per_hour || ''} 
+                                                            onChange={e => setFormData({ ...formData, price_per_hour: Number(e.target.value) })} 
+                                                        />
+                                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-text-muted font-black text-sm italic opacity-40">
+                                                            {user?.currency || '$'} / hora
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -559,107 +610,127 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                             {formStep === 3 && (
                                 <motion.div 
                                     key="step3"
-                                    initial={{ opacity: 0, x: 20 }} 
-                                    animate={{ opacity: 1, x: 0 }} 
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-10"
+                                    initial={{ opacity: 0, y: 20 }} 
+                                    animate={{ opacity: 1, y: 0 }} 
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="space-y-8"
                                 >
-                                    <div className="flex flex-col lg:flex-row gap-12">
-                                        <div className="flex-1 space-y-10">
-                                            <div onClick={() => {
+                                    {/* Flexible Schedule Toggle (Classic Style) */}
+                                    <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-bg-dark rounded-2xl border border-border-main">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-primary-main/10 flex items-center justify-center text-xl">🚀</div>
+                                            <div>
+                                                <p className="text-sm font-black text-text-main uppercase italic">Horario Flexible</p>
+                                                <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Sin días fijos</p>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
                                                 const newFlex = !formData.isFlexible;
                                                 setFormData(prev => ({ ...prev, isFlexible: newFlex }));
                                                 if (newFlex) setFormSchedules([]);
-                                            }} className={`group p-6 rounded-[2rem] border-2 transition-all cursor-pointer relative overflow-hidden ${
-                                                formData.isFlexible 
-                                                ? 'border-primary-main bg-primary-main/10' 
-                                                : 'border-zinc-100 dark:border-white/5 bg-zinc-50 dark:bg-bg-dark opacity-100'
-                                            }`}>
-                                                <div className="flex items-center gap-6">
-                                                    <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-3xl transition-all ${formData.isFlexible ? 'bg-primary-main text-white' : 'bg-zinc-200 dark:bg-white/5 text-text-muted'}`}>
-                                                        🚀
+                                            }}
+                                            className={`w-12 h-6 rounded-full relative transition-all ${formData.isFlexible ? 'bg-primary-main' : 'bg-zinc-200 dark:bg-white/10'}`}
+                                        >
+                                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.isFlexible ? 'left-7' : 'left-1'}`} />
+                                        </button>
+                                    </div>
+
+                                    {!formData.isFlexible && (
+                                        <div className="space-y-6 animate-in fade-in duration-500">
+                                            {/* Adder Concept */}
+                                            <div className="p-6 rounded-[2rem] bg-white dark:bg-bg-soft shadow-xl border border-border-main space-y-4">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-2 block opacity-60">
+                                                    Agregar Día y Horario
+                                                </label>
+                                                <div className="flex flex-col sm:flex-row items-end gap-4">
+                                                    <div className="flex-1 w-full">
+                                                        <label className="text-[9px] font-bold text-text-muted uppercase mb-1.5 block ml-1">Día</label>
+                                                        <select 
+                                                            value={newDay} 
+                                                            onChange={e => setNewDay(Number(e.target.value))}
+                                                            className="w-full p-3 rounded-xl border border-border-main bg-zinc-50 dark:bg-bg-dark text-sm font-bold text-text-main outline-none focus:border-primary-main transition-all"
+                                                        >
+                                                            <option value={1}>Lunes</option>
+                                                            <option value={2}>Martes</option>
+                                                            <option value={3}>Miércoles</option>
+                                                            <option value={4}>Jueves</option>
+                                                            <option value={5}>Viernes</option>
+                                                            <option value={6}>Sábado</option>
+                                                            <option value={0}>Domingo</option>
+                                                        </select>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-xl font-black text-text-main uppercase italic">Horario Flexible / Sin Día Fijo</p>
-                                                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">El alumno coordina sus turnos cada semana</p>
+                                                    <div className="flex-1 w-full">
+                                                        <label className="text-[9px] font-bold text-text-muted uppercase mb-1.5 block ml-1">Horario de Inicio</label>
+                                                        <div className="relative">
+                                                            <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-main/50" />
+                                                            <input 
+                                                                type="time" 
+                                                                value={newTime}
+                                                                onChange={e => setNewTime(e.target.value)}
+                                                                className="w-full p-3 pl-11 rounded-xl border border-border-main bg-zinc-50 dark:bg-bg-dark text-sm font-black text-primary-main outline-none focus:border-primary-main transition-all [color-scheme:dark]"
+                                                            />
+                                                        </div>
                                                     </div>
-                                                    <div className="ml-auto">
-                                                        <div className={`w-8 h-8 rounded-full border-4 transition-all ${formData.isFlexible ? 'bg-primary-main border-primary-main/20' : 'border-zinc-200 dark:border-white/10'}`} />
-                                                    </div>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFormSchedules(prev => [...prev, { dayOfWeek: newDay, startTime: newTime, endTime: '19:00' }]);
+                                                            showToast.success('Día agregado');
+                                                        }}
+                                                        className="h-[48px] px-6 bg-primary-main text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-primary-main/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                                    >
+                                                        <Plus size={18} /> AGREGAR
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            <AnimatePresence>
-                                                {!formData.isFlexible && (
-                                                    <motion.div 
-                                                        initial={{ opacity: 0, height: 0 }} 
-                                                        animate={{ opacity: 1, height: 'auto' }} 
-                                                        exit={{ opacity: 0, height: 0 }}
-                                                        className="space-y-6"
-                                                    >
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {formSchedules.map((schedule, i) => (
-                                                                <div key={i} className="flex flex-col gap-2 p-4 bg-zinc-50 dark:bg-bg-dark rounded-[1.5rem] border border-border-main scroll-mt-20">
-                                                                    <div className="flex items-center justify-between gap-4">
-                                                                        <select 
-                                                                            className="bg-transparent border-none text-xs font-black outline-none tracking-widest uppercase cursor-pointer italic"
-                                                                            value={schedule.dayOfWeek}
-                                                                            onChange={e => {
-                                                                                const newArr = [...formSchedules];
-                                                                                newArr[i].dayOfWeek = Number(e.target.value);
-                                                                                setFormSchedules(newArr);
-                                                                            }}
-                                                                        >
-                                                                            <option value={1}>Lunes</option>
-                                                                            <option value={2}>Martes</option>
-                                                                            <option value={3}>Miércoles</option>
-                                                                            <option value={4}>Jueves</option>
-                                                                            <option value={5}>Viernes</option>
-                                                                            <option value={6}>Sábado</option>
-                                                                            <option value={0}>Domingo</option>
-                                                                        </select>
-                                                                        <button onClick={() => setFormSchedules(prev => prev.filter((_, idx) => idx !== i))} className="p-1 hover:text-red-500 transition-colors"><X size={14} /></button>
+                                            {/* Summary List */}
+                                            {formSchedules.length > 0 && (
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-2 block opacity-60">
+                                                        Cronograma Seleccionado ({formSchedules.length})
+                                                    </label>
+                                                    <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                                                        {[...formSchedules].sort((a,b) => (a.dayOfWeek === 0 ? 7 : a.dayOfWeek) - (b.dayOfWeek === 0 ? 7 : b.dayOfWeek)).map((s, i) => {
+                                                            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                                                            return (
+                                                                <div key={i} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-bg-dark/50 rounded-2xl border border-border-main/50 group animate-in slide-in-from-left-2 duration-300">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-8 h-8 rounded-lg bg-primary-main/10 text-primary-main flex items-center justify-center font-black text-[10px]">
+                                                                            {dayNames[s.dayOfWeek].substring(0, 1)}
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-sm font-black text-text-main italic uppercase tracking-wider">{dayNames[s.dayOfWeek]}</p>
+                                                                            <p className="text-[10px] font-bold text-text-muted mt-0.5 uppercase tracking-tighter">Turno: {s.startTime} hs</p>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="relative group">
-                                                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-main opacity-50"><Clock size={14} /></div>
-                                                                        <input 
-                                                                            type="time" 
-                                                                            className="bg-zinc-100 dark:bg-black/20 pl-9 pr-4 py-2 rounded-xl border-none outline-none font-black text-primary-main italic w-full [color-scheme:dark] cursor-pointer"
-                                                                            value={schedule.startTime}
-                                                                            onChange={e => {
-                                                                                const newRef = [...formSchedules];
-                                                                                newRef[i].startTime = e.target.value;
-                                                                                setFormSchedules(newRef);
-                                                                            }}
-                                                                        />
-                                                                    </div>
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => setFormSchedules(prev => prev.filter(item => item !== s))}
+                                                                        className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                                                                    >
+                                                                        <X size={18} />
+                                                                    </button>
                                                                 </div>
-                                                            ))}
-                                                            
-                                                            <button 
-                                                                type="button" 
-                                                                onClick={() => setFormSchedules(prev => [...prev, { dayOfWeek: 1, startTime: '18:00', endTime: '19:00' }])}
-                                                                className="w-32 h-[92px] rounded-[1.5rem] border-2 border-dashed border-zinc-200 dark:border-white/5 flex flex-col items-center justify-center gap-1 text-text-muted hover:border-primary-main hover:text-primary-main hover:bg-primary-main/5 transition-all"
-                                                            >
-                                                                <Plus size={18} />
-                                                                <span className="text-[9px] font-black uppercase tracking-widest">Agregar</span>
-                                                            </button>
-                                                        </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
+                                    )}
 
-                                    {/* Action Step 3 (Final) */}
-                                    <div className="mt-10 flex items-center justify-between gap-4">
+                                    {/* Footer Actions */}
+                                    <div className="pt-6 border-t border-border-main flex items-center justify-between gap-4">
                                         <button type="button" onClick={() => setFormStep(2)} className="flex items-center gap-2 text-text-muted font-black uppercase tracking-widest text-[10px] hover:text-text-main transition-colors">
                                             <ArrowLeft size={16} /> Volver
                                         </button>
                                         <button 
                                             type="submit" 
                                             disabled={loading}
-                                            className="px-12 py-4 bg-primary-main text-white font-black uppercase tracking-[0.2em] text-xs rounded-[1.5rem] shadow-xl shadow-primary-main/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 italic"
+                                            className="px-12 py-4 bg-primary-main text-white font-black uppercase tracking-[0.2em] text-xs rounded-[2rem] shadow-xl shadow-primary-main/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 italic"
                                         >
                                             {loading ? 'Guardando...' : student ? 'Actualizar Alumno' : 'Finalizar Registro'}
                                             {!loading && (student ? <Check size={18} /> : <Sparkles size={18} />)}

@@ -94,7 +94,6 @@ const Settings = () => {
             { id: 'ratings', label: 'Testimonios', icon: MessageSquare, description: 'Reseñas de alumnos' }
         ]},
         { id: 'ayuda', label: 'Ayuda', icon: HelpCircle, tabs: [
-            { id: 'support', label: 'Soporte', icon: HelpCircle, description: 'Escribinos tu consulta' },
             { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos de uso' }
         ]},
         ...(user.email === 'ferrero1ferrero1@gmail.com' ? [{
@@ -278,16 +277,15 @@ const Settings = () => {
     );
 
     return (
-        <Layout>
+        <Layout fitted scrollable={false}>
             {/* ═══ UNIFIED CONTAINER ═══ */}
-            <div className="bg-surface rounded-[32px] min-h-[calc(100vh-200px)] lg:h-[calc(100vh-80px)] lg:min-h-0 overflow-hidden border border-border-main shadow-xl">
-                <div className="flex flex-col lg:flex-row h-full">
+            <div className="bg-surface lg:rounded-[32px] h-full overflow-hidden border-x border-b lg:border border-border-main shadow-xl flex flex-col lg:flex-row">
 
                     {/* ── SIDEBAR (Accordion Nav) ── */}
                     <div className={`shrink-0 transition-all duration-500 ease-in-out lg:h-full lg:overflow-y-auto hide-scrollbar border-b lg:border-b-0 lg:border-r border-border-main w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] ${
                         isNavOpen ? 'block' : 'hidden lg:block'
                     }`}>
-                        <div className="w-full p-4 md:p-6 lg:p-8 min-h-full">
+                        <div className="w-full h-full p-4 md:p-6 lg:p-8">
                             <SettingsNav
                                 categories={categories}
                                 activeTab={activeTab}
@@ -324,32 +322,41 @@ const Settings = () => {
 
                             <div className="hidden lg:block mb-6 h-6" />
 
-                            <SettingsContent
-                                activeTab={activeTab}
-                                user={user} setUser={setUser} handleSave={handleSave} saving={saving} tab={tab}
-                                passwordData={passwordData} setPasswordData={setPasswordData}
-                                handleChangePassword={handleChangePassword} changingPassword={changingPassword}
-                                showCurrentPassword={showCurrentPassword} setShowCurrentPassword={setShowCurrentPassword}
-                                showNewPassword={showNewPassword} setShowNewPassword={setShowNewPassword}
-                                showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword}
-                                userServices={userServices} newService={newService} setNewService={setNewService}
-                                handleAddService={handleAddService} handleDeleteService={handleDeleteService}
-                                isPro={isPro} pendingAdjustment={pendingAdjustment} setActiveTab={setActiveTab}
-                                studentCount={studentCount} scheduleCount={scheduleCount} hasRecentPayments={hasRecentPayments}
-                                subscriptionPlans={subscriptionPlans} priceLastUpdate={priceLastUpdate}
-                                loadingCheckout={loadingCheckout} handleUpgrade={handleUpgrade}
-                                handleCancelSubscription={handleCancelSubscription}
-                                cancelingSubscription={cancelingSubscription}
-                                subscriptionStatus={subscriptionStatus}
-                                ratings={ratings} ratingToken={ratingToken} ratingExpires={ratingExpires}
-                                handleGenerateLink={handleGenerateLink} handleToggleRatingVisibility={handleToggleRatingVisibility}
-                                handleUpdateService={handleUpdateService}
-                            />
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0, x: 10, filter: 'blur(10px)' }}
+                                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                                    exit={{ opacity: 0, x: -10, filter: 'blur(10px)' }}
+                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                >
+                                    <SettingsContent
+                                        activeTab={activeTab}
+                                        user={user} setUser={setUser} handleSave={handleSave} saving={saving} tab={tab}
+                                        passwordData={passwordData} setPasswordData={setPasswordData}
+                                        handleChangePassword={handleChangePassword} changingPassword={changingPassword}
+                                        showCurrentPassword={showCurrentPassword} setShowCurrentPassword={setShowCurrentPassword}
+                                        showNewPassword={showNewPassword} setShowNewPassword={setShowNewPassword}
+                                        showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword}
+                                        userServices={userServices} newService={newService} setNewService={setNewService}
+                                        handleAddService={handleAddService} handleDeleteService={handleDeleteService}
+                                        isPro={isPro} pendingAdjustment={pendingAdjustment} setActiveTab={setActiveTab}
+                                        studentCount={studentCount} scheduleCount={scheduleCount} hasRecentPayments={hasRecentPayments}
+                                        subscriptionPlans={subscriptionPlans} priceLastUpdate={priceLastUpdate}
+                                        loadingCheckout={loadingCheckout} handleUpgrade={handleUpgrade}
+                                        handleCancelSubscription={handleCancelSubscription}
+                                        cancelingSubscription={cancelingSubscription}
+                                        subscriptionStatus={subscriptionStatus}
+                                        ratings={ratings} ratingToken={ratingToken} ratingExpires={ratingExpires}
+                                        handleGenerateLink={handleGenerateLink} handleToggleRatingVisibility={handleToggleRatingVisibility}
+                                        handleUpdateService={handleUpdateService}
+                                    />
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
                     </div>
 
                 </div>
-            </div>
 
             {/* ── FLOATING SAVE BAR ── */}
             <AnimatePresence>

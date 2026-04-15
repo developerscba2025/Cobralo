@@ -32,7 +32,7 @@ router.get('/feed/:token', async (req: Request, res: Response) => {
             return;
         }
 
-        if (!user.isPro) {
+        if (!user.isPro && user.plan !== 'INITIAL') {
             res.status(403).send('Calendar sync is a PRO feature. Please upgrade your plan.');
             return;
         }

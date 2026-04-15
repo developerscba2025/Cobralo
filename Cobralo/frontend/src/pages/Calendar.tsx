@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import type { UnifiedSchedule, Student } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight, CheckCircle2, Edit2 } from 'lucide-react';
+import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight, CheckCircle2, Edit2, Search } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +22,10 @@ const Calendar = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [attendanceModal, setAttendanceModal] = useState<{ isOpen: boolean; schedule: (UnifiedSchedule & { date?: string }) | null }>({
+        isOpen: false,
+        schedule: null
+    });
+    const [actionModal, setActionModal] = useState<{ isOpen: boolean; schedule: (UnifiedSchedule & { date?: string }) | null }>({
         isOpen: false,
         schedule: null
     });
@@ -337,7 +341,7 @@ const Calendar = () => {
     };
 
     const handleSyncGoogle = () => {
-        if (user?.plan !== 'PRO') {
+        if (user?.plan === 'FREE') {
             showToast.error('Función exclusiva de Cobralo PRO');
             setSyncDropdown(false);
             return;
@@ -351,7 +355,7 @@ const Calendar = () => {
     };
 
     const handleSyncApple = () => {
-        if (user?.plan !== 'PRO') {
+        if (user?.plan === 'FREE') {
             showToast.error('Función exclusiva de Cobralo PRO');
             setSyncDropdown(false);
             return;
@@ -365,7 +369,7 @@ const Calendar = () => {
     };
 
     const handleExportICS = () => {
-        if (user?.plan !== 'PRO') {
+        if (user?.plan === 'FREE') {
             showToast.error('Función exclusiva de Cobralo PRO');
             return;
         }
@@ -418,7 +422,7 @@ const Calendar = () => {
 
     if (isLoading || !user) {
         return (
-            <Layout>
+            <Layout fitted>
                 <div className="flex items-center justify-center min-h-[400px]">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main"></div>
                 </div>
@@ -427,41 +431,45 @@ const Calendar = () => {
     }
 
     return (
-        <Layout>
-            <div className="flex flex-col gap-4">
-                <header className="flex-shrink-0 flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
-                    <div className="space-y-2">
-                        <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic">AGENDA SEMANAL</h1>
-                        <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">Gestioná tus horarios con precisión PRO</p>
+        <Layout fitted scrollable={false}>
+            <div className="flex flex-col h-full gap-2 2xl:gap-4 min-h-0">
+                <header className="flex-shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 2xl:mb-8">
+                    <div className="flex flex-col">
+                        <h1 className="text-xl md:text-2xl 2xl:text-4xl font-extrabold text-text-main tracking-tight uppercase leading-none flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-primary-main rounded-full" />
+                            AGENDA SEMANAL
+                        </h1>
+                        <p className="text-[9px] 2xl:text-xs font-bold text-text-muted uppercase tracking-[0.2em] opacity-40 mt-1 ml-3.5">Inteligencia y precisión en tus horarios</p>
                     </div>
                     
-                    <div className="flex flex-col sm:flex-row items-center bg-surface border border-border-main rounded-2xl p-1 shadow-sm gap-2">
+                    <div className="flex items-center bg-surface/50 backdrop-blur-sm border border-border-main rounded-2xl p-1 shadow-sm h-12">
                         <div className="flex items-center">
                             <button onClick={handlePrevWeek} className="p-2 hover:bg-bg-app rounded-xl transition text-text-main group">
-                                <ChevronLeft size={20} className="group-active:-translate-x-1 transition-transform" />
+                                <ChevronLeft size={18} className="group-active:-translate-x-1 transition-transform" />
                             </button>
-                            <div className="min-w-[140px] text-center px-2 flex flex-col justify-center">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-text-main">{weekLabel}</span>
+                            <div className="min-w-[150px] text-center px-1">
+                                <span className="text-[10px] 2xl:text-[11px] font-black uppercase tracking-widest text-text-main/80">{weekLabel}</span>
                             </div>
                             <button onClick={handleNextWeek} className="p-2 hover:bg-bg-app rounded-xl transition text-text-main group">
-                                <ChevronRight size={20} className="group-active:translate-x-1 transition-transform" />
+                                <ChevronRight size={18} className="group-active:translate-x-1 transition-transform" />
                             </button>
                         </div>
-                        <button onClick={handleToday} className="sm:ml-2 px-4 py-2 hover:bg-bg-app rounded-xl transition text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-primary-main">
+                        <div className="w-[1px] h-4 bg-border-main mx-1" />
+                        <button onClick={handleToday} className="px-4 py-2 hover:bg-bg-app rounded-xl transition text-[9px] font-black uppercase tracking-[0.2em] text-text-muted hover:text-primary-main">
                             Hoy
                         </button>
                     </div>
                     
-                    <div className="flex items-center gap-3">
-                        <button onClick={handleExportCSV} className="hidden md:flex items-center gap-2 px-6 py-3 bg-surface border border-border-main rounded-2xl font-black uppercase tracking-widest text-[10px] text-text-main hover:bg-bg-app transition-all shadow-sm">
-                            <Download size={18} className="text-primary-main" />
+                    <div className="flex items-center gap-2 h-12">
+                        <button onClick={handleExportCSV} className="hidden md:flex items-center gap-2 px-5 py-3 bg-surface/50 border border-border-main rounded-2xl font-black uppercase tracking-widest text-[9px] text-text-main/70 hover:text-text-main hover:bg-bg-app transition-all shadow-sm">
+                            <Download size={14} className="text-primary-main" />
                             Excel
                         </button>
                         <div className="relative hidden md:block" ref={syncDropdownRef}>
-                            <button onClick={handleExportICS} className={`flex items-center gap-2 px-6 py-3 bg-surface border border-border-main rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${user?.plan === 'PRO' ? 'text-text-main hover:bg-bg-app' : 'text-zinc-500'}`}>
-                                <CalendarIcon size={18} />
+                            <button onClick={handleExportICS} className={`flex items-center gap-2 px-5 py-3 bg-surface/50 border border-border-main rounded-2xl font-black uppercase tracking-widest text-[9px] transition-all ${user?.plan === 'FREE' ? 'text-zinc-500' : 'text-text-main/70 hover:text-text-main hover:bg-bg-app'}`}>
+                                <CalendarIcon size={14} />
                                 Sincronizar
-                                {user?.plan !== 'PRO' && <Lock size={14} className="text-primary-main ml-1" />}
+                                {user?.plan === 'FREE' && <Lock size={12} className="text-primary-main ml-1" />}
                             </button>
                             <AnimatePresence>
                                 {syncDropdown && (
@@ -481,54 +489,55 @@ const Calendar = () => {
                                 )}
                             </AnimatePresence>
                         </div>
-                        <button onClick={() => { setEditingId(null); setFormData(prev => ({ ...prev, studentIds: [] })); setIsModalOpen(true); }} className="hidden md:flex bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition-all items-center gap-2">
-                            <Plus size={20} />
+                        <button onClick={() => { setEditingId(null); setFormData(prev => ({ ...prev, studentIds: [] })); setIsModalOpen(true); }} className="hidden md:flex bg-primary-main hover:bg-emerald-500 text-white px-5 py-3 rounded-2xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-primary-glow transition-all items-center gap-2">
+                            <Plus size={16} />
                             Nueva Clase
                         </button>
                     </div>
                 </header>
 
                 {/* Desktop Grid */}
-                <div className="hidden md:flex bg-surface rounded-[30px] border border-border-main overflow-hidden shadow-2xl flex-1 flex-col relative w-full" style={{height: 'calc(100vh - 220px)'}}>
-                    <div className="overflow-auto flex-1 custom-scrollbar relative">
+                <div className="hidden md:flex flex-1 flex-col relative w-full min-h-0">
+                    <div className="overflow-auto custom-scrollbar flex-1 relative border border-border-main rounded-3xl bg-surface shadow-inner">
+                        {/* Current Time Indicator */}
+                        {showTimeLine && (
+                            <div className="absolute left-28 right-0 z-30 pointer-events-none flex items-center" style={{ top: `${timeLinePosition + 86}px` }}>
+                                <div className="w-2 h-2 rounded-full bg-primary-main shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+                                <div className="flex-1 h-[2px] bg-gradient-to-r from-primary-main to-transparent opacity-50" />
+                            </div>
+                        )}
                         <table className="w-full border-collapse table-fixed relative">
                             <thead className="sticky top-0 z-40 bg-surface/80 backdrop-blur-md">
                                 <tr className="border-b border-border-main">
                                     <th className="p-6 text-left text-text-muted font-black uppercase tracking-widest text-[10px] border-r border-border-main w-28 sticky left-0 bg-surface z-50">HORA</th>
                                     {weekDates.map((d, index) => (
-                                        <th key={index} className={`p-4 text-center border-r border-border-main/30 last:border-0 ${d.isToday ? 'bg-primary-main/5' : ''}`}>
+                                        <th key={index} className={`p-4 text-center border-r border-border-main/10 last:border-0 ${d.isToday ? 'bg-primary-main/[0.03]' : ''}`}>
                                             <div className="flex flex-col items-center gap-1">
-                                                <span className={`text-[10px] font-black uppercase tracking-widest ${d.isToday ? 'text-primary-main' : 'text-text-muted'}`}>{d.short}</span>
-                                                <span className={`text-xl font-black ${d.isToday ? 'text-primary-main' : 'text-text-main'}`}>{d.date}</span>
+                                                <span className={`text-[10px] font-black uppercase tracking-widest ${d.isToday ? 'text-primary-main' : 'text-text-muted opacity-60'}`}>{d.short}</span>
+                                                <span className={`text-xl font-black tracking-tight ${d.isToday ? 'text-primary-main bg-primary-main/10 px-3 py-1 rounded-xl' : 'text-text-main'}`}>{d.date}</span>
                                             </div>
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody className="relative">
-                                {showTimeLine && (
-                                    <div className="absolute left-28 right-0 z-30 pointer-events-none flex items-center" style={{ top: `${timeLinePosition + 86}px` }}>
-                                        <div className="w-2 h-2 rounded-full bg-primary-main shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-                                        <div className="flex-1 h-[2px] bg-gradient-to-r from-primary-main to-transparent opacity-50" />
-                                    </div>
-                                )}
                                 {HOURS.map((hour) => (
-                                    <tr key={hour} id={`hour-row-${hour}`} className="border-b border-border-main/30 last:border-0 hover:bg-primary-main/[0.01] transition-colors h-[100px]">
+                                    <tr key={hour} id={`hour-row-${hour}`} className="border-b border-border-main/30 last:border-0 hover:bg-primary-main/[0.01] transition-colors h-28">
                                         <td className="p-4 text-text-muted text-[11px] font-black border-r border-border-main w-28 sticky left-0 bg-surface z-20">{hour > 12 ? `${hour-12}PM` : `${hour}AM`}</td>
                                         {weekDates.map((d, dayIdx) => {
                                             const cellSchedules = getSchedulesForCell(d.dayOfWeek, hour, d.dateStr);
                                             return (
                                                 <td 
                                                     key={dayIdx} 
-                                                    className={`p-1 align-top border-r border-border-main/20 last:border-r-0 relative ${d.isToday ? 'bg-primary-main/[0.01]' : ''} transition-colors duration-200 ${draggedId ? 'hover:bg-primary-main/10 cursor-alias' : ''}`}
+                                                    className={`p-1 align-top border-r border-border-main/10 last:border-r-0 relative ${d.isToday ? 'bg-primary-main/[0.02]' : ''} transition-colors duration-200 ${draggedId ? 'hover:bg-primary-main/5 cursor-alias' : 'hover:bg-primary-main/[0.01]'}`}
                                                     onDragOver={handleDragOver}
                                                     onDrop={(e) => handleDrop(e, d.dayOfWeek, hour)}
                                                 >
-                                                    <div className="flex flex-col gap-1 w-full min-h-[80px]">
+                                                    <div className="flex flex-col gap-1 w-full min-h-24">
                                                         {cellSchedules.map((s) => (
                                                             <motion.div 
                                                                 key={s.id} 
-                                                                onClick={() => setAttendanceModal({ isOpen: true, schedule: { ...s, date: d.dateStr } as any })} 
+                                                                onClick={() => setActionModal({ isOpen: true, schedule: { ...s, date: d.dateStr } as any })} 
                                                                 draggable="true"
                                                                 onDragStart={(e: React.DragEvent) => handleDragStart(e, s.id)}
                                                                 onDragEnd={handleDragEnd}
@@ -586,7 +595,13 @@ const Calendar = () => {
                                 }}/>
                             );
                             return daySchedules.map((s, idx) => (
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} key={s.id} className="card-premium p-5 flex gap-5 items-center bg-surface">
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} 
+                                    transition={{ delay: idx * 0.05 }} 
+                                    key={s.id} 
+                                    onClick={() => setActionModal({ isOpen: true, schedule: { ...s, date: selectedDateObj?.dateStr } as any })}
+                                    className="card-premium p-5 flex gap-5 items-center bg-surface cursor-pointer active:scale-95 transition-all"
+                                >
                                     <div className="flex flex-col items-center justify-center min-w-[50px]">
                                         <div className="font-black text-primary-main text-lg leading-none">{s.startTime.split(':')[0]}</div>
                                         <div className="text-[10px] font-black uppercase text-text-muted mt-0.5">{s.startTime.split(':')[1]}</div>
@@ -656,62 +671,186 @@ const Calendar = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative bg-white dark:bg-bg-soft w-full max-w-lg rounded-[40px] p-6 shadow-2xl border border-zinc-100 dark:border-border-emerald max-h-[90vh] overflow-y-auto custom-scrollbar">
                             <button onClick={() => setIsModalOpen(false)} className="absolute right-6 top-6 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white transition"><X size={24} /></button>
                             <div className="mb-8">
-                                <h2 className="text-3xl font-black text-text-main">{editingId ? 'Editar Clase' : 'Nueva Clase'}</h2>
-                                <p className="text-text-muted mt-2 font-medium tracking-tight whitespace-nowrap">{editingId ? 'Modifica los detalles de este horario' : 'Asigna un nuevo horario a un alumno'}</p>
+                                <h2 className="text-2xl md:text-3xl font-black text-text-main tracking-tighter uppercase italic leading-tight">
+                                    {editingId 
+                                        ? `Editar Clase${formData.studentIds.length > 0 
+                                            ? ` - ${students.find(s => s.id === formData.studentIds[0])?.name || ''}${formData.studentIds.length > 1 ? ` +${formData.studentIds.length - 1}` : ''}` 
+                                            : ''}` 
+                                        : 'Nueva Clase'}
+                                </h2>
+                                <p className="text-text-muted mt-2 font-bold text-[10px] uppercase tracking-[0.2em] opacity-60">
+                                    {editingId ? 'Modificá los detalles de este horario' : 'Asigná un nuevo horario a un alumno'}
+                                </p>
                             </div>
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
-                                    <div className="flex items-center justify-between mb-3 ml-2">
-                                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Alumnos (uno o más)</label>
-                                        <input type="text" placeholder="Buscar..." value={studentSearchTerm} onChange={(e) => setStudentSearchTerm(e.target.value)} className="text-[10px] bg-bg-app border border-border-main rounded-lg px-3 py-1 outline-none focus:ring-1 focus:ring-primary-main/30" />
+                                    <div className="flex items-center justify-between mb-4 ml-2">
+                                        <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em]">Alumnos (uno o más)</label>
+                                        <div className="relative">
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-primary-main opacity-50" size={12} />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Buscar..." 
+                                                value={studentSearchTerm} 
+                                                onChange={(e) => setStudentSearchTerm(e.target.value)} 
+                                                className="text-[11px] font-bold bg-surface dark:bg-bg-soft border border-border-main rounded-xl pl-8 pr-3 py-1.5 outline-none focus:ring-2 focus:ring-primary-main/20 shadow-inner w-40 text-text-main transition-all placeholder:text-zinc-500" 
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[160px] overflow-y-auto p-4 bg-surface border border-border-main rounded-3xl shadow-inner font-bold text-sm custom-scrollbar">
-                                        {students.filter(s => s.name.toLowerCase().includes(studentSearchTerm.toLowerCase())).map(s => (
-                                            <label key={s.id} className="flex items-center gap-3 p-2 hover:bg-primary-main/5 rounded-xl cursor-pointer transition-all">
-                                                <input type="checkbox" checked={formData.studentIds.includes(s.id)} onChange={(e) => { const ids = e.target.checked ? [...formData.studentIds, s.id] : formData.studentIds.filter(id => id !== s.id); setFormData({ ...formData, studentIds: ids }); }} className="w-5 h-5 rounded-md accent-primary-main" />
-                                                <span className="text-text-main truncate">{s.name}</span>
-                                            </label>
-                                        ))}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto p-4 bg-surface dark:bg-bg-app/40 border border-border-main rounded-[24px] shadow-inner font-bold text-sm custom-scrollbar">
+                                        {(() => {
+                                            const filtered = students.filter(s => s.name.toLowerCase().includes(studentSearchTerm.toLowerCase()));
+                                            // Prioritize selected students
+                                            const prioritized = [...filtered].sort((a, b) => {
+                                                const aSelected = formData.studentIds.includes(a.id);
+                                                const bSelected = formData.studentIds.includes(b.id);
+                                                if (aSelected && !bSelected) return -1;
+                                                if (!aSelected && bSelected) return 1;
+                                                return a.name.localeCompare(b.name);
+                                            });
+                                            return prioritized.map(s => {
+                                                const isSelected = formData.studentIds.includes(s.id);
+                                                return (
+                                                    <label key={s.id} className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all border ${isSelected ? 'bg-primary-main/10 border-primary-main/20 shadow-sm' : 'hover:bg-primary-main/5 border-transparent'}`}>
+                                                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-primary-main border-primary-main' : 'border-zinc-300 dark:border-zinc-700'}`}>
+                                                            {isSelected && <CheckCircle2 size={12} className="text-white" />}
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={isSelected} 
+                                                                onChange={(e) => { 
+                                                                    const ids = e.target.checked ? [...formData.studentIds, s.id] : formData.studentIds.filter(id => id !== s.id); 
+                                                                    setFormData({ ...formData, studentIds: ids }); 
+                                                                }} 
+                                                                className="hidden" 
+                                                            />
+                                                        </div>
+                                                        <span className={`text-[13px] tracking-tight truncate ${isSelected ? 'text-primary-main font-black' : 'text-text-main font-bold'}`}>{s.name}</span>
+                                                    </label>
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="md:col-span-2">
-                                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Frecuencia</label>
-                                        <div className="flex p-1 bg-surface border border-border-main rounded-2xl">
-                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: true })} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.isRecurring ? 'bg-primary-main text-white shadow-lg' : 'text-text-muted'}`}>Semanal</button>
-                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: false })} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!formData.isRecurring ? 'bg-primary-main text-white shadow-lg' : 'text-text-muted'}`}>Única</button>
+                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Frecuencia</label>
+                                        <div className="flex p-1.5 bg-surface dark:bg-bg-app/40 border border-border-main rounded-[24px] shadow-inner">
+                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: true })} className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${formData.isRecurring ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>Semanal</button>
+                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: false })} className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${!formData.isRecurring ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>Única</button>
                                         </div>
                                     </div>
                                     {formData.isRecurring ? (
                                         <div>
-                                            <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Día</label>
-                                            <select value={formData.dayOfWeek} onChange={e => setFormData({ ...formData, dayOfWeek: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main outline-none focus:ring-2 focus:ring-primary-main/20 font-bold appearance-none shadow-inner dark:[color-scheme:dark]">
+                                            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Día</label>
+                                            <select value={formData.dayOfWeek} onChange={e => setFormData({ ...formData, dayOfWeek: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main outline-none focus:ring-2 focus:ring-primary-main/20 font-black text-sm appearance-none shadow-inner dark:[color-scheme:dark]">
                                                 {DAYS.map((day, i) => <option key={i} value={i}>{day}</option>)}
                                             </select>
                                         </div>
                                     ) : (
                                         <div>
-                                            <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Fecha</label>
-                                            <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" />
+                                            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Fecha</label>
+                                            <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-sm shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
                                         </div>
                                     )}
                                     <div>
-                                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Horario</label>
+                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Horario</label>
                                         <div className="flex items-center gap-2">
-                                            <input type="time" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" />
-                                            <span className="text-zinc-300 font-bold">a</span>
-                                            <input type="time" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" />
+                                            <input type="time" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-sm shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
+                                            <span className="text-zinc-300 font-bold opacity-50">a</span>
+                                            <input type="time" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-sm shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Cupo</label>
-                                        <input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" min="1" />
+                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Cupo</label>
+                                        <input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-lg shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" min="1" />
                                     </div>
                                 </div>
-                                <button type="submit" className="w-full bg-primary-main hover:bg-green-600 text-white p-6 rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary-glow transition-all active:scale-[0.98] mt-4">
-                                    {editingId ? 'Guardar Cambios' : 'Agendar Clase'}
+                                <button type="submit" className="w-full bg-primary-main hover:bg-emerald-600 text-white p-6 rounded-[24px] font-black uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-primary-main/20 transition-all active:scale-[0.98] mt-6 flex items-center justify-center gap-3">
+                                    <CheckCircle2 size={16} />
+                                    <span>{editingId ? 'Guardar Cambios' : 'Agendar Clase'}</span>
                                 </button>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Action Menu Popup */}
+            <AnimatePresence>
+                {actionModal.isOpen && actionModal.schedule && (
+                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-0">
+                        <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} onClick={() => setActionModal({ isOpen: false, schedule: null })} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+                        <motion.div initial={{opacity: 0, y: 100}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: 100}} className="relative bg-surface dark:bg-bg-soft border border-border-main rounded-[32px] sm:rounded-[24px] shadow-2xl w-full sm:w-96 overflow-hidden">
+                            <div className="p-6 border-b border-border-main flex items-center justify-between bg-black/5 dark:bg-white/[0.02]">
+                                <div className="min-w-0">
+                                    <h3 className="font-black text-text-main text-lg truncate pr-4 uppercase italic tracking-tight">
+                                        {actionModal.schedule.students && actionModal.schedule.students.length > 1 
+                                            ? `Grupo: ${actionModal.schedule.students[0].name} +${actionModal.schedule.students.length - 1}` 
+                                            : (actionModal.schedule.students?.[0]?.name || actionModal.schedule.student?.name || 'Clase Grupal')}
+                                    </h3>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary-main animate-pulse" />
+                                        <p className="text-[10px] uppercase font-black tracking-widest text-text-muted">
+                                            Opciones de Turno • {actionModal.schedule.startTime} HS
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setActionModal({ isOpen: false, schedule: null })} className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-text-muted transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            
+                            <div className="p-3 flex flex-col gap-2">
+                                <button 
+                                    onClick={() => {
+                                        setAttendanceModal({ isOpen: true, schedule: actionModal.schedule });
+                                        setActionModal({ isOpen: false, schedule: null });
+                                    }}
+                                    className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl bg-primary-main/10 hover:bg-primary-main text-primary-main hover:text-white transition-all text-left group"
+                                >
+                                    <div className="p-2.5 rounded-xl bg-primary-main text-white shadow-lg shadow-primary-main/20 group-hover:bg-white group-hover:text-primary-main transition-colors">
+                                        <CheckCircle2 size={18} strokeWidth={3} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[11px] font-black uppercase tracking-[0.2em]">Asistencia</span>
+                                        <span className="text-[10px] font-bold opacity-60">Marcar presentes/ausentes</span>
+                                    </div>
+                                </button>
+
+                                <button 
+                                    onClick={() => {
+                                        handleEdit(actionModal.schedule!);
+                                        setActionModal({ isOpen: false, schedule: null });
+                                    }}
+                                    className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-all text-left group"
+                                >
+                                    <div className="p-2.5 rounded-xl bg-zinc-200 dark:bg-white/10 text-text-main group-hover:bg-white dark:group-hover:bg-white/20 transition-colors">
+                                        <Edit2 size={18} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[11px] font-black uppercase tracking-[0.2em]">Editar Turno</span>
+                                        <span className="text-[10px] font-bold text-text-muted">Cambiar hora, alumnos o frecuencia</span>
+                                    </div>
+                                </button>
+
+                                <div className="h-px bg-border-main/50 my-1 mx-4" />
+
+                                <button 
+                                    onClick={() => {
+                                        setDeleteModal({ isOpen: true, id: actionModal.schedule!.id });
+                                        setActionModal({ isOpen: false, schedule: null });
+                                    }}
+                                    className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-red-500/10 transition-all text-left group"
+                                >
+                                    <div className="p-2.5 rounded-xl bg-red-500/10 text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                                        <Trash2 size={18} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[11px] font-black text-red-500 uppercase tracking-[0.2em]">Eliminar Turno</span>
+                                        <span className="text-[10px] font-bold text-red-500/60">Quitar permanentemente de la agenda</span>
+                                    </div>
+                                </button>
+                            </div>
                         </motion.div>
                     </div>
                 )}

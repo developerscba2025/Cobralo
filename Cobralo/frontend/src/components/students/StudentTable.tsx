@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     MessageCircle, MoreHorizontal, User, Calendar, 
-    FileText, ClipboardList, Trash2, Edit2, PlusCircle
+    FileText, ClipboardList, Trash2, Edit2, PlusCircle, X
 } from 'lucide-react';
 import type { Student } from '../../services/api';
 
@@ -12,6 +12,7 @@ interface StudentRowProps {
     onToggleSelect: (id: number) => void;
     onTogglePayment: (student: Student) => void;
     onOpenModals: (type: string, student: Student) => void;
+    onOpenActionMenu: (student: Student) => void;
     currency: string;
 }
 
@@ -21,6 +22,7 @@ const StudentRow: React.FC<StudentRowProps> = ({
     onToggleSelect,
     onTogglePayment,
     onOpenModals,
+    onOpenActionMenu,
     currency
 }) => {
     const initials = student.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -107,32 +109,10 @@ const StudentRow: React.FC<StudentRowProps> = ({
                     >
                         <MessageCircle size={16} />
                     </button>
-                    <div className="relative group/menu">
-                        <button className="p-2 text-text-muted hover:text-primary-main hover:bg-primary-main/10 rounded-lg transition-colors">
+                    <div className="relative">
+                        <button onClick={() => onOpenActionMenu(student)} className="p-2 text-text-muted hover:text-primary-main hover:bg-primary-main/10 rounded-lg transition-colors">
                             <MoreHorizontal size={16} />
                         </button>
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-surface dark:bg-bg-soft border border-border-main rounded-xl shadow-xl z-50 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all py-1">
-                            <button onClick={() => onOpenModals('edit', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
-                                <Edit2 size={14} className="text-text-muted" /> Editar Datos
-                            </button>
-                            <button onClick={() => onOpenModals('renew', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-primary-main hover:bg-primary-main/10 transition-colors text-left">
-                                <PlusCircle size={14} /> Cargar Clases (Pack)
-                            </button>
-
-                             <button onClick={() => onOpenModals('schedule', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
-                                <Calendar size={14} className="text-text-muted" /> Ver Horarios
-                            </button>
-                            <button onClick={() => onOpenModals('history', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
-                                <ClipboardList size={14} className="text-text-muted" /> Historial Asistencia
-                            </button>
-                            <button onClick={() => onOpenModals('notes', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-left">
-                                <FileText size={14} className="text-text-muted" /> Notas Privadas
-                            </button>
-                            <div className="h-px bg-border-main/50 my-1" />
-                            <button onClick={() => onOpenModals('delete', student)} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-500/10 transition-colors text-left">
-                                <Trash2 size={14} /> Eliminar Alumno
-                            </button>
-                        </div>
                     </div>
                 </div>
             </td>
@@ -177,7 +157,19 @@ const StudentTable: React.FC<StudentTableProps> = ({
         if (currentPage > 1) setCurrentPage(prev => prev - 1);
     };
 
-    return (        <div className="bg-surface dark:bg-bg-soft border border-border-main rounded-[28px] overflow-hidden shadow-sm relative flex flex-col">
+    const [actionModal, setActionModal] = useState<{isOpen: boolean, student: Student | null}>({isOpen: false, student: null});
+    const handleCloseActionMenu = () => setActionModal({isOpen: false, student: null});
+
+    const handleActionClick = (type: string) => {
+        if (actionModal.student) {
+            onOpenModals(type, actionModal.student);
+        }
+        handleCloseActionMenu();
+    };
+
+    return (
+        <>
+            <div className="bg-surface dark:bg-bg-soft border border-border-main rounded-[28px] overflow-hidden shadow-sm relative flex flex-col">
             <div className="relative flex-1">
                 <div className="overflow-x-auto w-full">
                     <table className="w-full text-left border-collapse">
@@ -208,6 +200,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                                         onToggleSelect={onToggleSelect}
                                         onTogglePayment={onTogglePayment}
                                         onOpenModals={onOpenModals}
+                                        onOpenActionMenu={(s) => setActionModal({isOpen: true, student: s})}
                                         currency={currency}
                                     />
                                 ))}
@@ -261,6 +254,83 @@ const StudentTable: React.FC<StudentTableProps> = ({
                 </div>
             )}
         </div>
+
+        {/* Global Action Menu Popup */}
+        <AnimatePresence>
+            {actionModal.isOpen && actionModal.student && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-0">
+                    <motion.div 
+                        initial={{opacity: 0}} 
+                        animate={{opacity: 1}} 
+                        exit={{opacity: 0}} 
+                        onClick={handleCloseActionMenu} 
+                        className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+                    />
+                    <motion.div 
+                        initial={{opacity: 0, y: 50, scale: 0.95}} 
+                        animate={{opacity: 1, y: 0, scale: 1}} 
+                        exit={{opacity: 0, y: 50, scale: 0.95}} 
+                        className="relative bg-surface dark:bg-bg-soft border border-border-main rounded-[40px] sm:rounded-[32px] shadow-2xl w-full sm:w-[420px] overflow-hidden max-h-[90vh] flex flex-col"
+                    >
+                        <div className="p-6 border-b border-border-main flex items-center justify-between bg-black/5 dark:bg-white/[0.02]">
+                            <div>
+                                <h3 className="font-black text-text-main text-xl tracking-tight truncate pr-4 uppercase italic italic-none">{actionModal.student.name}</h3>
+                                <p className="text-[10px] uppercase font-black tracking-[0.2em] text-text-muted mt-1 opacity-60">Opciones de Alumno</p>
+                            </div>
+                            <button onClick={handleCloseActionMenu} className="p-2.5 rounded-2xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-text-muted transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-4 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+                            <button onClick={() => handleActionClick('edit')} className="w-full flex items-center gap-4 px-5 py-4 rounded-3xl hover:bg-black/5 dark:hover:bg-white/5 transition-all text-left group">
+                                <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/5 group-hover:scale-110 transition-transform"><Edit2 size={18} className="text-text-main" /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm font-black text-text-main uppercase tracking-tight">Editar Datos</span>
+                                    <p className="text-[10px] font-bold text-text-muted opacity-50 uppercase tracking-widest mt-0.5">Modificar información personal</p>
+                                </div>
+                            </button>
+                            <button onClick={() => handleActionClick('renew')} className="w-full flex items-center gap-4 px-5 py-4 rounded-3xl bg-primary-main/5 hover:bg-primary-main/10 transition-all text-left group border border-primary-main/10">
+                                <div className="p-3 rounded-2xl bg-primary-main text-white group-hover:scale-110 transition-transform"><PlusCircle size={18} /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm font-black text-primary-main uppercase tracking-tight">Cargar Clases (Pack)</span>
+                                    <p className="text-[10px] font-bold text-primary-main/60 uppercase tracking-widest mt-0.5">Renovar saldo o paquete</p>
+                                </div>
+                            </button>
+                            <button onClick={() => handleActionClick('schedule')} className="w-full flex items-center gap-4 px-5 py-4 rounded-3xl hover:bg-black/5 dark:hover:bg-white/5 transition-all text-left group">
+                                <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/5 group-hover:scale-110 transition-transform"><Calendar size={18} className="text-text-main" /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm font-black text-text-main uppercase tracking-tight">Ver Horarios</span>
+                                    <p className="text-[10px] font-bold text-text-muted opacity-50 uppercase tracking-widest mt-0.5">Consultar agenda semanal</p>
+                                </div>
+                            </button>
+                            <button onClick={() => handleActionClick('history')} className="w-full flex items-center gap-4 px-5 py-4 rounded-3xl hover:bg-black/5 dark:hover:bg-white/5 transition-all text-left group">
+                                <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/5 group-hover:scale-110 transition-transform"><ClipboardList size={18} className="text-text-main" /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm font-black text-text-main uppercase tracking-tight">Historial Asistencia</span>
+                                    <p className="text-[10px] font-bold text-text-muted opacity-50 uppercase tracking-widest mt-0.5">Registro de clases dadas</p>
+                                </div>
+                            </button>
+                            <button onClick={() => handleActionClick('notes')} className="w-full flex items-center gap-4 px-5 py-4 rounded-3xl hover:bg-black/5 dark:hover:bg-white/5 transition-all text-left group">
+                                <div className="p-3 rounded-2xl bg-zinc-100 dark:bg-white/5 group-hover:scale-110 transition-transform"><FileText size={18} className="text-text-main" /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm font-black text-text-main uppercase tracking-tight">Notas Privadas</span>
+                                    <p className="text-[10px] font-bold text-text-muted opacity-50 uppercase tracking-widest mt-0.5">Anotaciones y recordatorios</p>
+                                </div>
+                            </button>
+                            <div className="h-px bg-border-main/50 my-2 mx-6" />
+                            <button onClick={() => handleActionClick('delete')} className="w-full flex items-center gap-4 px-5 py-4 rounded-3xl hover:bg-red-500/10 transition-all text-left group">
+                                <div className="p-3 rounded-2xl bg-red-500/10 text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all"><Trash2 size={18} /></div>
+                                <div className="flex-1">
+                                    <span className="text-sm font-black text-red-500 uppercase tracking-tight">Eliminar Alumno</span>
+                                    <p className="text-[10px] font-bold text-red-500/60 uppercase tracking-widest mt-0.5">Acción irreversible</p>
+                                </div>
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+        </>
     );
 };
 

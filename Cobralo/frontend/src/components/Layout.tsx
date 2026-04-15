@@ -7,7 +7,7 @@ import {
   Settings, Moon, Sun, LogOut, Menu, 
   Search, ExternalLink,
   LayoutDashboard, Calendar, Users2, LibraryBig,
-  RefreshCw, Bell, Lock, Banknote, HelpCircle, Mail
+  RefreshCw, Bell, Lock, Banknote, HelpCircle
 } from 'lucide-react';
 import { showToast } from './Toast';
 import MobileMenu from './MobileMenu';
@@ -18,9 +18,11 @@ import Container from './ui/Container';
 
 interface LayoutProps {
     children: React.ReactNode;
+    scrollable?: boolean;
+    fitted?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = false }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
@@ -143,17 +145,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             />
 
             {/* Sidebar - Desktop */}
-            <aside className="w-56 2xl:w-64 bg-surface/80 backdrop-blur-xl border-r border-border-main hidden md:flex flex-col relative z-30 transition-all duration-500 select-none shadow-xl shadow-black/5">
-                <div className="p-5 flex flex-col h-full">
-                    <div className="mb-10 flex items-center justify-between">
-                        <div className="flex items-center gap-3 group cursor-pointer transition-all">
-                            <div className="w-8 h-8 rounded-xl bg-primary-main flex items-center justify-center text-white shrink-0 shadow-lg shadow-primary-main/20">
-                                <span className="font-black italic text-sm">C</span>
+            <aside className="w-56 2xl:w-64 bg-surface/80 backdrop-blur-xl border-r border-border-main hidden md:flex flex-col relative z-30 transition-all duration-500 select-none shadow-xl shadow-black/5 overflow-hidden h-screen">
+                <div className="p-4 2xl:p-8 flex flex-col h-full">
+                    <div className="mb-6 2xl:mb-10 flex items-center justify-between px-1">
+                        <div className="flex items-center gap-2.5 group cursor-pointer transition-all">
+                            <div className="relative shrink-0">
+                                <div className="w-7 h-7 2xl:w-8 2xl:h-8 rounded-xl bg-primary-main flex items-center justify-center text-white shadow-lg shadow-primary-main/20">
+                                    <span className="font-black italic text-xs 2xl:text-sm">C</span>
+                                </div>
+                                <span className="absolute -bottom-1 -right-2 text-[5px] 2xl:text-[6px] font-black px-1 py-0.5 bg-surface text-text-main rounded-md border border-border-main animate-pulse shadow-sm">BETA</span>
                             </div>
-                            <span className="text-xl font-black italic tracking-tighter uppercase text-text-main group-hover:text-primary-main transition-colors">
+                            <span className="text-sm 2xl:text-base font-black italic tracking-tighter uppercase text-text-main group-hover:text-primary-main transition-colors">
                                 COBRALO
                             </span>
-                            <span className="text-[9px] font-black px-1.5 py-0.5 bg-primary-main text-white rounded-lg shadow-lg shadow-primary-main/20 animate-pulse">BETA</span>
                         </div>
 
                         {/* Notification Bell next to logo */}
@@ -178,13 +182,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     {/* Search trigger */}
                     <button
                         onClick={() => setIsSearchOpen(true)}
-                        className="mb-8 flex items-center gap-3 p-3 px-4 text-text-muted hover:text-text-main bg-bg-app/50 rounded-2xl transition-all text-xs border border-border-main/50 group w-full"
+                        className="mb-2 2xl:mb-6 flex items-center gap-3 p-2.5 px-4 text-text-muted hover:text-text-main bg-bg-app/50 rounded-2xl transition-all text-[11px] 2xl:text-xs border border-border-main/50 group w-full"
                     >
-                        <Search size={18} className="group-hover:scale-110 transition-transform shrink-0" />
-                        <span className="flex-1 text-left font-bold opacity-60">Buscar alumnos...</span>
+                        <Search size={16} className="group-hover:scale-110 transition-transform shrink-0" />
+                        <span className="flex-1 text-left font-bold opacity-60">Buscar...</span>
                     </button>
 
-                    <nav className="space-y-1.5 flex-1">
+                    <nav className="space-y-1.5 2xl:space-y-2 flex-1 py-4">
                         {[
                             { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
                             { to: '/app/students', icon: Users2, label: 'Alumnos' },
@@ -198,7 +202,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                 <Link 
                                     key={item.to}
                                     to={item.to} 
-                                    className={`relative flex items-center gap-3 p-3.5 rounded-2xl transition-all duration-300 group z-10 ${
+                                    className={`relative flex items-center gap-3 p-2.5 2xl:p-3 rounded-2xl transition-all duration-300 group z-10 ${
                                         active 
                                         ? 'text-white font-bold scale-[1.02]' 
                                         : 'text-text-muted hover:bg-primary-main/5 hover:text-primary-main font-semibold'
@@ -213,41 +217,39 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                         />
                                     )}
                                     
-                                    <item.icon size={20} className={`shrink-0 transition-transform relative z-20 ${active ? '' : 'group-hover:scale-110'}`} /> 
-                                    <span className="tracking-tight relative z-20">{item.label}</span>
+                                    <item.icon size={18} className={`shrink-0 transition-transform relative z-20 ${active ? '' : 'group-hover:scale-110'}`} /> 
+                                    <span className="tracking-tight relative z-20 text-xs 2xl:text-sm">{item.label}</span>
                                 </Link>
                             );
                         })}
-
                     </nav>
                     
-                    {/* Beta Support Box */}
-                    <div className="mt-4 mb-6 p-4 bg-primary-main/5 border border-primary-main/10 rounded-[24px] relative overflow-hidden group">
-                        <div className="absolute -right-2 -bottom-2 text-primary-main/10 group-hover:scale-110 transition-transform">
-                            <HelpCircle size={40} />
-                        </div>
-                        <p className="text-[10px] font-bold text-primary-main uppercase tracking-widest mb-1.5 leading-none">Soporte Cobralo</p>
-                        <p className="text-[9px] text-text-muted font-medium mb-3">
-                            Si ves un error o algo no funciona, escribinos un mensaje para ayudarte.
-                        </p>
+                    {/* New Support Link - Clean and Responsive */}
+                    <div className="pt-2 shrink-0">
                         <Link 
-                            to="/app/settings?tab=support" 
-                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-primary-main text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-primary-main/10 active:scale-95 relative z-10"
+                            to="/app/support" 
+                            className={`flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 group ${location.pathname === '/app/support' ? 'bg-primary-main/10 text-primary-main border border-primary-main/20' : 'text-text-muted hover:bg-primary-main/5 hover:text-primary-main'}`}
                         >
-                            <Mail size={12} /> Contactar Soporte
+                            <div className={`p-2 rounded-xl transition-all ${location.pathname === '/app/support' ? 'bg-primary-main text-white' : 'bg-primary-main/10 text-primary-main group-hover:scale-110'}`}>
+                                <HelpCircle size={18} />
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-[11px] font-black uppercase tracking-widest leading-none">Soporte</p>
+                                {location.pathname !== '/app/support' && <p className="text-[9px] font-bold opacity-50 mt-1 hidden 2xl:block">¿Necesitás ayuda?</p>}
+                            </div>
                         </Link>
                     </div>
 
                     {/* User Info & Actions */}
-                    <div className="pt-6 border-t border-border-main/50 space-y-4 px-1">
+                    <div className="pt-2 border-t border-border-main/30 space-y-2 px-1">
                         {user && (
-                            <div className="flex items-center gap-3 mb-4 group cursor-pointer">
-                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-green-600 to-emerald-800 flex items-center justify-center text-white font-bold text-sm shadow-xl shadow-emerald-900/10 uppercase shrink-0 transition-transform group-hover:scale-105 active:scale-95">
+                            <div className="flex items-center gap-2 mb-2 group cursor-pointer">
+                                <div className="w-8 h-8 2xl:w-9 2xl:h-9 rounded-xl bg-gradient-to-br from-green-600 to-emerald-800 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-emerald-900/10 uppercase shrink-0 transition-transform group-hover:scale-105 active:scale-95">
                                     {user.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-text-main text-sm truncate leading-tight uppercase tracking-tight">{user?.name}</p>
-                                    <p className="text-[9px] font-black text-primary-main uppercase tracking-widest mt-1 font-accent flex items-center gap-1">
+                                    <p className="font-bold text-text-main text-[11px] 2xl:text-xs truncate leading-tight uppercase tracking-tight">{user?.name}</p>
+                                    <p className="text-[8px] font-black text-primary-main uppercase tracking-widest mt-0.5 font-accent flex items-center gap-1">
                                         <span className="w-1 h-1 rounded-full bg-primary-main animate-pulse" />
                                         {user?.plan === 'PRO' ? 'PRO' : (user?.plan === 'INITIAL' ? 'BÁSICO' : 'FREE')}
                                     </p>
@@ -255,7 +257,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                             </div>
                         )}
 
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                                 <button 
                                     onClick={() => {
                                         if (!isPro) {
@@ -276,28 +278,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                                           showToast.error('Cargando perfil... reintenta en un momento.');
                                         }
                                     }}
-                                    className={`w-full flex items-center gap-3 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isPro ? 'text-text-muted hover:bg-primary-main/10 hover:text-primary-main' : 'text-zinc-500/50 bg-zinc-100/50 dark:bg-zinc-800/30 cursor-not-allowed'} group`}
+                                    className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${isPro ? 'text-text-muted hover:bg-primary-main/10 hover:text-primary-main' : 'text-zinc-500/50 bg-zinc-100/50 dark:bg-zinc-800/30 cursor-not-allowed'} group`}
                                 >
-                                    <ExternalLink size={18} className={`${isPro ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5' : ''} transition-transform shrink-0`} /> 
+                                    <ExternalLink size={16} className={`${isPro ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5' : ''} transition-transform shrink-0`} /> 
                                     <span className="flex-1 text-left">Enlace Público</span>
-                                    {!isPro && <Lock size={14} className="text-primary-main" />}
+                                    {!isPro && <Lock size={12} className="text-primary-main" />}
                                 </button>
                         </div>
 
-                        <div className="pt-4 border-t border-border-main/50 flex items-center justify-between">
+                        <div className="pt-1.5 border-t border-border-main/30 flex items-center justify-between gap-1.5">
                             <button
                                 onClick={toggleTheme}
-                                className="p-2.5 rounded-xl text-text-muted hover:bg-bg-app hover:text-primary-main transition-all active:scale-95"
+                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-main transition-all active:scale-95 border border-transparent hover:border-border-main/20"
                                 title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
                             >
-                                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                                <span className="text-[8px] font-black uppercase tracking-wider">{theme === 'dark' ? 'Luz' : 'Noche'}</span>
                             </button>
                             <button
                                 onClick={logout}
-                                className="p-2.5 rounded-xl text-red-500/70 hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95"
+                                className="p-2 rounded-xl text-red-500/70 hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 border border-transparent hover:border-red-500/10"
                                 title="Cerrar Sesión"
                             >
-                                <LogOut size={20} />
+                                <LogOut size={16} />
                             </button>
                         </div>
                     </div>
@@ -306,7 +309,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* Main Content */}
             <main 
-                className="flex-1 flex flex-col min-h-0 bg-bg-app overflow-y-auto custom-scrollbar transition-colors pb-24 md:pb-0 relative"
+                className="flex-1 flex flex-col min-w-0 h-screen bg-bg-app overflow-hidden relative"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -364,18 +367,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-x-hidden transition-all duration-300">
-                    <motion.div 
-                        key={location.pathname}
-                        initial={{ opacity: 0, filter: 'blur(10px)', scale: 1.02 }}
-                        animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-                        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        className="w-full h-full py-4 sm:py-6 md:py-8 lg:py-8 2xl:py-12"
-                    >
-                        <Container>
-                            {children}
-                        </Container>
-                    </motion.div>
+                <div className="flex-1 overflow-x-hidden relative">
+                    <AnimatePresence mode="wait">
+                        <motion.div 
+                            key={location.pathname}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex-1 flex flex-col min-h-0 w-full"
+                        >
+                            <div className={`flex-1 flex flex-col min-h-0 ${fitted ? 'pb-2 sm:pb-3 md:pb-4 px-2 sm:px-3 md:px-4 lg:px-6' : (scrollable ? 'overflow-y-auto custom-scrollbar py-2 sm:py-3 md:py-4 lg:py-6' : 'py-2 sm:py-3 md:py-4 lg:py-6')}`}>
+                                <Container className={`flex-1 flex flex-col min-h-0 ${fitted ? '!p-0' : ''}`}>
+                                    {children}
+                                </Container>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
 
             </main>

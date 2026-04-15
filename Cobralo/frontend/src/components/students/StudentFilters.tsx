@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, Filter, Plus, FileSpreadsheet, MessageCircle } from 'lucide-react';
+import { Search, Plus, FileSpreadsheet, MessageCircle, Filter } from 'lucide-react';
+import PremiumSelect from '../ui/PremiumSelect';
 
 interface StudentFiltersProps {
     searchTerm: string;
@@ -28,6 +29,17 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
     onWhatsAppMass,
     selectedCount
 }) => {
+    const statusOptions = [
+        { value: 'all', label: 'Todos los estados' },
+        { value: 'paid', label: 'Pagos' },
+        { value: 'pending', label: 'Pendientes' }
+    ];
+
+    const serviceOptions = [
+        { value: 'all', label: 'Todos los servicios' },
+        ...services.map(s => ({ value: s, label: s }))
+    ];
+
     return (
         <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
@@ -70,32 +82,19 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-surface dark:bg-bg-soft border border-border-main rounded-xl">
-                    <Filter size={14} className="text-text-muted" />
-                    <select 
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="bg-transparent text-[11px] font-black uppercase tracking-widest text-text-main outline-none cursor-pointer"
-                    >
-                        <option value="all">Todos los estados</option>
-                        <option value="paid">Pagos</option>
-                        <option value="pending">Pendientes</option>
-                    </select>
-                </div>
+            <div className="flex flex-wrap items-center gap-3">
+                <PremiumSelect 
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    options={statusOptions}
+                    icon={<Filter size={14} className="text-text-muted" />}
+                />
 
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-surface dark:bg-bg-soft border border-border-main rounded-xl">
-                    <select 
-                        value={serviceFilter}
-                        onChange={(e) => setServiceFilter(e.target.value)}
-                        className="bg-transparent text-[11px] font-black uppercase tracking-widest text-text-main outline-none cursor-pointer"
-                    >
-                        <option value="all">Todos los servicios</option>
-                        {services.map(s => (
-                            <option key={s} value={s}>{s}</option>
-                        ))}
-                    </select>
-                </div>
+                <PremiumSelect 
+                    value={serviceFilter}
+                    onChange={setServiceFilter}
+                    options={serviceOptions}
+                />
 
                 {selectedCount > 0 && (
                     <div className="ml-auto px-4 py-1.5 bg-primary-main/10 text-primary-main rounded-xl text-[10px] font-black uppercase tracking-widest border border-primary-main/20 animate-in fade-in slide-in-from-right-4">
