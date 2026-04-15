@@ -155,6 +155,7 @@ export interface User {
     generalTemplate?: string;
     classRemindersEnabled?: boolean;
     classReminderMinutes?: number;
+    isAdmin?: boolean;
 }
 
 

@@ -30,7 +30,6 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
-    const [unreadNotifCount, setUnreadNotifCount] = useState(0);
     
     // Pull to refresh state
     const [pullDistance, setPullDistance] = useState(0);
@@ -172,11 +171,6 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                             title="Notificaciones"
                         >
                             <Bell size={20} className={location.pathname === '/app/notifications' ? 'fill-primary-main/20' : ''} />
-                            {unreadNotifCount > 0 && (
-                                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-sm">
-                                    {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
-                                </span>
-                            )}
                         </Link>
                     </div>
 
@@ -359,11 +353,6 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                             className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-bg-dark transition text-zinc-500 relative touch-target"
                         >
                             <Bell size={22} />
-                            {unreadNotifCount > 0 && (
-                                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                                    {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
-                                </span>
-                            )}
                         </Link>
                         <button
                             onClick={() => setIsSearchOpen(true)}
@@ -421,7 +410,7 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                         exit={{ opacity: 0, y: 20 }}
                         className="md:hidden"
                     >
-                        <BottomNav pendingCount={pendingCount} unreadNotifCount={unreadNotifCount} />
+                        <BottomNav pendingCount={pendingCount} />
                     </motion.div>
                 )}
             </AnimatePresence>

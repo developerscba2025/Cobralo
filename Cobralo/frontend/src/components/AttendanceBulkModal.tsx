@@ -165,10 +165,12 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                         <div className="relative">
                             <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-surface/90 dark:from-bg-soft/90 to-transparent z-10 pointer-events-none" />
                             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar p-1 pb-10">
-                                {participants.map((student, idx) => {
+                                {participants.map((student) => {
                                     const currentStatus = attRecords[student.id] || 'PRESENT';
                                     
                                     return (
+                                        <motion.div
+                                            key={student.id}
                                             className="relative group p-3 sm:p-4 rounded-[28px] bg-bg-app/30 dark:bg-black/20 border border-border-main/50 hover:border-primary-main/30 transition-all flex items-center gap-4 hover:shadow-lg hover:shadow-primary-main/5"
                                         >
                                             <div className="flex-1 min-w-0 pr-2 w-full sm:w-auto">

@@ -17,6 +17,7 @@ const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7am to 9pm
 
 const Calendar = () => {
     const { user } = useAuth();
+    const isPro = user?.plan === 'PRO' || user?.plan === 'INITIAL';
     const [schedules, setSchedules] = useState<UnifiedSchedule[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -501,6 +502,11 @@ const Calendar = () => {
                                             <button onClick={handleSyncApple} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-primary-main/5 transition-all text-left">
                                                 <div className="w-8 h-8 rounded-xl bg-zinc-500/10 flex items-center justify-center shrink-0"><CalendarIcon size={16} className="text-zinc-400" /></div>
                                                 <div><p className="text-[11px] font-black text-text-main uppercase tracking-tight">Apple / iCloud</p></div>
+                                            </button>
+                                            <div className="mx-3 h-[1px] bg-border-main/50" />
+                                            <button onClick={handleCopyFeed} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-primary-main/5 transition-all text-left">
+                                                <div className="w-8 h-8 rounded-xl bg-primary-main/10 flex items-center justify-center shrink-0"><Download size={16} className="text-primary-main" /></div>
+                                                <div><p className="text-[11px] font-black text-text-main uppercase tracking-tight">Copiar Enlace Feed</p></div>
                                             </button>
                                         </div>
                                     </motion.div>

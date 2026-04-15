@@ -1,4 +1,4 @@
-import { Calendar, Users2, ArrowRight, Filter, Plus, Check, Clock, TrendingUp, ChevronRight, DollarSign, Zap, Activity, MessageCircle } from 'lucide-react';
+import { Calendar, Users2, ArrowRight, Filter, Check, TrendingUp, DollarSign, Activity, MessageCircle } from 'lucide-react';
 import { bentoBase } from './theme';
 
 interface DashboardViewProps {

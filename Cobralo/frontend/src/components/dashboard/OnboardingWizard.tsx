@@ -135,7 +135,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPay
                                     }
                                     ${!step.done && isAccessible && "hover:-translate-y-2 active:scale-[0.97]"}
                                 `}
-                                onClick={(e) => (step.done || !isAccessible) && e.preventDefault()}
+                                onClick={(e: React.MouseEvent) => (step.done || !isAccessible) && e.preventDefault()}
                             >
                                 <div className="flex items-start justify-between mb-8 relative z-10">
                                     <div className={`
