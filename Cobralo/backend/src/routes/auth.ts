@@ -503,9 +503,12 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
 router.post('/admin/update-plan', authLimiter, authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
         const adminEmail = 'developerscba2025@gmail.com';
+        console.log(`[ADMIN] User ${req.userEmail} attempting to update plan for ${req.body.targetEmail}`);
+        
         const user = await prisma.user.findUnique({ where: { id: req.userId } });
         
         if (!user || user.email !== adminEmail) {
+            console.warn(`[ADMIN] Access denied for user ${user?.email || 'Unknown'}`);
             res.status(403).json({ error: 'Acceso denegado' });
             return;
         }

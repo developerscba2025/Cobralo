@@ -175,27 +175,42 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
-                                                <div className="flex items-center gap-4 min-w-0">
-                                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-surface flex items-center justify-center text-primary-main shadow-sm border border-border-main/30 group-hover:scale-105 transition-all duration-300 shrink-0">
-                                                        <Star size={24} className="fill-primary-main/10" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="font-black text-zinc-800 dark:text-white text-base tracking-tight truncate">{service.name}</p>
+                                            <div className="flex items-center gap-4 group">
+                                                {/* Left Icon Area */}
+                                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-surface flex items-center justify-center text-primary-main shadow-sm border border-border-main/30 group-hover:scale-105 transition-all duration-300 shrink-0">
+                                                    <Star size={24} className="fill-primary-main/10" />
+                                                </div>
+
+                                                {/* Middle Content Area - Responsive Flex/Grid */}
+                                                <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-y-2 gap-x-4">
+                                                    <div className="min-w-0">
+                                                        <p className="font-black text-zinc-800 dark:text-white text-base tracking-tight truncate leading-tight" title={service.name}>
+                                                            {service.name}
+                                                        </p>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <span className="text-[10px] font-black text-primary-main uppercase tracking-widest bg-primary-main/10 px-2 py-0.5 rounded-lg border border-primary-main/10 whitespace-nowrap">
+                                                            <span className="text-[10px] sm:text-[11px] font-black text-primary-main uppercase tracking-widest bg-primary-main/10 px-2.5 py-1 rounded-xl border border-primary-main/10 whitespace-nowrap">
                                                                 {user.currency}{Number(service.defaultPrice).toLocaleString('es-AR')}
                                                             </span>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex items-center gap-1 sm:self-center self-end border-t sm:border-t-0 border-border-main/10 pt-2 sm:pt-0 w-full sm:w-auto justify-end">
-                                                    <button onClick={() => startEditing(service)} className="p-2.5 sm:p-3 text-zinc-300 hover:text-primary-main hover:bg-primary-main/5 rounded-xl transition-all" title="Editar">
-                                                        <Edit2 size={18} />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteService(service.id)} className="p-2.5 sm:p-3 text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all" title="Eliminar">
-                                                        <Trash2 size={18} />
-                                                    </button>
+
+                                                    {/* Right Actions Area */}
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <button 
+                                                            onClick={() => startEditing(service)} 
+                                                            className="p-2 sm:p-2.5 text-zinc-400 hover:text-primary-main hover:bg-primary-main/5 dark:hover:bg-primary-main/10 rounded-xl transition-all active:scale-95" 
+                                                            title="Editar"
+                                                        >
+                                                            <Edit2 size={18} />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeleteService(service.id)} 
+                                                            className="p-2 sm:p-2.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all active:scale-95" 
+                                                            title="Eliminar"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

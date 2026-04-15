@@ -355,7 +355,7 @@ const Calendar = () => {
     };
 
     const handleSyncApple = () => {
-        if (user?.plan === 'FREE') {
+        if (!isPro) {
             showToast.error('Función exclusiva de Cobralo PRO');
             setSyncDropdown(false);
             return;
@@ -363,8 +363,26 @@ const Calendar = () => {
         const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
         const feedUrl = `${API_BASE}/api/calendar-feed/feed/${user?.calendarToken}`;
         const webcalUrl = feedUrl.replace(/^https?:\/\//, 'webcal://');
+        
+        // Copy to clipboard as fallback
         navigator.clipboard.writeText(feedUrl);
+        showToast.success('Enlace copiado. Si no se abre tu Calendario, pégalo en la configuración de iCloud.');
+        
+        // Try to open protocol
         window.location.href = webcalUrl;
+        setSyncDropdown(false);
+    };
+
+    const handleCopyFeed = () => {
+        if (!isPro) {
+            showToast.error('Función exclusiva de Cobralo PRO');
+            setSyncDropdown(false);
+            return;
+        }
+        const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
+        const feedUrl = `${API_BASE}/api/calendar-feed/feed/${user?.calendarToken}`;
+        navigator.clipboard.writeText(feedUrl);
+        showToast.success('Enlace de suscripción copiado al portapapeles.');
         setSyncDropdown(false);
     };
 
@@ -680,9 +698,9 @@ const Calendar = () => {
                                     {editingId ? 'Modificá los detalles de este horario' : 'Asigná un nuevo horario a un alumno'}
                                 </p>
                             </div>
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <div className="flex items-center justify-between mb-4 ml-2">
+                                    <div className="flex items-center justify-between mb-3 ml-2">
                                         <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em]">Alumnos (uno o más)</label>
                                         <div className="relative">
                                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-primary-main opacity-50" size={12} />
@@ -695,10 +713,9 @@ const Calendar = () => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto p-4 bg-surface dark:bg-bg-app/40 border border-border-main rounded-[24px] shadow-inner font-bold text-sm custom-scrollbar">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto p-3 bg-surface dark:bg-bg-app/40 border border-border-main rounded-[24px] shadow-inner font-bold text-sm custom-scrollbar">
                                         {(() => {
                                             const filtered = students.filter(s => s.name.toLowerCase().includes(studentSearchTerm.toLowerCase()));
-                                            // Prioritize selected students
                                             const prioritized = [...filtered].sort((a, b) => {
                                                 const aSelected = formData.studentIds.includes(a.id);
                                                 const bSelected = formData.studentIds.includes(b.id);
@@ -709,9 +726,9 @@ const Calendar = () => {
                                             return prioritized.map(s => {
                                                 const isSelected = formData.studentIds.includes(s.id);
                                                 return (
-                                                    <label key={s.id} className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all border ${isSelected ? 'bg-primary-main/10 border-primary-main/20 shadow-sm' : 'hover:bg-primary-main/5 border-transparent'}`}>
-                                                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-primary-main border-primary-main' : 'border-zinc-300 dark:border-zinc-700'}`}>
-                                                            {isSelected && <CheckCircle2 size={12} className="text-white" />}
+                                                    <label key={s.id} className={`flex items-center gap-2.5 p-2 rounded-xl cursor-pointer transition-all border ${isSelected ? 'bg-primary-main/10 border-primary-main/20 shadow-sm' : 'hover:bg-primary-main/5 border-transparent'}`}>
+                                                        <div className={`w-4 h-4 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-primary-main border-primary-main' : 'border-zinc-300 dark:border-zinc-700'}`}>
+                                                            {isSelected && <CheckCircle2 size={10} className="text-white" />}
                                                             <input 
                                                                 type="checkbox" 
                                                                 checked={isSelected} 
@@ -722,48 +739,55 @@ const Calendar = () => {
                                                                 className="hidden" 
                                                             />
                                                         </div>
-                                                        <span className={`text-[13px] tracking-tight truncate ${isSelected ? 'text-primary-main font-black' : 'text-text-main font-bold'}`}>{s.name}</span>
+                                                        <span className={`text-[12px] tracking-tight truncate ${isSelected ? 'text-primary-main font-black' : 'text-text-main font-bold'}`}>{s.name}</span>
                                                     </label>
                                                 );
                                             });
                                         })()}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="md:col-span-2">
-                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Frecuencia</label>
-                                        <div className="flex p-1.5 bg-surface dark:bg-bg-app/40 border border-border-main rounded-[24px] shadow-inner">
-                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: true })} className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${formData.isRecurring ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>Semanal</button>
-                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: false })} className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${!formData.isRecurring ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>Única</button>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-2.5 ml-2">Frecuencia</label>
+                                        <div className="flex p-1.5 bg-surface dark:bg-bg-app/40 border border-border-main rounded-[20px] shadow-inner">
+                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: true })} className={`flex-1 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${formData.isRecurring ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' : 'text-zinc-500'}`}>Semanal</button>
+                                            <button type="button" onClick={() => setFormData({ ...formData, isRecurring: false })} className={`flex-1 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${!formData.isRecurring ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' : 'text-zinc-500'}`}>Única</button>
                                         </div>
                                     </div>
-                                    {formData.isRecurring ? (
+
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Día</label>
-                                            <select value={formData.dayOfWeek} onChange={e => setFormData({ ...formData, dayOfWeek: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main outline-none focus:ring-2 focus:ring-primary-main/20 font-black text-sm appearance-none shadow-inner dark:[color-scheme:dark]">
-                                                {DAYS.map((day, i) => <option key={i} value={i}>{day}</option>)}
-                                            </select>
+                                            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-2.5 ml-2">{formData.isRecurring ? 'Día' : 'Fecha'}</label>
+                                            {formData.isRecurring ? (
+                                                <select value={formData.dayOfWeek} onChange={e => setFormData({ ...formData, dayOfWeek: Number(e.target.value) })} className="w-full p-3.5 bg-surface border border-border-main rounded-[20px] text-text-main outline-none focus:ring-2 focus:ring-primary-main/20 font-black text-[11px] appearance-none shadow-sm dark:[color-scheme:dark]">
+                                                    {DAYS.map((day, i) => <option key={i} value={i}>{day}</option>)}
+                                                </select>
+                                            ) : (
+                                                <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full p-3.5 bg-surface border border-border-main rounded-[20px] text-text-main font-black text-[11px] shadow-sm dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
+                                            )}
                                         </div>
-                                    ) : (
                                         <div>
-                                            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Fecha</label>
-                                            <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-sm shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
+                                            <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-2.5 ml-2">Cupo</label>
+                                            <input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: Number(e.target.value) })} className="w-full p-3.5 bg-surface border border-border-main rounded-[20px] text-text-main font-black text-[11px] shadow-sm dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" min="1" />
                                         </div>
-                                    )}
+                                    </div>
+
                                     <div>
-                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Horario</label>
+                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-2.5 ml-2">Horario</label>
                                         <div className="flex items-center gap-2">
-                                            <input type="time" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-sm shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
-                                            <span className="text-zinc-300 font-bold opacity-50">a</span>
-                                            <input type="time" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-sm shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
+                                            <div className="flex-1 relative">
+                                                <input type="time" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} className="w-full p-3.5 bg-surface border border-border-main rounded-[20px] text-text-main font-black text-[11px] shadow-sm dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
+                                            </div>
+                                            <span className="text-zinc-300 font-bold opacity-30">a</span>
+                                            <div className="flex-1 relative">
+                                                <input type="time" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} className="w-full p-3.5 bg-surface border border-border-main rounded-[20px] text-text-main font-black text-[11px] shadow-sm dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mb-4 ml-2">Cupo</label>
-                                        <input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-[24px] text-text-main font-black text-lg shadow-inner dark:[color-scheme:dark] outline-none focus:ring-2 focus:ring-primary-main/20" min="1" />
                                     </div>
                                 </div>
-                                <button type="submit" className="w-full bg-primary-main hover:bg-emerald-600 text-white p-6 rounded-[24px] font-black uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-primary-main/20 transition-all active:scale-[0.98] mt-6 flex items-center justify-center gap-3">
+
+                                <button type="submit" className="w-full bg-primary-main hover:bg-emerald-600 text-white py-4 rounded-[20px] font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary-main/20 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-3">
                                     <CheckCircle2 size={16} />
                                     <span>{editingId ? 'Guardar Cambios' : 'Agendar Clase'}</span>
                                 </button>

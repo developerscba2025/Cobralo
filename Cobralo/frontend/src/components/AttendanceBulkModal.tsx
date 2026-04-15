@@ -69,33 +69,23 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
             glow: 'shadow-emerald-500/20'
         },
         { 
-            id: 'CANCELLED', 
-            label: 'Con Aviso', 
-            icon: Clock, 
-            color: 'text-amber-500', 
-            bg: 'bg-amber-500/10', 
-            activeBg: 'bg-amber-500', 
-            short: 'C.A',
-            glow: 'shadow-amber-500/20'
-        },
-        { 
             id: 'ABSENT', 
-            label: 'Falta', 
+            label: 'Ausente', 
             icon: XCircle, 
             color: 'text-red-500', 
             bg: 'bg-red-500/10', 
             activeBg: 'bg-red-500', 
-            short: 'F',
+            short: 'A',
             glow: 'shadow-red-500/20'
         },
         { 
             id: 'HOLIDAY', 
-            label: 'Feriado', 
+            label: 'Sin Clase', 
             icon: Calendar, 
             color: 'text-sky-500', 
             bg: 'bg-sky-500/10', 
             activeBg: 'bg-sky-500', 
-            short: 'FER',
+            short: 'S.C',
             glow: 'shadow-sky-500/20'
         },
     ];
@@ -152,7 +142,7 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                         {/* Bulk Actions Section */}
                         <div className="mb-8">
                             <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] mb-4 ml-2">Asistencia Masiva</p>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <div className="grid grid-cols-3 gap-2.5">
                                 {statuses.map(s => (
                                     <button
                                         key={s.id}
@@ -240,15 +230,31 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                             <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface/90 dark:from-bg-soft/90 to-transparent z-10 pointer-events-none" />
                         </div>
 
-                        {/* Footer Section */}
+                        {/* Footer Section with Legend & Action */}
                         <div className="mt-8 sm:mt-10 space-y-6">
-                            <div className="flex items-center gap-4 p-5 bg-primary-main/5 rounded-[28px] border border-primary-main/10 border-dashed">
-                                <div className="p-2 bg-primary-main/10 rounded-xl">
-                                    <AlertCircle size={20} className="text-primary-main" />
+                            {/* Legend / Info Section */}
+                            <div className="p-6 sm:p-8 bg-black/5 dark:bg-white/5 rounded-[32px] border border-border-main/50 space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <AlertCircle size={18} className="text-primary-main" />
+                                    <span className="text-[10px] font-black text-text-main uppercase tracking-[0.2em]">Guía de Referencia</span>
                                 </div>
-                                <p className="text-[10px] font-bold text-text-muted leading-snug uppercase tracking-tight">
-                                    <span className="text-primary-main font-black">Recordatorio Cobralo:</span> Presente descuenta créditos automáticamente. Los feriados no afectan el saldo de los alumnos.
-                                </p>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                    <div className="space-y-1.5 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
+                                        <p className="text-[11px] font-black text-emerald-500 uppercase tracking-tight">P — Presente</p>
+                                        <p className="text-[9px] font-bold text-text-muted leading-relaxed opacity-80 uppercase tracking-tighter">Asistió a clase. Descuenta 1 crédito.</p>
+                                    </div>
+                                    
+                                    <div className="space-y-1.5 p-3 rounded-2xl bg-red-500/5 border border-red-500/10">
+                                        <p className="text-[11px] font-black text-red-500 uppercase tracking-tight">A — Ausente</p>
+                                        <p className="text-[9px] font-bold text-text-muted leading-relaxed opacity-80 uppercase tracking-tighter">Falta sin aviso. Descuenta 1 crédito.</p>
+                                    </div>
+                                    
+                                    <div className="space-y-1.5 p-3 rounded-2xl bg-sky-500/5 border border-sky-500/10">
+                                        <p className="text-[11px] font-black text-sky-500 uppercase tracking-tight">S.C — Sin Clase</p>
+                                        <p className="text-[9px] font-bold text-text-muted leading-relaxed opacity-80 uppercase tracking-tighter">Feriado o cancelación del profe. No descuenta saldo.</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <button

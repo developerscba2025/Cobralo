@@ -52,34 +52,35 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
         fetchPending();
     }, [location.pathname, user]);
 
-    // Poll unread notifications every 60 seconds
+    // Auto-sync plan status (specifically for admin or upgraded accounts)
+    const { updateUser } = useAuth();
     useEffect(() => {
-        if (!user) return;
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-        const token = localStorage.getItem('token');
-        const fetchUnread = async () => {
+        if (!user || user.plan === 'PRO') return;
+        
+        const syncUser = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
             try {
-                const res = await fetch(`${API_URL}/notifications/unread-count`, { 
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {} 
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+                const res = await fetch(`${API_URL}/auth/me`, { 
+                    headers: { 'Authorization': `Bearer ${token}` } 
                 });
                 if (res.ok) {
-                    const data = await res.json();
-                    setUnreadNotifCount(data.count ?? 0);
+                    const freshData = await res.json();
+                    if (freshData.plan !== user.plan) {
+                        updateUser(freshData);
+                    }
                 }
             } catch { /* silent */ }
         };
-        fetchUnread();
+        
+        // Sync on mount and every 30 seconds if not PRO yet
+        syncUser();
+        const interval = setInterval(syncUser, 30000);
+        return () => clearInterval(interval);
+    }, [user?.plan]);
 
-        // Listen for manual updates
-        const handleManualUpdate = () => fetchUnread();
-        window.addEventListener('notifications-updated', handleManualUpdate);
-
-        const interval = setInterval(fetchUnread, 60000);
-        return () => {
-            clearInterval(interval);
-            window.removeEventListener('notifications-updated', handleManualUpdate);
-        };
-    }, [user]);
+    // Poll unread notifications every 60 seconds
 
     // Global keyboard shortcut Ctrl+K
     useEffect(() => {
@@ -199,27 +200,33 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                         ].map((item) => {
                             const active = location.pathname === item.to;
                             return (
-                                <Link 
+                                <motion.div
                                     key={item.to}
-                                    to={item.to} 
-                                    className={`relative flex items-center gap-3 p-2.5 2xl:p-3 rounded-2xl transition-all duration-300 group z-10 ${
-                                        active 
-                                        ? 'text-white font-bold scale-[1.02]' 
-                                        : 'text-text-muted hover:bg-primary-main/5 hover:text-primary-main font-semibold'
-                                    }`}
+                                    whileHover={{ x: active ? 0 : 4 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="relative"
                                 >
-                                    {/* Active Background Pill */}
-                                    {active && (
-                                        <motion.div 
-                                            layoutId="activeTabPill"
-                                            className="absolute inset-0 bg-primary-main shadow-lg shadow-primary-main/20 rounded-2xl -z-10"
-                                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                                        />
-                                    )}
-                                    
-                                    <item.icon size={18} className={`shrink-0 transition-transform relative z-20 ${active ? '' : 'group-hover:scale-110'}`} /> 
-                                    <span className="tracking-tight relative z-20 text-xs 2xl:text-sm">{item.label}</span>
-                                </Link>
+                                    <Link 
+                                        to={item.to} 
+                                        className={`relative flex items-center gap-3 p-2.5 2xl:p-3 rounded-2xl transition-all duration-300 group z-10 ${
+                                            active 
+                                            ? 'text-white font-bold' 
+                                            : 'text-text-muted hover:bg-primary-main/5 hover:text-primary-main font-semibold'
+                                        }`}
+                                    >
+                                        {/* Active Background Pill */}
+                                        {active && (
+                                            <motion.div 
+                                                layoutId="activeTabPill"
+                                                className="absolute inset-0 bg-primary-main shadow-lg shadow-primary-main/20 rounded-2xl -z-10"
+                                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                            />
+                                        )}
+                                        
+                                        <item.icon size={18} className={`shrink-0 transition-transform relative z-20 ${active ? '' : 'group-hover:scale-110'}`} /> 
+                                        <span className="tracking-tight relative z-20 text-xs 2xl:text-sm">{item.label}</span>
+                                    </Link>
+                                </motion.div>
                             );
                         })}
                     </nav>
@@ -385,10 +392,14 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                     <AnimatePresence mode="wait">
                         <motion.div 
                             key={location.pathname}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
+                            initial={{ opacity: 0, y: 12, filter: 'blur(10px)' }}
+                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                            exit={{ opacity: 0, y: -12, filter: 'blur(10px)' }}
+                            transition={{ 
+                                type: "spring",
+                                stiffness: 260,
+                                damping: 20
+                            }}
                             className="flex-1 flex flex-col min-h-0 w-full overflow-hidden"
                         >
                             <div className={`flex-1 flex flex-col min-h-0 ${fitted ? 'p-1.5 sm:p-3 md:p-4 lg:p-6' : (scrollable ? 'overflow-y-auto custom-scrollbar pt-2 pb-24 sm:py-3 md:py-4 lg:py-6' : 'py-2 sm:py-3 md:py-4 lg:py-6')}`}>
