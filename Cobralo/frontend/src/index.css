@@ -117,17 +117,26 @@
   h3 { font-size: clamp(1.25rem, 3vw, 2rem); }
   h4 { font-size: clamp(1.15rem, 2.5vw, 1.5rem); }
 
-  /* Universal scrollbar fix */
+  /* Universal scrollbar fix - Minimalist & Premium */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(34, 197, 94, 0.1);
-    border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: 20px;
+    transition: background 0.3s;
+  }
+  
+  *:hover::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.15);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.3) !important;
   }
 
   /* Custom Scrollbar for Hero Mockup */

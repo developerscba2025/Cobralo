@@ -111,6 +111,34 @@ const Classes = () => {
         return a - b;
     });
 
+    // Within each day, merge schedules that share the same startTime + serviceName if 2+ students
+    const getMergedSchedules = (daySchedules: UnifiedSchedule[]): UnifiedSchedule[] => {
+        const timeMap: Record<string, UnifiedSchedule[]> = {};
+        daySchedules.forEach(s => {
+            const serviceName = (s.students?.[0]?.service_name || s.student?.service_name || '');
+            const key = `${s.startTime}__${serviceName}`;
+            if (!timeMap[key]) timeMap[key] = [];
+            timeMap[key].push(s);
+        });
+
+        return Object.values(timeMap).map(group => {
+            if (group.length < 2) return group[0]; // Keep as-is if only 1 entry
+            // Merge all students into the first schedule's student list
+            const allStudents = group.flatMap(s => s.students || (s.student ? [s.student] : []));
+            const uniqueStudents = Array.from(new Map(allStudents.map(st => [st.id, st])).values());
+            return {
+                ...group[0],
+                students: uniqueStudents,
+                // Mark as merged so we can pass all IDs for attendance
+                _mergedIds: group.map(s => s.id),
+            } as UnifiedSchedule & { _mergedIds: number[] };
+        }).sort((a, b) => {
+            const timeA = (a.startTime || '').replace(/^(\d:)/, '0$1');
+            const timeB = (b.startTime || '').replace(/^(\d:)/, '0$1');
+            return timeA.localeCompare(timeB);
+        });
+    };
+
     const navigate = useNavigate();
 
     return (
@@ -169,20 +197,17 @@ const Classes = () => {
                                 <CalendarIcon size={14} /> {DAYS[dayNum]}
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                                {groupedByDay[dayNum].sort((a,b) => {
-                                    const timeA = (a.startTime || '').replace(/^(\d:)/, '0$1');
-                                    const timeB = (b.startTime || '').replace(/^(\d:)/, '0$1');
-                                    return timeA.localeCompare(timeB);
-                                }).map(schedule => {
+                                {getMergedSchedules(groupedByDay[dayNum]).map(schedule => {
                                     const participants = schedule.students || (schedule.student ? [schedule.student] : []);
+                                    const isMerged = !!(schedule as any)._mergedIds;
                                     return (
                                         <motion.div
                                             key={schedule.id}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="group relative bg-surface dark:bg-bg-soft border border-border-main rounded-[32px] p-6 shadow-sm hover:shadow-xl hover:border-primary-main/30 transition-all overflow-hidden"
+                                            className={`group relative bg-surface dark:bg-bg-soft border rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all overflow-hidden ${isMerged ? 'border-primary-main/30 hover:border-primary-main/60' : 'border-border-main hover:border-primary-main/30'}`}
                                         >
-                                            <div className="absolute top-0 left-0 w-1.5 h-full bg-primary-main opacity-20 group-hover:opacity-100 transition-opacity" />
+                                            <div className={`absolute top-0 left-0 w-1.5 h-full bg-primary-main transition-opacity ${isMerged ? 'opacity-60 group-hover:opacity-100' : 'opacity-20 group-hover:opacity-100'}`} />
                                             
                                             <div className="flex justify-between items-start mb-6">
                                                 <div>
@@ -191,6 +216,11 @@ const Classes = () => {
                                                         <span className="text-xl font-black text-text-main tabular-nums">
                                                             {schedule.startTime} - {schedule.endTime}
                                                         </span>
+                                                        {isMerged && (
+                                                            <span className="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest bg-primary-main/10 text-primary-main border border-primary-main/20">
+                                                                GRUPO
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-text-muted opacity-80">
                                                         {participants[0]?.service_name || 'Servicio General'}

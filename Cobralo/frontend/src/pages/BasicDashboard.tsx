@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { Student } from '../services/api';
 import EmptyState from '../components/EmptyState';
 import TiltCard from '../components/TiltCard';
+import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 
 interface BasicDashboardProps {
     stats: {
@@ -35,9 +36,10 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
 
     return (
         <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="space-y-6"
+            variants={staggerContainerVariants}
+            initial="initial"
+            animate="animate"
+            className="space-y-4 md:space-y-6 pb-12 lg:pb-0"
         >
             {/* ── Header ── */}
             <div className="space-y-2 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -90,7 +92,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
             )}
 
             {/* ══ BENTO GRID SUPERIOR ══ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <motion.div variants={listItemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 xl:gap-5">
 
                 {/* Ingresos del mes - Large */}
                 <TiltCard intensity={3} className="col-span-1 sm:col-span-2">
@@ -112,19 +114,19 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                                 <DollarSign size={18} />
                             </div>
                         </div>
-                        <div className="mt-6">
-                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 italic">Ingresos (Mes Actual)</p>
+                        <div className="mt-4 md:mt-6">
+                            <p className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 italic">Ingresos (Mes Actual)</p>
                             {stats.paid === 0 && stats.pending === 0 && stats.totalStudents === 0 ? (
-                                <p className="text-[11px] font-black text-text-muted mt-2 italic">
-                                    Tu próximo ingreso aparecerá acá ✨
+                                <p className="text-[10px] md:text-[11px] font-black text-text-muted mt-1 opacity-60">
+                                    Aparecerá aquí ✨
                                 </p>
                             ) : (
                                 <>
-                                    <p className="text-4xl md:text-5xl font-black text-text-main tracking-tighter">
+                                    <p className="text-3xl md:text-5xl font-black text-text-main tracking-tighter leading-none">
                                         {currency}{stats.paid.toLocaleString('es-AR')}
                                     </p>
                                     {stats.pending > 0 && (
-                                        <p className="text-[10px] font-bold text-amber-500/90 uppercase tracking-wider mt-2">
+                                        <p className="text-[9px] font-bold text-amber-500/90 uppercase tracking-wider mt-1.5 opacity-80">
                                             {currency}{stats.pending.toLocaleString('es-AR')} pendiente
                                         </p>
                                     )}
@@ -219,7 +221,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                         </div>
                     </motion.div>
                 )}
-            </div>
+            </motion.div>
 
             {/* ══ ACTIVIDAD RECIENTE ══ */}
             <motion.div

@@ -162,7 +162,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             variants={staggerContainerVariants}
             initial="initial"
             animate="animate"
-            className="space-y-6"
+            className="space-y-4 md:space-y-6 pb-12 lg:pb-0"
         >
             {/* IPC Notice Banner */}
             {pendingAdjustment && (
@@ -393,29 +393,29 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             </motion.div>
 
             {/* ── Row 3: Insights ── */}
-            <motion.div variants={fadeInUpVariants} className="space-y-6">
+            <motion.div variants={fadeInUpVariants} className="space-y-4 md:space-y-6">
                 {/* ── Resumen Anual (Chart) ── */}
-                {chartData && chartData.length > 0 && (
-                    <div className={`${bentoBase} ${bentoGlass} p-5 lg:p-7`}>
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-sm font-black text-text-main uppercase tracking-widest flex items-center gap-2">
-                                Resumen de Ingresos
-                            </h3>
-                        </div>
-                        <div className="h-64 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
+                <div className={`${bentoBase} ${bentoGlass} p-4 sm:p-5 lg:p-7`}>
+                    <div className="flex items-center justify-between mb-4 lg:mb-6">
+                        <h3 className="text-[10px] md:text-sm font-black text-text-main uppercase tracking-widest flex items-center gap-2 leading-none">
+                            Resumen de Ingresos
+                        </h3>
+                    </div>
+                    {chartData && chartData.length > 0 ? (
+                        <div className="h-48 sm:h-64 w-full relative">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <XAxis 
                                         dataKey="name" 
                                         axisLine={false} 
                                         tickLine={false} 
-                                        tick={{ fontSize: 10, fill: '#888' }} 
+                                        tick={{ fontSize: 9, fill: '#888' }} 
                                         dy={10} 
                                     />
                                     <YAxis 
                                         axisLine={false} 
                                         tickLine={false} 
-                                        tick={{ fontSize: 10, fill: '#888' }} 
+                                        tick={{ fontSize: 9, fill: '#888' }} 
                                         tickFormatter={(value) => `$${value}`} 
                                     />
                                     <Tooltip 
@@ -427,8 +427,15 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <div className="h-32 flex flex-col items-center justify-center text-center px-4">
+                            <BarChart3 className="w-8 h-8 text-text-muted opacity-10 mb-2" />
+                            <p className="text-[11px] font-black text-text-muted uppercase tracking-widest opacity-60">
+                                Tus ingresos se verán reflejados aquí ✨
+                            </p>
+                        </div>
+                    )}
+                </div>
                 
                 <DashboardMetrics students={students} currency={user?.currency} />
             </motion.div>

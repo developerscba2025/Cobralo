@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, LogOut, Mail, ShieldCheck, Moon, Sun } from 'lucide-react';
+import { X, LogOut, Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -14,7 +14,6 @@ interface MobileMenuProps {
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenLegal }) => {
 
     const { logout, user } = useAuth();
-    const { theme, toggleTheme } = useTheme();
 
     return (
         <AnimatePresence>
@@ -102,23 +101,14 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenLegal })
                                 </div>
                             </div>
 
-                            {/* System Actions Area */}
                              <div className="p-4 border-t border-border-main/50 space-y-2 bg-bg-app/50 sticky bottom-0 backdrop-blur-md">
-                                <div className="flex items-center gap-2">
-                                    <button 
-                                        onClick={toggleTheme}
-                                        className="flex-1 flex items-center justify-center gap-3 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-text-muted bg-bg-soft dark:bg-bg-app border border-border-main/50 hover:text-primary-main transition-all active:scale-95"
-                                    >
-                                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                                        <span>{theme === 'dark' ? 'Luz' : 'Noche'}</span>
-                                    </button>
-                                    <button
-                                        onClick={() => { logout(); onClose(); }}
-                                        className="p-3 rounded-xl text-red-500 bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95 shadow-sm shadow-red-500/5 group"
-                                    >
-                                        <LogOut size={18} className="group-active:translate-x-0.5 transition-transform" />
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={() => { logout(); onClose(); }}
+                                    className="w-full flex items-center justify-center gap-3 p-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 transition-all active:scale-95"
+                                >
+                                    <LogOut size={18} />
+                                    <span>Cerrar Sesión</span>
+                                </button>
                                 <p className="text-center text-[7px] font-black text-text-muted/30 uppercase tracking-[0.3em] pt-2">
                                     Cobralo v1.0 BETA
                                 </p>

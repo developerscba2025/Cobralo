@@ -183,6 +183,10 @@ const Hero = () => {
   const backgroundScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
   const opacityGrid = useTransform(scrollYProgress, [0, 0.5], [0.6, 0.2]);
 
+  // Transform values for background and orbs
+  const orb1Y = useTransform(scrollYProgress, [0, 1], [0, 300]);
+  const orb2Y = useTransform(scrollYProgress, [0, 1], [0, -200]);
+
   return (
     <section
       ref={ref}
@@ -206,7 +210,7 @@ const Hero = () => {
       <motion.div
         className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full pointer-events-none"
         style={{ 
-          y: useTransform(scrollYProgress, [0, 1], [0, 300]),
+          y: orb1Y,
           background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.15) 0%, transparent 65%)' 
         }}
       />
@@ -214,7 +218,7 @@ const Hero = () => {
       <motion.div
         className="absolute top-[35%] -left-[150px] w-[400px] h-[400px] rounded-full pointer-events-none"
         style={{ 
-          y: useTransform(scrollYProgress, [0, 1], [0, -200]),
+          y: orb2Y,
           background: 'radial-gradient(ellipse at center, rgba(74,222,128,0.06) 0%, transparent 70%)' 
         }}
       />

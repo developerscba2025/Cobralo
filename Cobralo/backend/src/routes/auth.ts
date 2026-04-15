@@ -499,10 +499,10 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
     }
 });
 
-// POST /api/auth/admin/make-pro
-router.post('/admin/make-pro', authLimiter, authMiddleware, async (req: AuthRequest, res: Response) => {
+// POST /api/auth/admin/update-plan
+router.post('/admin/update-plan', authLimiter, authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
-        const adminEmail = 'ferrero1ferrero1@gmail.com';
+        const adminEmail = 'developerscba2025@gmail.com';
         const user = await prisma.user.findUnique({ where: { id: req.userId } });
         
         if (!user || user.email !== adminEmail) {
@@ -510,7 +510,7 @@ router.post('/admin/make-pro', authLimiter, authMiddleware, async (req: AuthRequ
             return;
         }
 
-        const { targetEmail } = req.body;
+        const { targetEmail, plan, expiryDate } = req.body;
         if (!targetEmail) {
             res.status(400).json({ error: 'Email destino requerido' });
             return;
@@ -522,18 +522,30 @@ router.post('/admin/make-pro', authLimiter, authMiddleware, async (req: AuthRequ
             return;
         }
 
+        const newPlan = plan || 'PRO';
+        const isPro = newPlan === 'PRO';
+        
+        // If no date provided and plan is PRO, default to 10 years. 
+        // If BASIC (INITIAL), default to 30 days.
+        // If FREE, null.
+        let finalExpiry = expiryDate ? new Date(expiryDate) : null;
+        if (!expiryDate) {
+            if (newPlan === 'PRO') finalExpiry = new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000);
+            else if (newPlan === 'INITIAL') finalExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        }
+
         await prisma.user.update({
             where: { id: targetUser.id },
             data: { 
-                plan: 'PRO', 
-                isPro: true,
-                subscriptionExpiry: new Date(Date.now() + 3650 * 24 * 60 * 60 * 1000) // 10 years
+                plan: newPlan, 
+                isPro: isPro,
+                subscriptionExpiry: finalExpiry
             }
         });
 
-        res.json({ message: `Cuenta ${targetEmail} actualizada a PRO Exitosamente` });
+        res.json({ message: `Cuenta ${targetEmail} actualizada a ${newPlan} exitosamente hasta ${finalExpiry ? finalExpiry.toLocaleDateString() : 'Siempre'}` });
     } catch (error) {
-        console.error('Admin make-pro error:', error);
+        console.error('Admin update-plan error:', error);
         res.status(500).json({ error: 'Error al actualizar usuario' });
     }
 });

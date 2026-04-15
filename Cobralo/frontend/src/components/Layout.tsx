@@ -289,18 +289,18 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                         <div className="pt-1.5 border-t border-border-main/30 flex items-center justify-between gap-1.5">
                             <button
                                 onClick={toggleTheme}
-                                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-main transition-all active:scale-95 border border-transparent hover:border-border-main/20"
+                                className="p-2.5 rounded-xl text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-main transition-all active:scale-95 border border-transparent hover:border-border-main/20"
                                 title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
                             >
-                                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                                <span className="text-[8px] font-black uppercase tracking-wider">{theme === 'dark' ? 'Luz' : 'Noche'}</span>
+                                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                             </button>
                             <button
                                 onClick={logout}
-                                className="p-2 rounded-xl text-red-500/70 hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 border border-transparent hover:border-red-500/10"
+                                className="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl text-red-500/70 hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 border border-transparent hover:border-red-500/10"
                                 title="Cerrar Sesión"
                             >
-                                <LogOut size={16} />
+                                <LogOut size={20} />
+                                <span className="text-[10px] font-black uppercase tracking-widest hidden 2xl:block">Salir</span>
                             </button>
                         </div>
                     </div>
@@ -364,10 +364,24 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                         >
                             <Search size={22} />
                         </button>
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-bg-dark transition text-zinc-500 touch-target active:scale-90"
+                            title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
+                        >
+                            <motion.div
+                                key={theme}
+                                initial={{ rotate: -30, opacity: 0, scale: 0.7 }}
+                                animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                            >
+                                {theme === 'dark' ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-500" />}
+                            </motion.div>
+                        </button>
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-x-hidden relative">
+                <div className={`flex-1 flex flex-col min-h-0 w-full overflow-hidden`}>
                     <AnimatePresence mode="wait">
                         <motion.div 
                             key={location.pathname}
@@ -375,10 +389,10 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            className="flex-1 flex flex-col min-h-0 w-full"
+                            className="flex-1 flex flex-col min-h-0 w-full overflow-hidden"
                         >
-                            <div className={`flex-1 flex flex-col min-h-0 ${fitted ? 'pb-2 sm:pb-3 md:pb-4 px-2 sm:px-3 md:px-4 lg:px-6' : (scrollable ? 'overflow-y-auto custom-scrollbar py-2 sm:py-3 md:py-4 lg:py-6' : 'py-2 sm:py-3 md:py-4 lg:py-6')}`}>
-                                <Container className={`flex-1 flex flex-col min-h-0 ${fitted ? '!p-0' : ''}`}>
+                            <div className={`flex-1 flex flex-col min-h-0 ${fitted ? 'p-1.5 sm:p-3 md:p-4 lg:p-6' : (scrollable ? 'overflow-y-auto custom-scrollbar pt-2 pb-24 sm:py-3 md:py-4 lg:py-6' : 'py-2 sm:py-3 md:py-4 lg:py-6')}`}>
+                                <Container className={`flex-1 flex flex-col min-h-0 ${fitted ? '!p-0 !max-w-none' : ''}`}>
                                     {children}
                                 </Container>
                             </div>

@@ -108,7 +108,7 @@ const Students = () => {
 
     if (loading) {
         return (
-            <Layout>
+            <Layout fitted>
                 <div className="space-y-6">
                     <SkeletonCard variant="stat" count={2} />
                     <div className="card-premium overflow-hidden">
@@ -127,8 +127,8 @@ const Students = () => {
     const totalStudents = students.length;
 
     return (
-        <Layout>
-            <div className="space-y-6 w-full">
+        <Layout fitted scrollable={false}>
+            <div className="flex flex-col h-full min-h-0 space-y-6 w-full overflow-y-auto custom-scrollbar pr-1 -mr-1">
                 {/* Header / Stats */}
                 <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                     <div className="space-y-2">

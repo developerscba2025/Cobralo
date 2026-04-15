@@ -52,6 +52,10 @@ const TiltCard: React.FC<TiltCardProps> = ({ children, className = "", intensity
         y.set(0);
     };
 
+    // Glint effect values
+    const glintX = useTransform(x, [-100, 100], ['-50%', '50%']);
+    const glintY = useTransform(y, [-100, 100], ['-50%', '50%']);
+
     return (
         <div 
             ref={containerRef}
@@ -76,8 +80,8 @@ const TiltCard: React.FC<TiltCardProps> = ({ children, className = "", intensity
                 {!isMobile && (
                     <motion.div 
                         style={{
-                            x: useTransform(x, [-100, 100], ['-50%', '50%']),
-                            y: useTransform(y, [-100, 100], ['-50%', '50%']),
+                            x: glintX,
+                            y: glintY,
                             background: 'radial-gradient(circle at center, rgba(255,255,255,0.12) 0%, transparent 80%)',
                             transformStyle: 'preserve-3d',
                             translateZ: '20px',

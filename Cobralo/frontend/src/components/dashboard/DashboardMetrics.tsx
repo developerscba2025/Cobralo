@@ -49,27 +49,27 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ students }) => {
                     </div>
                 </div>
                 {upcomingStudents.length === 0 ? (
-                    <div className="py-6 flex flex-col items-center justify-center text-center">
-                        <p className="text-[13px] font-black text-text-main uppercase tracking-tight">Todo Tranquilo</p>
-                        <p className="text-[10px] font-bold text-text-muted mt-1">Nadie vence pronto.</p>
+                    <div className="py-3 md:py-6 flex flex-col items-center justify-center text-center">
+                        <p className="text-[11px] md:text-[13px] font-black text-text-main uppercase tracking-tight">Todo Tranquilo</p>
+                        <p className="text-[9px] md:text-[10px] font-bold text-text-muted mt-0.5 opacity-60">Nadie vence pronto.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                         {upcomingStudents.slice(0, 4).map(student => {
                             let diff = (student.due_day || 0) - todayDate;
                             if (diff < 0) diff += 30;
                             return (
-                                <div key={student.id} className="flex items-center justify-between p-3 rounded-2xl bg-black/5 dark:bg-white/[0.07] border border-black/8 dark:border-white/[0.08] hover:bg-black/10 dark:hover:bg-white/[0.12] transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-[11px] shrink-0">
+                                <div key={student.id} className="flex items-center justify-between p-2.5 rounded-2xl bg-black/5 dark:bg-white/[0.05] border border-black/5 dark:border-white/[0.05] hover:bg-black/10 dark:hover:bg-white/[0.1] transition-colors">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-[10px] shrink-0">
                                             {(student.name || '?').charAt(0).toUpperCase()}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-bold text-text-main leading-none truncate">{student.name}</p>
-                                            <p className="text-[10px] font-bold text-text-muted mt-0.5 truncate">{student.service_name}</p>
+                                            <p className="text-xs font-bold text-text-main leading-none truncate">{student.name}</p>
+                                            <p className="text-[9px] font-bold text-text-muted mt-0.5 truncate opacity-70">{student.service_name}</p>
                                         </div>
                                     </div>
-                                    <span className="text-[10px] font-black px-2 py-1 bg-amber-500/10 text-amber-500 rounded-lg whitespace-nowrap">
+                                    <span className="text-[9px] font-black px-1.5 py-0.5 bg-amber-500/10 text-amber-500 rounded-md whitespace-nowrap">
                                         En {diff} d
                                     </span>
                                 </div>
@@ -88,17 +88,19 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ students }) => {
                     </div>
                 </div>
                 {serviceData.length === 0 ? (
-                    <p className="text-sm text-text-muted font-bold">Sin datos</p>
+                    <div className="py-2">
+                        <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest opacity-40 italic">Aún sin alumnos cargados</p>
+                    </div>
                 ) : (
-                    <div className="space-y-3 mt-2">
+                    <div className="space-y-3 mt-1">
                         {serviceData.map((svc, i) => {
                             const maxCount = serviceData[0].count;
                             const pct = maxCount > 0 ? (svc.count / maxCount) * 100 : 0;
                             return (
                                 <div key={i}>
                                     <div className="flex items-center justify-between mb-1">
-                                        <span className="text-[11px] font-bold text-text-main truncate max-w-[120px]">{svc.name}</span>
-                                        <span className="text-[10px] font-black text-text-muted">{svc.count} al.</span>
+                                        <span className="text-[10px] font-bold text-text-main truncate max-w-[120px]">{svc.name}</span>
+                                        <span className="text-[9px] font-black text-text-muted">{svc.count} al.</span>
                                     </div>
                                     <div className="h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                                         <motion.div 

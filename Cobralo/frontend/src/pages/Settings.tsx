@@ -96,7 +96,7 @@ const Settings = () => {
         { id: 'ayuda', label: 'Ayuda', icon: HelpCircle, tabs: [
             { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos de uso' }
         ]},
-        ...(user.email === 'ferrero1ferrero1@gmail.com' ? [{
+        ...(user.email === 'developerscba2025@gmail.com' ? [{
             id: 'admin', label: 'Admin', icon: Zap, tabs: [
                 { id: 'admin_panel', label: 'Super Admin', icon: Zap, description: 'Modo Dios (Solo vos)' }
             ]
@@ -282,7 +282,7 @@ const Settings = () => {
             <div className="bg-surface lg:rounded-[32px] h-full overflow-hidden border-x border-b lg:border border-border-main shadow-xl flex flex-col lg:flex-row">
 
                     {/* ── SIDEBAR (Accordion Nav) ── */}
-                    <div className={`shrink-0 transition-all duration-500 ease-in-out lg:h-full lg:overflow-y-auto hide-scrollbar border-b lg:border-b-0 lg:border-r border-border-main w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] ${
+                    <div className={`shrink-0 lg:h-full lg:overflow-y-auto hide-scrollbar border-b lg:border-b-0 lg:border-r border-border-main w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] ${
                         isNavOpen ? 'block' : 'hidden lg:block'
                     }`}>
                         <div className="w-full h-full p-4 md:p-6 lg:p-8">
@@ -298,10 +298,10 @@ const Settings = () => {
 
                     {/* ── CONTENT ── */}
                     <div className={`flex-1 min-w-0 lg:h-full lg:overflow-y-auto hide-scrollbar ${isNavOpen ? 'hidden lg:block' : 'block'}`}>
-                        <div className={`p-4 md:p-6 lg:p-8 xl:p-10 min-h-full ${isDirty ? 'pb-28' : ''}`}>
+                        <div className={`p-3.5 md:p-6 lg:p-8 xl:p-10 min-h-full ${isDirty ? 'pb-28' : ''}`}>
 
                             {/* Desktop Header */}
-                            <div className="hidden lg:block mb-10 space-y-2 animate-in fade-in slide-in-from-left-4 duration-700">
+                            <div className="hidden lg:block mb-10 space-y-2">
                                 <h2 className="text-4xl xl:text-5xl font-black text-text-main tracking-tighter uppercase italic">
                                     {tab.label}
                                 </h2>
@@ -311,10 +311,10 @@ const Settings = () => {
                             </div>
 
                             {/* Mobile back header */}
-                            <div className="lg:hidden flex items-center justify-between mb-10 pb-6 border-b border-border-main">
-                                <button onClick={() => setIsNavOpen(true)} className="group flex items-center gap-4 text-primary-main font-black uppercase tracking-widest text-[14px] touch-target">
-                                    <div className="w-10 h-10 rounded-full bg-primary-main/10 dark:bg-emerald-500/10 flex items-center justify-center group-active:scale-90 transition-all">
-                                        <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                            <div className="lg:hidden flex items-center justify-between mb-6 pb-4 border-b border-border-main">
+                                <button onClick={() => setIsNavOpen(true)} className="group flex items-center gap-3 text-primary-main font-black uppercase tracking-widest text-[13px] touch-target">
+                                    <div className="w-8 h-8 rounded-full bg-primary-main/10 dark:bg-emerald-500/10 flex items-center justify-center group-active:scale-90 transition-all">
+                                        <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
                                     </div>
                                     <span>Ajustes</span>
                                 </button>
@@ -325,10 +325,10 @@ const Settings = () => {
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={activeTab}
-                                    initial={{ opacity: 0, x: 10, filter: 'blur(10px)' }}
-                                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                                    exit={{ opacity: 0, x: -10, filter: 'blur(10px)' }}
-                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    transition={{ duration: 0.2 }}
                                 >
                                     <SettingsContent
                                         activeTab={activeTab}

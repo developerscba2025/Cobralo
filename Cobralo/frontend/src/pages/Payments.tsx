@@ -266,25 +266,25 @@ const Payments = () => {
     };
 
     return (
-        <Layout>
-                <div className="w-full">
-                    <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div className="space-y-2">
-                            <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic">
+        <Layout fitted scrollable={false}>
+                <div className="flex flex-col h-full min-h-0 gap-4 2xl:gap-6">
+                    <header className="flex-shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex flex-col">
+                            <h1 className="text-2xl md:text-3xl 2xl:text-5xl font-black text-text-main tracking-tighter uppercase italic flex items-center gap-3">
+                                <span className="w-1.5 h-8 bg-primary-main rounded-full" />
                                 COBROS
                             </h1>
-                            <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">
-                                Organizá tus ingresos y gestioná recibos en un solo lugar.
-                            </p>
+                            <p className="text-[10px] 2xl:text-xs font-bold text-text-muted uppercase tracking-[0.2em] opacity-40 mt-1 ml-4.5">Control total de tus finanzas</p>
                         </div>
 
-                        {/* Stats Summary in Header */}
                         <div className="flex gap-4">
-                            <div className="px-5 py-3 bg-primary-main/10 rounded-2xl border border-primary-main/20 flex items-center gap-3">
-                                <DollarSign size={20} className="text-primary-main" />
+                            <div className="px-6 py-3 bg-surface/80 dark:bg-white/5 backdrop-blur-xl border border-border-main/50 rounded-2xl flex items-center gap-4 shadow-sm">
+                                <div className="w-10 h-10 rounded-xl bg-primary-main/10 flex items-center justify-center text-primary-main">
+                                    <DollarSign size={22} strokeWidth={3} />
+                                </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase text-primary-main/60 tracking-widest leading-none mb-1">Total (Período)</p>
-                                    <p className="font-black text-primary-main text-lg leading-none">
+                                    <p className="text-[9px] font-black uppercase text-text-muted tracking-widest leading-none mb-1">Recaudado (Período)</p>
+                                    <p className="font-black text-text-main text-xl leading-none">
                                         {user?.currency || '$'}{totalCollected.toLocaleString('es-AR')}
                                     </p>
                                 </div>
@@ -292,42 +292,43 @@ const Payments = () => {
                         </div>
                     </header>
 
-                    {/* Navigation Tabs */}
-                    <div className="flex p-1.5 bg-bg-soft-app border border-border-main/50 rounded-2xl mb-8 w-fit mx-auto sm:mx-0">
-                        {[
-                            { id: 'pending', label: 'Pendientes', icon: Clock },
-                            { id: 'history', label: 'Historial', icon: Banknote },
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleTabChange(tab.id as Tab)}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all ${
-                                    activeTab === tab.id 
-                                    ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' 
-                                    : 'text-text-muted hover:text-text-main'
-                                }`}
-                            >
-                                <tab.icon size={16} />
-                                {tab.label}
-                                {tab.id === 'pending' && pendingStudents.length > 0 && (
-                                    <span className="ml-1 w-5 h-5 bg-white/20 text-white rounded-full flex items-center justify-center text-[9px]">
-                                        {pendingStudents.length}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
+                    {/* Control Bar: Tabs + Search */}
+                    <div className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface/50 dark:bg-white/[0.02] border border-border-main/50 p-2 rounded-[28px]">
+                        <div className="flex p-1 bg-bg-app dark:bg-black/20 rounded-2xl w-full sm:w-auto">
+                            {[
+                                { id: 'pending', label: 'Pendientes', icon: Clock },
+                                { id: 'history', label: 'Historial', icon: Banknote },
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => handleTabChange(tab.id as Tab)}
+                                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                                        activeTab === tab.id 
+                                        ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20' 
+                                        : 'text-text-muted hover:text-text-main'
+                                    }`}
+                                >
+                                    <tab.icon size={14} />
+                                    {tab.label}
+                                    {tab.id === 'pending' && pendingStudents.length > 0 && (
+                                        <span className={`ml-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-primary-main/10 text-primary-main'}`}>
+                                            {pendingStudents.length}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
 
-                    {/* Global Search for tabs */}
-                    <div className="relative group mb-8 max-w-2xl">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors" size={20} />
-                        <input
-                            type="text"
-                            placeholder={activeTab === 'receipts' ? "Buscar por alumno o N°..." : "Buscar alumno..."}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 bg-surface border border-border-main/50 rounded-3xl shadow-sm focus:ring-2 focus:ring-primary-main transition-all outline-none text-text-main font-bold text-sm"
-                        />
+                        <div className="relative w-full sm:w-80 2xl:w-96 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors" size={16} />
+                            <input
+                                type="text"
+                                placeholder={activeTab === 'receipts' ? "Buscar por alumno o N°..." : "Buscar alumno..."}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-11 pr-4 py-3 bg-bg-app dark:bg-black/20 border border-transparent focus:border-primary-main/30 rounded-2xl transition-all outline-none text-text-main font-bold text-xs"
+                            />
+                        </div>
                     </div>
 
                     <AnimatePresence mode="wait">
@@ -349,237 +350,236 @@ const Payments = () => {
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
                             >
-                                {/* PENDIENTES TAB */}
+                                {/* PENDIENTES TAB - Bento Grid */}
                                 {activeTab === 'pending' && (
-                                    <div className="space-y-4">
+                                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 -mr-1">
                                         {pendingStudents.length === 0 ? (
-                                            <div className="card-premium p-12 text-center border-2 border-dashed">
-                                                <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                    <CheckCircle2 size={32} />
+                                            <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+                                                <div className="w-20 h-20 bg-primary-main/10 text-primary-main rounded-full flex items-center justify-center mb-4">
+                                                    <CheckCircle2 size={40} />
                                                 </div>
                                                 <h3 className="text-xl font-black text-text-main uppercase italic font-accent mb-2">¡Todo al día!</h3>
-                                                <p className="text-text-muted font-bold text-xs uppercase tracking-widest">No hay alumnos con pagos pendientes por ahora.</p>
+                                                <p className="text-text-muted font-bold text-[10px] uppercase tracking-widest">No hay alumnos con pagos pendientes.</p>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pb-8">
                                                 {pendingStudents.map(student => (
-                                                    <div key={student.id} className="card-premium p-6 group hover:scale-[1.01] transition-all border border-border-main/60">
-                                                        <div className="flex flex-col gap-4 mb-6">
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-14 h-14 rounded-2xl bg-primary-main/10 flex items-center justify-center text-primary-main font-black text-xl shrink-0">
+                                                    <motion.div 
+                                                        key={student.id} 
+                                                        layout
+                                                        className="group bg-surface/50 dark:bg-white/[0.03] backdrop-blur-sm p-5 2xl:p-6 rounded-[32px] border border-border-main/50 hover:border-primary-main/30 hover:bg-surface dark:hover:bg-white/[0.05] transition-all duration-300 relative flex flex-col justify-between"
+                                                    >
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-main to-emerald-600 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-primary-main/20">
                                                                     {student.name.charAt(0)}
                                                                 </div>
                                                                 <div className="min-w-0">
-                                                                    <h3 className="text-xl font-black text-text-main uppercase tracking-tighter truncate">{student.name}</h3>
-                                                                    <p className="label-premium !text-[10px] mt-0.5 truncate">{student.service_name}</p>
+                                                                    <h3 className="font-black text-text-main uppercase tracking-tighter truncate leading-none">{student.name}</h3>
+                                                                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1 opacity-60 truncate">{student.service_name}</p>
                                                                 </div>
                                                             </div>
-                                                            
-                                                            <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-white/5 rounded-2xl border border-border-main/30">
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-40">Vence</span>
+                                                                <span className="text-xs font-black text-text-main">Día {student.deadline_day || 10}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-4">
+                                                            <div className="flex items-end justify-between p-4 bg-bg-app dark:bg-black/20 rounded-[20px] border border-border-main/30 group-hover:bg-primary-main/[0.02] transition-colors">
                                                                 <div>
-                                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none mb-1 opacity-60 italic">Vencimiento</p>
-                                                                    <p className="text-sm font-black text-text-main">Día {student.deadline_day || 10}</p>
-                                                                </div>
-                                                                <div className="text-right">
-                                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none mb-1 opacity-60 italic">Total</p>
-                                                                    <p className="text-xl font-black text-primary-main leading-none">
+                                                                    <p className="text-[9px] font-black text-primary-main/60 uppercase tracking-widest leading-none mb-1">Monto Total</p>
+                                                                    <p className="text-2xl font-black text-text-main leading-none tabular-nums">
                                                                         {user?.currency || '$'}{Number(student.amount).toLocaleString('es-AR')}
                                                                     </p>
                                                                 </div>
+                                                                
+                                                                <div className="h-10 w-[1px] bg-border-main/50 mx-2" />
+                                                                
+                                                                <div className="hidden sm:block">
+                                                                    <p className="text-[9px] font-black text-text-muted/60 uppercase tracking-widest leading-none mb-1 text-right">Estado</p>
+                                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                                                        <span className="text-[8px] font-black text-amber-500 uppercase">Pendiente</span>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        
-                                                        <div className="grid grid-cols-2 gap-2">
-                                                            {isPro ? (
-                                                                user?.mpAccessToken ? (
+
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                {isPro && user?.mpAccessToken ? (
                                                                     <button
                                                                         onClick={() => handleSendPaymentLink(student)}
-                                                                        className="flex items-center justify-center gap-2 py-4 bg-[#009EE3]/10 text-[#009EE3] border border-[#009EE3]/20 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-[#009EE3] hover:text-white transition-all italic"
-                                                                        title="Enviar link de pago por MP"
+                                                                        className="flex items-center justify-center gap-2 py-3 bg-surface hover:bg-[#009EE3] text-[#009EE3] hover:text-white border border-[#009EE3]/30 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all italic shadow-sm"
                                                                     >
-                                                                        <CreditCard size={14} />
-                                                                        Link MP
+                                                                        <CreditCard size={14} /> Link MP
                                                                     </button>
                                                                 ) : (
                                                                     <Link
-                                                                        to="/app/settings?tab=business"
-                                                                        className="flex items-center justify-center gap-2 py-4 bg-zinc-100 dark:bg-white/5 text-zinc-500 border border-zinc-200 dark:border-white/10 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-zinc-200 transition-all italic text-center"
-                                                                        title="Vincular Mercado Pago en Ajustes"
+                                                                        to={isPro ? "/app/settings?tab=business" : "/app/settings?tab=subscription"}
+                                                                        className="flex items-center justify-center gap-2 py-3 bg-surface text-text-muted border border-border-main rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-bg-app transition-all italic text-center"
                                                                     >
-                                                                        <CreditCard size={14} />
-                                                                        Vincular MP
+                                                                        <CreditCard size={14} /> {isPro ? 'Vincular' : 'Pro'}
                                                                     </Link>
-                                                                )
-                                                            ) : (
-                                                                <Link
-                                                                    to="/app/settings?tab=subscription"
-                                                                    className="flex items-center justify-center gap-1.5 py-4 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-amber-500/20 transition-all italic text-center"
-                                                                    title="Función PRO: Link de pago con Mercado Pago"
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleRecordPayment(student)}
+                                                                    className="flex items-center justify-center gap-2 py-3 bg-primary-main text-white rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary-main/20 hover:scale-[1.03] active:scale-95 transition-all italic"
                                                                 >
-                                                                    <CreditCard size={12} />
-                                                                    PRO
-                                                                </Link>
-                                                            )}
-                                                            <button
-                                                                onClick={() => handleRecordPayment(student)}
-                                                                className="flex items-center justify-center gap-2 py-4 bg-primary-main text-white rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-primary-main/20 hover:scale-[1.03] active:scale-95 transition-all italic"
-                                                            >
-                                                                <Wallet size={16} />
-                                                                Registrar
-                                                            </button>
+                                                                    <Wallet size={16} /> Registrar
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </motion.div>
                                                 ))}
                                             </div>
                                         )}
                                     </div>
                                 )}
 
-                                {/* HISTORIAL TAB */}
+                                {/* HISTORIAL TAB - Modern List */}
                                 {activeTab === 'history' && (
-                                    <div className="space-y-4">
-                                        <div className="bg-surface border border-border-main/50 rounded-3xl p-6 flex flex-wrap items-center gap-6 mb-2">
+                                    <div className="flex-1 min-h-0 flex flex-col gap-4">
+                                        <div className="flex-shrink-0 bg-surface/30 dark:bg-white/[0.02] backdrop-blur-md border border-border-main/50 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
                                             <div className="flex items-center gap-4">
-                                                <Filter size={20} className="text-primary-main" />
-                                                <div className="flex gap-2">
+                                                <div className="flex items-center gap-2 bg-bg-app dark:bg-black/20 p-1 rounded-xl border border-border-main/30">
                                                     <select
                                                         value={selectedYear}
                                                         onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                                        className="px-4 py-2 bg-bg-soft-app dark:text-white rounded-xl border-none font-black text-[11px] uppercase tracking-widest outline-none focus:ring-2 focus:ring-primary-main/20"
+                                                        className="px-3 py-1.5 bg-transparent text-text-main rounded-lg appearance-none font-black text-[10px] uppercase tracking-widest outline-none cursor-pointer"
                                                     >
-                                                        {years.map(year => <option key={year} value={year}>{year}</option>)}
+                                                        {years.map(year => <option key={year} value={year} className="bg-surface">{year}</option>)}
                                                     </select>
+                                                    <div className="w-px h-4 bg-border-main/50" />
                                                     <select
                                                         value={selectedMonth || ''}
                                                         onChange={(e) => setSelectedMonth(e.target.value ? Number(e.target.value) : null)}
-                                                        className="px-4 py-2 bg-bg-soft-app dark:text-white rounded-xl border-none font-black text-[11px] uppercase tracking-widest outline-none focus:ring-2 focus:ring-primary-main/20"
+                                                        className="px-3 py-1.5 bg-transparent text-text-main rounded-lg appearance-none font-black text-[10px] uppercase tracking-widest outline-none cursor-pointer"
                                                     >
-                                                        <option value="">Todo el año</option>
-                                                        {MONTHS.map((month, i) => <option key={i} value={i + 1}>{month}</option>)}
+                                                        <option value="" className="bg-surface">Todo el año</option>
+                                                        {MONTHS.map((month, i) => <option key={i} value={i + 1} className="bg-surface">{month}</option>)}
                                                     </select>
                                                 </div>
-                                                <button
-                                                    onClick={handleExportMonthlyClosing}
-                                                    className="flex items-center gap-2 px-6 py-2.5 bg-primary-main/10 text-primary-main hover:bg-primary-main hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
-                                                >
-                                                    <Download size={14} />
-                                                    Exportar Excel
-                                                </button>
                                             </div>
+                                            <button
+                                                onClick={handleExportMonthlyClosing}
+                                                className="flex items-center gap-2 px-6 py-2 bg-primary-main/10 text-primary-main hover:bg-primary-main hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+                                            >
+                                                <Download size={14} /> Exportar
+                                            </button>
                                         </div>
 
-                                        <div className="card-premium overflow-hidden border border-border-main/60">
+                                        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 -mr-1">
                                             {filteredHistory.length === 0 ? (
-                                                <div className="p-20 text-center text-text-muted">
-                                                    <Calendar size={48} className="mx-auto mb-4 opacity-20" />
-                                                    <p className="font-bold uppercase tracking-widest text-xs">Sin registros en este periodo.</p>
+                                                <div className="flex flex-col items-center justify-center h-full py-20 text-text-muted">
+                                                    <Calendar size={48} className="mb-4 opacity-10" />
+                                                    <p className="font-bold uppercase tracking-widest text-[10px]">Sin registros en este periodo.</p>
                                                 </div>
                                             ) : (
-                                                <table className="w-full text-left">
-                                                    <thead className="bg-bg-soft-app border-b border-border-main/50">
-                                                        <tr>
-                                                            <th className="p-5 label-premium">Alumno</th>
-                                                            <th className="p-5 label-premium text-center">Monto</th>
-                                                            <th className="p-5 label-premium hidden md:table-cell text-center">Confirmación</th>
-                                                            <th className="p-5 label-premium text-right">Acciones</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {filteredHistory.map(payment => (
-                                                            <tr key={payment.id} className="border-b border-border-main/30 hover:bg-primary-main/5 transition-colors">
-                                                                <td className="p-4">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-xl bg-bg-soft-app flex items-center justify-center text-primary-main font-bold">
-                                                                            {payment.student?.name.charAt(0)}
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="font-black text-text-main leading-tight">{payment.student?.name || 'Alumno Eliminado'}</p>
-                                                                            <p className="text-[10px] uppercase font-black text-text-muted tracking-tighter">{payment.student?.service_name}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-4 text-center">
-                                                                    <p className="font-black text-primary-main">{user?.currency || '$'}{Number(payment.amount).toLocaleString('es-AR')}</p>
-                                                                </td>
-                                                                <td className="p-4 hidden md:table-cell text-center">
-                                                                    <p className="text-text-main text-[11px] font-black uppercase tracking-tight leading-none mb-1">
-                                                                        {new Date(payment.paidAt).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                <div className="space-y-3 pb-8">
+                                                    {filteredHistory.map(payment => (
+                                                        <motion.div 
+                                                            key={payment.id} 
+                                                            initial={{ opacity: 0, x: -10 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            className="bg-surface/50 dark:bg-white/[0.02] border border-border-main/30 rounded-2xl p-4 flex items-center justify-between hover:border-primary-main/20 hover:bg-surface transition-all group"
+                                                        >
+                                                            <div className="flex items-center gap-4 min-w-0">
+                                                                <div className="w-10 h-10 rounded-xl bg-bg-app dark:bg-black/20 flex items-center justify-center text-primary-main font-black text-sm border border-border-main/30">
+                                                                    {payment.student?.name.charAt(0)}
+                                                                </div>
+                                                                <div className="truncate">
+                                                                    <p className="font-black text-text-main leading-tight truncate">{payment.student?.name || 'Alumno Eliminado'}</p>
+                                                                    <p className="text-[9px] uppercase font-bold text-text-muted tracking-wide flex items-center gap-1.5">
+                                                                        <Clock size={10} strokeWidth={3} />
+                                                                        {new Date(payment.paidAt).toLocaleDateString('es-AR')} • {new Date(payment.paidAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} HS
                                                                     </p>
-                                                                    <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest leading-none">
-                                                                        {new Date(payment.paidAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} HS
-                                                                    </p>
-                                                                </td>
-                                                                <td className="p-4 text-right">
-                                                                    <div className="flex items-center justify-end gap-2">
-                                                                        <button 
-                                                                            onClick={() => handleShareReceipt(payment.id)} 
-                                                                            className="flex items-center gap-2 px-4 py-2 bg-primary-main/10 text-primary-main hover:bg-primary-main hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
-                                                                            title="Confirmar por WhatsApp"
-                                                                        >
-                                                                            <Share2 size={16} />
-                                                                            Confirmar
-                                                                        </button>
-                                                                        <button onClick={() => setDeleteModal({ isOpen: true, paymentId: payment.id })} className="p-2.5 rounded-xl hover:bg-red-500/10 text-text-muted hover:text-red-500 transition-all">
-                                                                            <Trash2 size={18} />
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className="flex items-center gap-6">
+                                                                <div className="text-right hidden sm:block">
+                                                                    <p className="text-[9px] font-black text-text-muted uppercase tracking-widest opacity-40 leading-none mb-1">Monto</p>
+                                                                    <p className="font-black text-primary-main tabular-nums leading-none">{user?.currency || '$'}{Number(payment.amount).toLocaleString('es-AR')}</p>
+                                                                </div>
+                                                                
+                                                                <div className="flex items-center gap-2">
+                                                                    <button 
+                                                                        onClick={() => handleShareReceipt(payment.id)} 
+                                                                        className="flex items-center gap-2 px-4 py-2 bg-primary-main/10 text-primary-main hover:bg-primary-main hover:text-white rounded-xl font-black text-[9px] uppercase tracking-widest transition-all"
+                                                                    >
+                                                                        <Share2 size={14} /> <span className="hidden md:inline">Confirmar</span>
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => setDeleteModal({ isOpen: true, paymentId: payment.id })} 
+                                                                        className="p-2 rounded-xl text-text-muted hover:bg-red-500/10 hover:text-red-500 transition-all"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
                                             )}
                                         </div>
                                     </div>
                                 )}
 
-                                {/* RECIBOS TAB */}
+                                {/* RECIBOS TAB - Compact Bento */}
                                 {activeTab === 'receipts' && (
-                                    <div className="space-y-4">
+                                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 -mr-1">
                                         {filteredReceipts.length === 0 ? (
-                                            <div className="card-premium p-20 text-center border-2 border-dashed">
-                                                <ReceiptIcon size={48} className="mx-auto mb-4 opacity-20 text-primary-main" />
+                                            <div className="flex flex-col items-center justify-center h-full py-20 text-center">
+                                                <ReceiptIcon size={48} className="mb-4 opacity-10 text-primary-main" />
                                                 <h3 className="text-xl font-black text-text-main uppercase italic font-accent mb-2">Sin Recibos</h3>
-                                                <p className="text-text-muted font-bold text-xs uppercase tracking-widest leading-relaxed">Los recibos se generan automáticamente cuando registras un cobro.</p>
+                                                <p className="text-text-muted font-bold text-[10px] uppercase tracking-widest">Los recibos se generan automáticamente al registrar cobros.</p>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8">
                                                 {filteredReceipts.map(receipt => (
-                                                    <div key={receipt.id} className="card-premium p-6 group flex items-center justify-between gap-6 border border-border-main/50">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-14 h-14 bg-bg-soft-app text-primary-main rounded-2xl flex flex-col items-center justify-center shrink-0 border border-border-main/50 shadow-sm transition-transform group-hover:scale-105">
-                                                                <span className="text-[9px] font-black uppercase text-text-muted tracking-widest mb-1">Día</span>
-                                                                <span className="text-lg font-black leading-none">{new Date(receipt.paidAt).getDate()}</span>
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <h3 className="font-black text-text-main text-lg leading-tight truncate">{receipt.studentName}</h3>
-                                                                <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                                    <p className="label-premium !text-[9px] truncate">{receipt.receiptNumber}</p>
-                                                                    <span className="w-1 h-1 rounded-full bg-border-main" />
-                                                                    <p className="label-premium !text-[9px]">
-                                                                        {new Date(receipt.paidAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} HS
-                                                                    </p>
-                                                                    <span className="w-1 h-1 rounded-full bg-border-main" />
-                                                                    <p className="label-premium !text-[9px]">{user?.currency || '$'}{receipt.amount.toLocaleString()}</p>
+                                                    <motion.div 
+                                                        key={receipt.id} 
+                                                        layout
+                                                        className="bg-surface/50 dark:bg-white/[0.03] p-5 rounded-[28px] border border-border-main/50 hover:border-primary-main/30 group transition-all"
+                                                    >
+                                                        <div className="flex items-start justify-between mb-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-12 h-12 bg-bg-app dark:bg-black/20 text-primary-main rounded-2xl flex flex-col items-center justify-center border border-border-main/30">
+                                                                    <span className="text-[7px] font-black uppercase text-text-muted/60 tracking-widest mb-0.5">Día</span>
+                                                                    <span className="text-lg font-black leading-none">{new Date(receipt.paidAt).getDate()}</span>
                                                                 </div>
+                                                                <div className="min-w-0">
+                                                                    <h3 className="font-black text-text-main text-base leading-tight truncate">{receipt.studentName}</h3>
+                                                                    <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mt-1 opacity-60">{receipt.receiptNumber}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="p-2 bg-primary-main/10 rounded-xl text-primary-main opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <ReceiptIcon size={16} />
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center gap-2">
-                                                            <button 
-                                                                onClick={() => handleDownloadReceipt(receipt.id)}
-                                                                className={`p-3 rounded-2xl transition-all active:scale-90 ${isPro ? 'bg-bg-app text-text-main hover:bg-primary-main/10 hover:text-primary-main' : 'bg-bg-soft-app text-text-muted opacity-50 cursor-not-allowed'}`}
-                                                            >
-                                                                <Download size={20} />
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleShareReceipt(receipt.id)}
-                                                                className="p-3 bg-primary-main/10 text-primary-main rounded-2xl hover:bg-primary-main hover:text-white transition-all active:scale-90 shadow-sm"
-                                                            >
-                                                                <Share2 size={20} />
-                                                            </button>
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <div className="px-3 py-1.5 bg-bg-app dark:bg-black/20 rounded-xl border border-border-main/20">
+                                                                <p className="text-[11px] font-black text-primary-main tabular-nums">{user?.currency || '$'}{receipt.amount.toLocaleString()}</p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <button 
+                                                                    onClick={() => handleDownloadReceipt(receipt.id)}
+                                                                    className={`p-2.5 rounded-xl transition-all ${isPro ? 'bg-bg-app text-text-main hover:bg-primary-main/10 hover:text-primary-main' : 'bg-bg-soft-app text-text-muted opacity-50 cursor-not-allowed'}`}
+                                                                    title="Descargar PDF"
+                                                                >
+                                                                    <Download size={16} />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleShareReceipt(receipt.id)}
+                                                                    className="p-2.5 bg-primary-main/10 text-primary-main rounded-xl hover:bg-primary-main hover:text-white transition-all shadow-sm"
+                                                                    title="Compartir"
+                                                                >
+                                                                    <Share2 size={16} />
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </motion.div>
                                                 ))}
                                             </div>
                                         )}

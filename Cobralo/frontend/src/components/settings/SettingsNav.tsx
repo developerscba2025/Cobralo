@@ -81,7 +81,7 @@ const SettingsNav: React.FC<SettingsNavProps> = ({
                                         <button
                                             key={tab.id}
                                             onClick={() => handleTabClick(tab)}
-                                            className={`w-full flex items-center gap-3.5 px-3 py-3 rounded-2xl transition-all text-left group relative ${
+                                            className={`w-full flex items-center gap-3 md:gap-3.5 px-3 py-2 md:py-3 rounded-xl md:rounded-2xl transition-all text-left group relative ${
                                                 isActive
                                                     ? isSpecialPlan 
                                                         ? 'bg-primary-main text-white shadow-lg shadow-primary-main/20 my-1'
@@ -92,7 +92,7 @@ const SettingsNav: React.FC<SettingsNavProps> = ({
                                             }`}
                                         >
                                             {/* Icon */}
-                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                                            <div className={`w-7 h-7 md:w-9 md:h-9 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 transition-all ${
                                                 isActive
                                                     ? isSpecialPlan
                                                         ? 'bg-white/20 text-white'
@@ -101,13 +101,13 @@ const SettingsNav: React.FC<SettingsNavProps> = ({
                                                       ? 'bg-primary-main/10 text-primary-main'
                                                       : 'bg-white dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 group-hover:text-primary-main border border-zinc-100 dark:border-zinc-700/60'
                                             }`}>
-                                                <tab.icon size={16} />
+                                                <tab.icon size={isActive && !isSpecialPlan ? 14 : 14} className="md:size-[16px]" />
                                             </div>
 
                                             {/* Text */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`text-[13px] md:text-[12px] font-bold md:font-black tracking-tight truncate ${
+                                                    <span className={`text-[12px] md:text-[12px] font-bold md:font-black tracking-tight truncate ${
                                                         isActive 
                                                           ? isSpecialPlan 
                                                               ? 'text-white' 
@@ -117,21 +117,21 @@ const SettingsNav: React.FC<SettingsNavProps> = ({
                                                         {tab.label}
                                                     </span>
                                                     {isSpecialPlan && (
-                                                        <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter ${
+                                                        <span className={`px-1 py-0.5 rounded-md text-[7px] font-black uppercase tracking-tighter ${
                                                             isActive ? 'bg-white/20 text-white' : 'bg-primary-main/10 text-primary-main'
                                                         }`}>
                                                             {isPro ? 'ACTIVO' : 'MEJORÁ'}
                                                         </span>
                                                     )}
                                                     {needsPro && !isSpecialPlan && (
-                                                        <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-primary-main/10 dark:bg-emerald-500/15 text-[7px] font-black text-primary-main dark:text-emerald-400 uppercase tracking-tighter shrink-0">
+                                                        <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-md bg-primary-main/10 dark:bg-emerald-500/15 text-[7px] font-black text-primary-main dark:text-emerald-400 uppercase tracking-tighter shrink-0">
                                                             <Lock size={7} />
                                                             <span>PRO</span>
                                                         </div>
                                                     )}
                                                 </div>
                                                 {tab.description && (
-                                                    <span className={`block text-[10px] md:text-[11px] font-medium md:font-bold mt-0.5 truncate tracking-wide opacity-60 ${
+                                                    <span className={`block text-[9px] md:text-[11px] font-medium md:font-bold mt-0.5 truncate tracking-wide opacity-60 ${
                                                         isActive 
                                                           ? isSpecialPlan ? 'text-white/70' : 'text-primary-main/60 dark:text-emerald-400/50' 
                                                           : 'text-zinc-400 dark:text-zinc-500'

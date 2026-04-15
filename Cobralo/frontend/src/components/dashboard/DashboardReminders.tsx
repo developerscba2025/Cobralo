@@ -109,10 +109,10 @@ const DashboardReminders: React.FC<DashboardRemindersProps> = ({
                     {reminders.length === 0 ? (
                         <motion.div 
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="h-full flex flex-col items-center justify-center text-center text-text-muted py-6"
+                            className="flex flex-col items-center justify-center text-center text-text-muted py-2 md:py-6"
                         >
-                            <ListTodo size={24} className="mb-2 opacity-20" />
-                            <p className="text-[11px] font-bold">No hay recordatorios pendientes.</p>
+                            <ListTodo size={18} className="mb-1 opacity-20 hidden md:block" />
+                            <p className="text-[10px] md:text-[11px] font-bold opacity-60">No hay recordatorios pendientes.</p>
                         </motion.div>
                     ) : (
                         reminders.map(reminder => {

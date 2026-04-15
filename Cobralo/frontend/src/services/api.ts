@@ -524,12 +524,12 @@ export const api = {
         return res.json();
     },
 
-    // POST /api/auth/admin/make-pro
-    async makeAnyUserPro(targetEmail: string): Promise<{ message: string }> {
-        const res = await fetchWithTimeout(`${API_URL}/auth/admin/make-pro`, {
+    // POST /api/auth/admin/update-plan
+    async updateUserPlanAdmin(targetEmail: string, plan: string, expiryDate?: string): Promise<{ message: string }> {
+        const res = await fetchWithTimeout(`${API_URL}/auth/admin/update-plan`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-            body: JSON.stringify({ targetEmail })
+            body: JSON.stringify({ targetEmail, plan, expiryDate })
         });
         return res.json();
     },

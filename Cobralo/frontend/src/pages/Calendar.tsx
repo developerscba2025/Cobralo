@@ -433,29 +433,29 @@ const Calendar = () => {
     return (
         <Layout fitted scrollable={false}>
             <div className="flex flex-col h-full gap-2 2xl:gap-4 min-h-0">
-                <header className="flex-shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 2xl:mb-8">
+                <header className="flex-shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-2 md:mb-4 2xl:mb-8">
                     <div className="flex flex-col">
-                        <h1 className="text-xl md:text-2xl 2xl:text-4xl font-extrabold text-text-main tracking-tight uppercase leading-none flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-primary-main rounded-full" />
-                            AGENDA SEMANAL
+                        <h1 className="text-base md:text-2xl 2xl:text-4xl font-extrabold text-text-main tracking-tight uppercase leading-none flex items-center gap-2">
+                            <span className="w-1 h-5 md:w-1.5 md:h-6 bg-primary-main rounded-full" />
+                            AGENDA
                         </h1>
-                        <p className="text-[9px] 2xl:text-xs font-bold text-text-muted uppercase tracking-[0.2em] opacity-40 mt-1 ml-3.5">Inteligencia y precisión en tus horarios</p>
+                        <p className="text-[8px] md:text-[9px] 2xl:text-xs font-bold text-text-muted uppercase tracking-[0.2em] opacity-40 mt-1 ml-2.5 md:ml-3.5 italic">Inteligencia y precisión</p>
                     </div>
                     
-                    <div className="flex items-center bg-surface/50 backdrop-blur-sm border border-border-main rounded-2xl p-1 shadow-sm h-12">
+                    <div className="flex items-center bg-surface/50 backdrop-blur-sm border border-border-main rounded-2xl p-0.5 shadow-sm h-10 md:h-12">
                         <div className="flex items-center">
-                            <button onClick={handlePrevWeek} className="p-2 hover:bg-bg-app rounded-xl transition text-text-main group">
-                                <ChevronLeft size={18} className="group-active:-translate-x-1 transition-transform" />
+                            <button onClick={handlePrevWeek} className="p-1.5 md:p-2 hover:bg-bg-app rounded-xl transition text-text-main group">
+                                <ChevronLeft size={16} className="md:size-[18px] group-active:-translate-x-1 transition-transform" />
                             </button>
-                            <div className="min-w-[150px] text-center px-1">
-                                <span className="text-[10px] 2xl:text-[11px] font-black uppercase tracking-widest text-text-main/80">{weekLabel}</span>
+                            <div className="min-w-[120px] md:min-w-[150px] text-center px-0.5">
+                                <span className="text-[9px] md:text-[10px] 2xl:text-[11px] font-black uppercase tracking-widest text-text-main/80">{weekLabel}</span>
                             </div>
-                            <button onClick={handleNextWeek} className="p-2 hover:bg-bg-app rounded-xl transition text-text-main group">
-                                <ChevronRight size={18} className="group-active:translate-x-1 transition-transform" />
+                            <button onClick={handleNextWeek} className="p-1.5 md:p-2 hover:bg-bg-app rounded-xl transition text-text-main group">
+                                <ChevronRight size={16} className="md:size-[18px] group-active:translate-x-1 transition-transform" />
                             </button>
                         </div>
-                        <div className="w-[1px] h-4 bg-border-main mx-1" />
-                        <button onClick={handleToday} className="px-4 py-2 hover:bg-bg-app rounded-xl transition text-[9px] font-black uppercase tracking-[0.2em] text-text-muted hover:text-primary-main">
+                        <div className="w-[1px] h-3 md:h-4 bg-border-main mx-1" />
+                        <button onClick={handleToday} className="px-3 md:px-4 py-1.5 md:py-2 hover:bg-bg-app rounded-xl transition text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-text-muted hover:text-primary-main">
                             Hoy
                         </button>
                     </div>
@@ -573,12 +573,12 @@ const Calendar = () => {
 
                 {/* Mobile View */}
                 <div className="md:hidden flex flex-col min-h-[500px]">
-                    <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-6 -mx-4 px-4 sticky top-0 z-20 bg-bg-app/90 backdrop-blur-md pt-2 snap-x">
+                    <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-4 -mx-4 px-4 sticky top-0 z-20 bg-bg-app/90 backdrop-blur-md pt-2 snap-x">
                         {weekDates.map((d) => (
-                            <button key={d.dayOfWeek} onClick={() => setSelectedMobileDay(d.dayOfWeek)} className={`snap-center flex flex-col items-center justify-center min-w-[72px] h-[86px] rounded-[24px] p-3 transition-all ${selectedMobileDay === d.dayOfWeek ? 'bg-primary-main text-white shadow-lg shadow-primary-glow border border-primary-light/30' : d.isToday ? 'bg-primary-main/10 text-primary-main border border-primary-main/20' : 'bg-surface border border-border-main text-text-muted hover:border-primary-main/30'}`}>
-                                <span className="text-[10px] font-black uppercase tracking-widest opacity-90">{d.short}</span>
-                                <span className={`text-2xl font-black mt-1 leading-none ${selectedMobileDay === d.dayOfWeek ? 'text-white' : 'text-text-main'}`}>{d.date}</span>
-                                {d.isToday && selectedMobileDay !== d.dayOfWeek && <div className="w-1 h-1 rounded-full bg-primary-main mt-1.5" />}
+                            <button key={d.dayOfWeek} onClick={() => setSelectedMobileDay(d.dayOfWeek)} className={`snap-center flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-[20px] p-2 transition-all ${selectedMobileDay === d.dayOfWeek ? 'bg-primary-main text-white shadow-lg shadow-primary-glow border border-primary-light/30' : d.isToday ? 'bg-primary-main/10 text-primary-main border border-primary-main/20' : 'bg-surface border border-border-main text-text-muted hover:border-primary-main/30'}`}>
+                                <span className="text-[9px] font-black uppercase tracking-widest opacity-90">{d.short}</span>
+                                <span className={`text-xl font-black mt-0.5 leading-none ${selectedMobileDay === d.dayOfWeek ? 'text-white' : 'text-text-main'}`}>{d.date}</span>
+                                {d.isToday && selectedMobileDay !== d.dayOfWeek && <div className="w-1 h-1 rounded-full bg-primary-main mt-1" />}
                             </button>
                         ))}
                     </div>
@@ -600,37 +600,35 @@ const Calendar = () => {
                                     transition={{ delay: idx * 0.05 }} 
                                     key={s.id} 
                                     onClick={() => setActionModal({ isOpen: true, schedule: { ...s, date: selectedDateObj?.dateStr } as any })}
-                                    className="card-premium p-5 flex gap-5 items-center bg-surface cursor-pointer active:scale-95 transition-all"
+                                    className="card-premium p-3.5 flex gap-3.5 items-center bg-surface cursor-pointer active:scale-[0.98] transition-all"
                                 >
-                                    <div className="flex flex-col items-center justify-center min-w-[50px]">
-                                        <div className="font-black text-primary-main text-lg leading-none">{s.startTime.split(':')[0]}</div>
-                                        <div className="text-[10px] font-black uppercase text-text-muted mt-0.5">{s.startTime.split(':')[1]}</div>
-                                        {!s.isRecurring && <CalendarIcon size={12} className="text-primary-main mt-1 opacity-50" />}
+                                    <div className="flex flex-col items-center justify-center min-w-[45px]">
+                                        <div className="font-black text-primary-main text-base leading-none">{s.startTime.split(':')[0]}</div>
+                                        <div className="text-[9px] font-black uppercase text-text-muted mt-0.5">{s.startTime.split(':')[1]}</div>
+                                        {!s.isRecurring && <CalendarIcon size={10} className="text-primary-main mt-1 opacity-50" />}
                                     </div>
-                                    <div className="w-px h-10 bg-border-main/50"></div>
+                                    <div className="w-px h-8 bg-border-main/50"></div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="text-base font-bold text-text-main truncate leading-tight">
+                                        <h4 className="text-[15px] font-bold text-text-main truncate leading-tight">
                                             {s.students && s.students.length > 1 ? `${s.students[0].name} +${s.students.length - 1}` : (s.students?.[0]?.name || s.student?.name || 'Clase Grupal')}
                                         </h4>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted opacity-80 truncate">
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-text-muted opacity-80 truncate">
                                                 {s.students && s.students.length > 1 ? `${s.students.length} alumnos` : (s.students?.[0]?.service_name || s.student?.service_name || 'General')}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2 shrink-0">
-                                        <div className="flex items-center gap-1.5">
+                                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                                        <div className="flex items-center gap-1">
                                             <button 
-                                                onClick={() => setAttendanceModal({ isOpen: true, schedule: { ...s, date: selectedDateObj?.dateStr } as any })}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-main/10 text-primary-main rounded-xl hover:bg-primary-main hover:text-white transition-all active:scale-95 group/btn"
+                                                onClick={(e) => { e.stopPropagation(); setAttendanceModal({ isOpen: true, schedule: { ...s, date: selectedDateObj?.dateStr } as any }); }}
+                                                className="w-8 h-8 flex items-center justify-center bg-primary-main/10 text-primary-main rounded-xl hover:bg-primary-main hover:text-white transition-all active:scale-90"
                                             >
-                                                <CheckCircle2 size={14} className="group-hover/btn:rotate-12 transition-transform" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest">Asistencia</span>
+                                                <CheckCircle2 size={14} />
                                             </button>
-                                            <button onClick={() => handleEdit(s)} className="p-1.5 rounded-xl text-zinc-300 hover:text-primary-main hover:bg-primary-main/10 transition-all"><Edit2 size={16} /></button>
-                                            <button onClick={() => setDeleteModal({ isOpen: true, id: s.id })} className="p-1.5 rounded-xl text-zinc-300 hover:text-red-500 hover:bg-red-500/10 transition-all"><Trash2 size={16} /></button>
+                                            <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="w-8 h-8 flex items-center justify-center rounded-xl text-zinc-300 hover:text-primary-main hover:bg-primary-main/10 transition-all"><Edit2 size={14} /></button>
                                         </div>
-                                        <span className="text-[9px] font-black text-white bg-primary-main px-2 py-0.5 rounded-full shadow-sm">a {s.endTime}</span>
+                                        <span className="text-[8px] font-black text-white bg-primary-main/90 px-1.5 py-0.5 rounded-full shadow-sm">a {s.endTime}</span>
                                     </div>
                                 </motion.div>
                             ));

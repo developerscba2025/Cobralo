@@ -123,7 +123,8 @@ export const notificationService = {
             console.log(`✅ Email sent to ${email}`);
             return true;
         } catch (error: any) {
-            console.error('❌ Error sending Email:', error.response?.data || error.message);
+            const apiError = error.response?.data;
+            console.error('❌ Error sending Email:', apiError ? JSON.stringify(apiError, null, 2) : error.message);
             return false;
         }
     }
