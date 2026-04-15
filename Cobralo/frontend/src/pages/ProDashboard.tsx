@@ -429,7 +429,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                         </div>
                     ) : (
                         <div className="h-32 flex flex-col items-center justify-center text-center px-4">
-                            <BarChart3 className="w-8 h-8 text-text-muted opacity-10 mb-2" />
+                            <TrendingUp className="w-8 h-8 text-text-muted opacity-10 mb-2" />
                             <p className="text-[11px] font-black text-text-muted uppercase tracking-widest opacity-60">
                                 Tus ingresos se verán reflejados aquí ✨
                             </p>

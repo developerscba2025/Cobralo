@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { api, type Student, type Payment, type ReceiptData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Calendar, DollarSign, Trash2, Filter, 
+  Calendar, DollarSign, Trash2, 
   Download, Receipt as ReceiptIcon, Clock, CheckCircle2, 
   Search, Share2, CreditCard, Wallet, Banknote
 } from 'lucide-react';
