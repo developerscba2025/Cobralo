@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import type { UnifiedSchedule, Student } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight, CheckCircle2, Edit2 } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +25,8 @@ const Calendar = () => {
         isOpen: false,
         schedule: null
     });
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [draggedId, setDraggedId] = useState<number | null>(null);
     const [selectedMobileDay, setSelectedMobileDay] = useState(new Date().getDay());
     const [baseDate, setBaseDate] = useState(new Date());
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: number | null }>({
@@ -145,7 +147,7 @@ const Calendar = () => {
         }
     };
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (formData.studentIds.length === 0) {
             showToast.error('Selecciona al menos un alumno');
@@ -158,34 +160,113 @@ const Calendar = () => {
         }
 
         try {
-            const result = await api.createSchedule({
-                studentIds: formData.studentIds,
-                dayOfWeek: formData.dayOfWeek,
-                startTime: formData.startTime,
-                endTime: formData.endTime,
-                date: formData.isRecurring ? undefined : formData.date,
-                isRecurring: formData.isRecurring,
-                capacity: formData.capacity
-            });
-
-            if ((result as any).error) {
-                showToast.error((result as any).error);
-                return;
-            }
-
-            if ((result as any).conflicts && (result as any).conflicts.length > 0) {
-                const names = (result as any).conflicts.map((c: any) => c.student?.name || 'Otro alumno').join(', ');
-                showToast.error(`${names} ya están en ese horario`);
+            let result;
+            if (editingId) {
+                result = await api.updateSchedule(editingId, {
+                    studentIds: formData.studentIds,
+                    dayOfWeek: formData.dayOfWeek,
+                    startTime: formData.startTime,
+                    endTime: formData.endTime,
+                    date: formData.isRecurring ? undefined : formData.date,
+                    isRecurring: formData.isRecurring,
+                    capacity: formData.capacity
+                });
+                showToast.success('Clase actualizada correctamente');
             } else {
-                showToast.success('Clase agendada correctamente');
+                result = await api.createSchedule({
+                    studentIds: formData.studentIds,
+                    dayOfWeek: formData.dayOfWeek,
+                    startTime: formData.startTime,
+                    endTime: formData.endTime,
+                    date: formData.isRecurring ? undefined : formData.date,
+                    isRecurring: formData.isRecurring,
+                    capacity: formData.capacity
+                });
+
+                if ((result as any).conflicts && (result as any).conflicts.length > 0) {
+                    const names = (result as any).conflicts.map((c: any) => c.student?.name || 'Otro alumno').join(', ');
+                    showToast.error(`${names} ya están en ese horario`);
+                } else {
+                    showToast.success('Clase agendada correctamente');
+                }
             }
             
             setIsModalOpen(false);
+            setEditingId(null);
             setFormData(prev => ({ ...prev, studentIds: [] }));
             fetchData();
-        } catch (error) {
-            showToast.error('Error al agendar la clase');
+        } catch (error: any) {
+            showToast.error(error.message || 'Error al guardar la clase');
         }
+    };
+
+    const handleEdit = (schedule: UnifiedSchedule) => {
+        setFormData({
+            studentIds: schedule.students?.map(s => s.id) || (schedule.student ? [schedule.student.id] : []),
+            dayOfWeek: schedule.dayOfWeek,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            date: schedule.date || new Date().toISOString().split('T')[0],
+            isRecurring: schedule.isRecurring,
+            capacity: schedule.capacity || 10
+        });
+        setEditingId(schedule.id);
+        setIsModalOpen(true);
+    };
+
+    const handleDragStart = (e: React.DragEvent, id: number) => {
+        setDraggedId(id);
+        e.dataTransfer.setData('scheduleId', id.toString());
+        // Reduce opacity visually
+        if (e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.style.opacity = '0.5';
+        }
+    };
+
+    const handleDragEnd = (e: React.DragEvent) => {
+        if (e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.style.opacity = '1';
+        }
+        setDraggedId(null);
+    };
+
+    const handleDrop = async (e: React.DragEvent, dayOfWeek: number, hour: number) => {
+        e.preventDefault();
+        const scheduleId = Number(e.dataTransfer.getData('scheduleId'));
+        if (!scheduleId) return;
+
+        const schedule = schedules.find(s => s.id === scheduleId);
+        if (!schedule) return;
+
+        // Calculate duration to keep it same
+        const [startH, startM] = schedule.startTime.split(':').map(Number);
+        const [endH, endM] = schedule.endTime.split(':').map(Number);
+        const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+
+        const newStartHour = hour;
+        const newStartMinutes = startM; // Keep original minutes offset
+        const newStartTime = `${String(newStartHour).padStart(2, '0')}:${String(newStartMinutes).padStart(2, '0')}`;
+        
+        const totalEndMinutes = (newStartHour * 60 + newStartMinutes) + durationMin;
+        const newEndHour = Math.floor(totalEndMinutes / 60);
+        const newEndMinutes = totalEndMinutes % 60;
+        const newEndTime = `${String(newEndHour).padStart(2, '0')}:${String(newEndMinutes).padStart(2, '0')}`;
+
+        try {
+            await api.updateSchedule(scheduleId, {
+                dayOfWeek,
+                startTime: newStartTime,
+                endTime: newEndTime
+            });
+            showToast.success('Horario actualizado');
+            fetchData();
+        } catch (error: any) {
+            showToast.error(error.message || 'Error al mover el turno');
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault(); // Required to allow drop
     };
 
     const handleDelete = async () => {
@@ -400,7 +481,7 @@ const Calendar = () => {
                                 )}
                             </AnimatePresence>
                         </div>
-                        <button onClick={() => setIsModalOpen(true)} className="hidden md:flex bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition-all items-center gap-2">
+                        <button onClick={() => { setEditingId(null); setFormData(prev => ({ ...prev, studentIds: [] })); setIsModalOpen(true); }} className="hidden md:flex bg-primary-main hover:bg-green-600 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary-glow transition-all items-center gap-2">
                             <Plus size={20} />
                             Nueva Clase
                         </button>
@@ -437,15 +518,30 @@ const Calendar = () => {
                                         {weekDates.map((d, dayIdx) => {
                                             const cellSchedules = getSchedulesForCell(d.dayOfWeek, hour, d.dateStr);
                                             return (
-                                                <td key={dayIdx} className={`p-1 align-top border-r border-border-main/20 last:border-r-0 relative ${d.isToday ? 'bg-primary-main/[0.01]' : ''}`}>
-                                                    <div className="flex flex-col gap-1 w-full">
+                                                <td 
+                                                    key={dayIdx} 
+                                                    className={`p-1 align-top border-r border-border-main/20 last:border-r-0 relative ${d.isToday ? 'bg-primary-main/[0.01]' : ''} transition-colors duration-200 ${draggedId ? 'hover:bg-primary-main/10 cursor-alias' : ''}`}
+                                                    onDragOver={handleDragOver}
+                                                    onDrop={(e) => handleDrop(e, d.dayOfWeek, hour)}
+                                                >
+                                                    <div className="flex flex-col gap-1 w-full min-h-[80px]">
                                                         {cellSchedules.map((s) => (
-                                                            <motion.div key={s.id} onClick={() => setAttendanceModal({ isOpen: true, schedule: { ...s, date: d.dateStr } as any })} className="bg-primary-main/10 dark:bg-primary-main/15 border-l-4 border-primary-main shadow-sm p-3 rounded-xl group cursor-pointer hover:bg-primary-main/20 transition-all">
+                                                            <motion.div 
+                                                                key={s.id} 
+                                                                onClick={() => setAttendanceModal({ isOpen: true, schedule: { ...s, date: d.dateStr } as any })} 
+                                                                draggable="true"
+                                                                onDragStart={(e: React.DragEvent) => handleDragStart(e, s.id)}
+                                                                onDragEnd={handleDragEnd}
+                                                                className="bg-primary-main/10 dark:bg-primary-main/15 border-l-4 border-primary-main shadow-sm p-3 rounded-xl group cursor-pointer hover:bg-primary-main/20 transition-all active:scale-[0.98] select-none"
+                                                            >
                                                                 <div className="flex items-center justify-between gap-1 mb-1">
                                                                     <span className="text-[10px] font-black text-primary-main uppercase tracking-widest opacity-80 flex items-center gap-1">
                                                                         {s.startTime} {!s.isRecurring && <CalendarIcon size={10} />}
                                                                     </span>
-                                                                    <button onClick={(e) => { e.stopPropagation(); setDeleteModal({ isOpen: true, id: s.id }); }} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 rounded-lg hover:bg-red-500/10 transition-all"><Trash2 size={12} /></button>
+                                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-1 text-primary-main rounded-lg hover:bg-primary-main/10 transition-all" title="Editar horario"><Edit2 size={12} /></button>
+                                                                        <button onClick={(e) => { e.stopPropagation(); setDeleteModal({ isOpen: true, id: s.id }); }} className="p-1 text-red-500 rounded-lg hover:bg-red-500/10 transition-all" title="Eliminar"><Trash2 size={12} /></button>
+                                                                    </div>
                                                                 </div>
                                                                 <div className="text-sm font-bold text-text-main leading-tight truncate">
                                                                     {s.students && s.students.length > 1 ? `${s.students[0].name} +${s.students.length - 1}` : (s.students?.[0]?.name || s.student?.name || 'Clase Grupal')}
@@ -484,7 +580,8 @@ const Calendar = () => {
                             if (daySchedules.length === 0) return (
                                 <EmptyState icon={CalendarIcon} title="Día Libre" description="No tienes clases agendadas para este día." actionLabel="Nueva Clase" onAction={() => {
                                     const selectedDateObj = weekDates.find(d => d.dayOfWeek === selectedMobileDay);
-                                    setFormData(prev => ({ ...prev, dayOfWeek: selectedMobileDay, date: selectedDateObj?.dateStr || prev.date }));
+                                    setEditingId(null);
+                                    setFormData(prev => ({ ...prev, dayOfWeek: selectedMobileDay, date: selectedDateObj?.dateStr || prev.date, studentIds: [] }));
                                     setIsModalOpen(true);
                                 }}/>
                             );
@@ -515,6 +612,7 @@ const Calendar = () => {
                                                 <CheckCircle2 size={14} className="group-hover/btn:rotate-12 transition-transform" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest">Asistencia</span>
                                             </button>
+                                            <button onClick={() => handleEdit(s)} className="p-1.5 rounded-xl text-zinc-300 hover:text-primary-main hover:bg-primary-main/10 transition-all"><Edit2 size={16} /></button>
                                             <button onClick={() => setDeleteModal({ isOpen: true, id: s.id })} className="p-1.5 rounded-xl text-zinc-300 hover:text-red-500 hover:bg-red-500/10 transition-all"><Trash2 size={16} /></button>
                                         </div>
                                         <span className="text-[9px] font-black text-white bg-primary-main px-2 py-0.5 rounded-full shadow-sm">a {s.endTime}</span>
@@ -532,7 +630,7 @@ const Calendar = () => {
                             <CalendarIcon size={22} className="text-primary-main" />
                         </button>
                     )}
-                    <button onClick={() => setIsModalOpen(true)} className="w-14 h-14 bg-primary-main text-white rounded-full flex items-center justify-center shadow-lg shadow-primary-glow active:scale-95 transition-transform">
+                    <button onClick={() => { setEditingId(null); setFormData(prev => ({ ...prev, studentIds: [] })); setIsModalOpen(true); }} className="w-14 h-14 bg-primary-main text-white rounded-full flex items-center justify-center shadow-lg shadow-primary-glow active:scale-95 transition-transform">
                         <Plus size={24} strokeWidth={2.5} />
                     </button>
                 </div>
@@ -558,10 +656,10 @@ const Calendar = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative bg-white dark:bg-bg-soft w-full max-w-lg rounded-[40px] p-6 shadow-2xl border border-zinc-100 dark:border-border-emerald max-h-[90vh] overflow-y-auto custom-scrollbar">
                             <button onClick={() => setIsModalOpen(false)} className="absolute right-6 top-6 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white transition"><X size={24} /></button>
                             <div className="mb-8">
-                                <h2 className="text-3xl font-black text-text-main">Nueva Clase</h2>
-                                <p className="text-text-muted mt-2 font-medium tracking-tight whitespace-nowrap">Asigna un nuevo horario a un alumno</p>
+                                <h2 className="text-3xl font-black text-text-main">{editingId ? 'Editar Clase' : 'Nueva Clase'}</h2>
+                                <p className="text-text-muted mt-2 font-medium tracking-tight whitespace-nowrap">{editingId ? 'Modifica los detalles de este horario' : 'Asigna un nuevo horario a un alumno'}</p>
                             </div>
-                            <form onSubmit={handleCreate} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
                                     <div className="flex items-center justify-between mb-3 ml-2">
                                         <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Alumnos (uno o más)</label>
@@ -587,30 +685,32 @@ const Calendar = () => {
                                     {formData.isRecurring ? (
                                         <div>
                                             <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Día</label>
-                                            <select value={formData.dayOfWeek} onChange={e => setFormData({ ...formData, dayOfWeek: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main outline-none focus:ring-2 focus:ring-primary-main/20 font-bold appearance-none shadow-inner">
+                                            <select value={formData.dayOfWeek} onChange={e => setFormData({ ...formData, dayOfWeek: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main outline-none focus:ring-2 focus:ring-primary-main/20 font-bold appearance-none shadow-inner dark:[color-scheme:dark]">
                                                 {DAYS.map((day, i) => <option key={i} value={i}>{day}</option>)}
                                             </select>
                                         </div>
                                     ) : (
                                         <div>
                                             <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Fecha</label>
-                                            <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner" />
+                                            <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" />
                                         </div>
                                     )}
                                     <div>
                                         <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Horario</label>
                                         <div className="flex items-center gap-2">
-                                            <input type="time" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner" />
+                                            <input type="time" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" />
                                             <span className="text-zinc-300 font-bold">a</span>
-                                            <input type="time" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner" />
+                                            <input type="time" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3 ml-2">Cupo</label>
-                                        <input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner" min="1" />
+                                        <input type="number" value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: Number(e.target.value) })} className="w-full p-5 bg-surface border border-border-main rounded-3xl text-text-main font-bold shadow-inner dark:[color-scheme:dark]" min="1" />
                                     </div>
                                 </div>
-                                <button type="submit" className="w-full bg-primary-main hover:bg-green-600 text-white p-6 rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary-glow transition-all active:scale-[0.98] mt-4">Agendar Clase</button>
+                                <button type="submit" className="w-full bg-primary-main hover:bg-green-600 text-white p-6 rounded-3xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary-glow transition-all active:scale-[0.98] mt-4">
+                                    {editingId ? 'Guardar Cambios' : 'Agendar Clase'}
+                                </button>
                             </form>
                         </motion.div>
                     </div>

@@ -25,7 +25,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPay
             desc: 'Agregá un Alias, CBU o vinculá Mercado Pago para recibir tus pagos.',
             icon: CreditCard,
             done: hasPayments,
-            to: '/app/settings?tab=business'
+            to: '/app/settings?tab=payment-accounts'
         },
         {
             id: 'student',

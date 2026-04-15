@@ -155,7 +155,7 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                                         <select
                                             value={newDay}
                                             onChange={e => setNewDay(Number(e.target.value))}
-                                            className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all"
+                                            className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all dark:[color-scheme:dark]"
                                         >
                                             {DAYS.map((day, i) => (
                                                 <option key={i} value={i}>{day}</option>
@@ -166,7 +166,7 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                                             type="date"
                                             value={newDate}
                                             onChange={e => setNewDate(e.target.value)}
-                                            className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all"
+                                            className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all dark:[color-scheme:dark]"
                                         />
                                     )}
                                 </div>
@@ -176,7 +176,7 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
                                         type="time"
                                         value={newStart}
                                         onChange={e => setNewStart(e.target.value)}
-                                        className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all"
+                                        className="w-full p-3 rounded-xl border border-zinc-100 dark:border-border-emerald text-xs font-bold bg-white dark:bg-bg-dark text-zinc-700 dark:text-emerald-50 focus:ring-2 focus:ring-primary-main/20 outline-none transition-all dark:[color-scheme:dark]"
                                     />
                                 </div>
                             </div>
