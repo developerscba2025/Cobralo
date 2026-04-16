@@ -15,7 +15,7 @@ const ITEMS = [
 
 const BottomNavMockup = ({ active, onTabChange }: BottomNavProps) => {
   return (
-    <div className="flex md:hidden items-center justify-around px-4 py-3 bg-[#0E1113] border-t border-white/5 absolute bottom-0 left-0 right-0 z-50">
+    <div className="flex lg:hidden items-center justify-around px-4 py-3 bg-[#0E1113] border-t border-white/5 absolute bottom-0 left-0 right-0 z-50">
       {ITEMS.map((item) => (
         <button
           key={item.id}

@@ -72,7 +72,8 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
                 email: user.email,
                 name: user.name,
                 isPro: user.isPro,
-                plan: user.plan
+                plan: user.plan,
+                isAdmin: user.isAdmin
             }
         });
     } catch (error) {
@@ -110,7 +111,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         // Generate token
         const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
-        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'developerscba2025@gmail.com';
+
 
         res.json({
             message: 'Login exitoso',
@@ -121,7 +122,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
                 name: user.name,
                 isPro: user.isPro,
                 plan: user.plan,
-                isAdmin: user.email === ADMIN_EMAIL
+                isAdmin: user.isAdmin
             }
         });
     } catch (error) {
@@ -258,7 +259,8 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                 paymentAccounts: true,
                 calendarToken: true,
                 ratingToken: true,
-                ratingTokenExpires: true
+                ratingTokenExpires: true,
+                isAdmin: true
             }
         });
 
@@ -267,28 +269,9 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'developerscba2025@gmail.com';
-
-        // Generate calendarToken if it doesn't exist
-        if (!user.calendarToken) {
-            const randomToken = require('crypto').randomBytes(20).toString('hex');
-            const userWithToken = await prisma.user.update({
-                where: { id: user.id },
-                data: { calendarToken: randomToken },
-                select: {
-                    id: true, email: true, name: true, bizName: true, bizAlias: true, businessCategory: true,
-                    phoneNumber: true, reminderTemplate: true, classReminderTemplate: true, welcomeTemplate: true, generalTemplate: true, defaultPrice: true, defaultService: true,
-                    defaultSurcharge: true, currency: true, receiptFooter: true, taxId: true, billingAddress: true,
-                    isPro: true, plan: true, biography: true, photoUrl: true, instagramUrl: true, facebookUrl: true, paymentAccounts: true, calendarToken: true,
-                    ratingToken: true, ratingTokenExpires: true
-                }
-            });
-            res.json({ ...userWithToken, isAdmin: userWithToken.email === ADMIN_EMAIL });
-            return;
-        }
-
-        res.json({ ...user, isAdmin: user.email === ADMIN_EMAIL });
+        res.json(user);
     } catch (error) {
+        console.error('Me error:', error);
         res.status(401).json({ error: 'Token inválido' });
     }
 });
@@ -403,7 +386,8 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                 paymentAccounts: true,
                 calendarToken: true,
                 ratingToken: true,
-                ratingTokenExpires: true
+                ratingTokenExpires: true,
+                isAdmin: true
             }
         });
 
@@ -441,7 +425,8 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                     paymentAccounts: true,
                     calendarToken: true,
                     ratingToken: true,
-                    ratingTokenExpires: true
+                    ratingTokenExpires: true,
+                    isAdmin: true
                 }
             });
             res.json(userWithToken);
@@ -507,12 +492,11 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
 // POST /api/auth/admin/update-plan
 router.post('/admin/update-plan', authLimiter, authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
-        const adminEmail = 'developerscba2025@gmail.com';
         console.log(`[ADMIN] User ${req.userEmail} attempting to update plan for ${req.body.targetEmail}`);
         
         const user = await prisma.user.findUnique({ where: { id: req.userId } });
         
-        if (!user || user.email !== adminEmail) {
+        if (!user || !user.isAdmin) {
             console.warn(`[ADMIN] Access denied for user ${user?.email || 'Unknown'}`);
             res.status(403).json({ error: 'Acceso denegado' });
             return;

@@ -159,7 +159,7 @@ const DashboardMockup = () => {
                 </div>
 
               {/* Inner Content Area */}
-              <div className="flex h-[580px] md:h-[680px] relative overflow-hidden pb-[64px] md:pb-0">
+              <div className="flex h-[580px] md:h-[680px] relative overflow-hidden pb-[64px] lg:pb-0">
                   <MiniSidebar active={activeTab} onTabChange={setActiveTab} plan="PRO" />
                   <div className="flex-1 relative overflow-hidden h-full">
                       <AnimatePresence mode="wait">

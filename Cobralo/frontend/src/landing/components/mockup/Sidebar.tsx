@@ -23,7 +23,7 @@ const SIDEBAR_ITEMS = [
 ];
 
 const MiniSidebar = ({ active, onTabChange, plan = 'PRO' }: SidebarProps) => (
-  <div className="w-[220px] lg:w-[240px] flex-shrink-0 hidden md:flex flex-col p-4 border-r relative z-10"
+  <div className="w-[220px] lg:w-[240px] flex-shrink-0 hidden lg:flex flex-col p-4 border-r relative z-10"
     style={{ background: '#090B0D', borderColor: 'rgba(255,255,255,0.03)' }}>
     
     {/* Logo Area */}
