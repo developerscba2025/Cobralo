@@ -145,6 +145,7 @@ export interface User {
     mpAccessToken?: string;
     mpPublicKey?: string;
     notificationsEnabled?: boolean;
+    workStartHour?: number;
     isPublicProfileVisible?: boolean;
     biography?: string;
     photoUrl?: string;

@@ -251,7 +251,7 @@ const NotificationsPage: React.FC = () => {
                                                     </div>
                                                     
                                                     <div className="shrink-0 flex flex-col items-end gap-2">
-                                                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest bg-black/5 dark:bg-white/5 px-2 py-1 rounded-lg">
+                                                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest bg-black/5 px-2 py-1 rounded-lg">
                                                             {relativeTime(n.createdAt)}
                                                         </span>
                                                         {!n.isRead && (

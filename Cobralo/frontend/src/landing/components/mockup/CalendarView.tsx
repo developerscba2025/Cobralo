@@ -28,7 +28,7 @@ const CalendarView = () => (
                {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(h => (
                   <div key={h} className="contents">
                     <div className="h-[80px] md:h-[100px] border-b border-white/5 flex items-start justify-center p-2 md:p-4 text-[9px] md:text-[10px] font-black text-zinc-700 bg-[#090B0D] sticky left-0 z-20">
-                       {h >= 12 ? (h === 12 ? '12PM' : `${h-12}PM`) : `${h}AM`}
+                       {h.toString().padStart(2, '0')}:00
                     </div>
                     {[0,1,2,3,4,5,6].map(d => (
                        <div key={d} className={`h-[80px] md:h-[100px] border-b border-l border-white/5 relative bg-white/[0.005] ${d===3 ? 'bg-zinc-800/10' : ''}`}>

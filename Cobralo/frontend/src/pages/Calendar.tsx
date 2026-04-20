@@ -13,11 +13,13 @@ import EmptyState from '../components/EmptyState';
 import AttendanceBulkModal from '../components/AttendanceBulkModal';
 
 const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7am to 9pm
+// HOURS will be dynamic inside the component
 
 const Calendar = () => {
     const { user } = useAuth();
     const isPro = user?.plan === 'PRO' || user?.plan === 'INITIAL';
+    const startHour = user?.workStartHour ?? 7;
+    const hours = Array.from({ length: 16 }, (_, i) => i + startHour); // Dinámico
     const [schedules, setSchedules] = useState<UnifiedSchedule[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -123,7 +125,7 @@ const Calendar = () => {
             
             if (weekSchedules.length > 0) {
                 const earliestHour = Math.min(...weekSchedules.map(s => parseInt(s.startTime.split(':')[0], 10)));
-                const targetHour = Math.max(7, earliestHour - 1);
+                const targetHour = Math.max(startHour, earliestHour - 1);
                 
                 setTimeout(() => {
                     const element = document.getElementById(`hour-row-${targetHour}`);
@@ -425,8 +427,8 @@ const Calendar = () => {
     const currentTime = new Date();
     const currentHour = currentTime.getHours();
     const currentMinutes = currentTime.getMinutes();
-    const showTimeLine = currentHour >= 7 && currentHour <= 21;
-    const timeLinePosition = ((currentHour - 7) * 100) + (currentMinutes * 100 / 60);
+    const showTimeLine = currentHour >= startHour && currentHour <= (startHour + 15);
+    const timeLinePosition = ((currentHour - startHour) * 100) + (currentMinutes * 100 / 60);
 
     const getMonthShort = (dateStr: string) => {
         const monthNum = parseInt(dateStr.split('-')[1], 10);
@@ -545,9 +547,9 @@ const Calendar = () => {
                                 </tr>
                             </thead>
                             <tbody className="relative">
-                                {HOURS.map((hour) => (
+                                {hours.map((hour) => (
                                     <tr key={hour} id={`hour-row-${hour}`} className="border-b border-border-main/30 last:border-0 hover:bg-primary-main/[0.01] transition-colors h-28">
-                                        <td className="p-4 text-text-muted text-[11px] font-black border-r border-border-main w-28 sticky left-0 bg-surface z-20">{hour > 12 ? `${hour-12}PM` : `${hour}AM`}</td>
+                                        <td className="p-4 text-text-muted text-[11px] font-black border-r border-border-main w-28 sticky left-0 bg-surface z-20">{String(hour).padStart(2, '0')}:00</td>
                                         {weekDates.map((d, dayIdx) => {
                                             const cellSchedules = getSchedulesForCell(d.dayOfWeek, hour, d.dateStr);
                                             return (
@@ -689,9 +691,9 @@ const Calendar = () => {
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm" />
-                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative bg-white dark:bg-bg-soft w-full max-w-lg rounded-[40px] p-6 shadow-2xl border border-zinc-100 dark:border-border-emerald max-h-[90vh] overflow-y-auto custom-scrollbar">
-                            <button onClick={() => setIsModalOpen(false)} className="absolute right-6 top-6 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white transition"><X size={24} /></button>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-surface/60 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative bg-surface w-full max-w-lg rounded-[40px] p-6 shadow-2xl border border-border-main max-h-[90vh] overflow-y-auto custom-scrollbar">
+                            <button onClick={() => setIsModalOpen(false)} className="absolute right-6 top-6 p-2 text-text-muted hover:text-text-main transition"><X size={24} /></button>
                             <div className="mb-8">
                                 <h2 className="text-2xl md:text-3xl font-black text-text-main tracking-tighter uppercase italic leading-tight">
                                     {editingId 
@@ -809,7 +811,7 @@ const Calendar = () => {
                     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 sm:p-0">
                         <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} onClick={() => setActionModal({ isOpen: false, schedule: null })} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
                         <motion.div initial={{opacity: 0, y: 100}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: 100}} className="relative bg-surface dark:bg-bg-soft border border-border-main rounded-[32px] sm:rounded-[24px] shadow-2xl w-full sm:w-96 overflow-hidden">
-                            <div className="p-6 border-b border-border-main flex items-center justify-between bg-black/5 dark:bg-white/[0.02]">
+                            <div className="p-6 border-b border-border-main flex items-center justify-between bg-black/5">
                                 <div className="min-w-0">
                                     <h3 className="font-black text-text-main text-lg truncate pr-4 uppercase italic tracking-tight">
                                         {actionModal.schedule.students && actionModal.schedule.students.length > 1 

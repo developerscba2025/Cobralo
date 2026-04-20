@@ -102,8 +102,8 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                         </button>
 
                         <div className="mb-8">
-                            <h2 className="text-3xl font-black text-text-main tracking-tighter uppercase italic">Integrantes de Clase</h2>
-                            <p className="text-text-muted mt-2 font-medium tracking-tight">
+                            <h2 className="text-3xl font-black text-text-main tracking-tighter uppercase">Integrantes de Clase</h2>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mt-2">
                                 {schedule.startTime} - {schedule.endTime} | {selectedIds.length} alumnos
                             </p>
                         </div>
@@ -116,7 +116,7 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                                     placeholder="Buscar alumnos..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3 bg-bg-app dark:bg-bg-dark border border-border-main rounded-2xl outline-none focus:ring-2 focus:ring-primary-main/20 text-sm font-bold"
+                                    className="w-full pl-12 pr-4 py-3 bg-bg-app border border-border-main rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500/10 text-sm font-bold placeholder:text-text-muted/50"
                                 />
                             </div>
                             <div className="relative">
@@ -126,7 +126,7 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                                     placeholder="Cupo (opcional)"
                                     value={capacity}
                                     onChange={e => setCapacity(e.target.value === '' ? '' : Number(e.target.value))}
-                                    className="w-full pl-12 pr-4 py-3 bg-bg-app dark:bg-bg-dark border border-border-main rounded-2xl outline-none focus:ring-2 focus:ring-primary-main/20 text-sm font-bold"
+                                    className="w-full pl-12 pr-4 py-3 bg-bg-app border border-border-main rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500/10 text-sm font-bold placeholder:text-text-muted/50"
                                 />
                             </div>
                         </div>
@@ -181,8 +181,8 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                                         
                                         <div className={`w-6 h-6 rounded-lg flex items-center justify-center border transition-all ${
                                             isSelected 
-                                                ? 'bg-primary-main border-primary-main text-white shadow-lg shadow-primary-glow' 
-                                                : 'bg-transparent border-zinc-200 dark:border-border-emerald'
+                                                ? 'bg-emerald-500 border-emerald-500 text-black shadow-lg shadow-emerald-500/20' 
+                                                : 'bg-transparent border-border-main'
                                         }`}>
                                             {isSelected && <Check size={14} strokeWidth={4} />}
                                         </div>
@@ -191,16 +191,22 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                             })}
                         </div>
 
-                        <div className="mt-8">
+                        <div className="mt-8 pt-6 border-t border-border-main">
                             <button
                                 onClick={handleSave}
-                                disabled={isSaving || selectedIds.length === 0}
-                                className="w-full bg-primary-main hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest text-xs py-5 rounded-3xl shadow-xl shadow-primary-glow transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                disabled={isSaving}
+                                className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] rounded-[24px] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-3"
                             >
                                 {isSaving ? (
-                                    <><Loader2 className="animate-spin" size={20} /> Guardando...</>
+                                    <>
+                                        <Loader2 size={18} className="animate-spin" />
+                                        Guardando...
+                                    </>
                                 ) : (
-                                    'ACTUALIZAR INTEGRANTES'
+                                    <>
+                                        <Check size={18} strokeWidth={3} />
+                                        Confirmar Cambios
+                                    </>
                                 )}
                             </button>
                         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, CreditCard, Calendar, Check, Plus, Minus, ArrowRight, ArrowLeft, Target, Wallet, Clock, Sparkles, MessageCircle, Banknote, Lock, Unlock } from 'lucide-react';
-import { api, type Student, type UserService, type BusinessPaymentAccount } from '../../services/api';
+import { Plus, Target, Calendar, CreditCard, User, Phone, Zap, ChevronUp, ChevronDown, Check, ArrowRight, LayoutGrid, Clock, Tag, DollarSign, X, Search } from 'lucide-react';
+import { api, type Student, type UserService } from '../../services/api';
 import { showToast } from '../Toast';
 
 interface StudentFormModalProps {
@@ -13,6 +13,57 @@ interface StudentFormModalProps {
     userServices: UserService[];
     refreshServices: () => Promise<void>;
 }
+
+// --- SUB-COMPONENTS (Clean Premium Styling) - Fuera para evitar re-montaje ---
+const StepIndicatorComp = ({ currentStep, stepNum, label }: { currentStep: number, stepNum: number, label: string }) => (
+    <div className="flex items-center gap-2">
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm transition-all duration-500 ${currentStep >= stepNum ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'bg-surface text-text-muted border border-border-main'}`}>
+        {currentStep > stepNum ? <Check size={18} strokeWidth={3} /> : stepNum}
+      </div>
+      <span className={`hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-500 ${currentStep >= stepNum ? 'text-text-main' : 'text-text-muted opacity-50'}`}>
+        {label}
+      </span>
+    </div>
+);
+
+const InputFieldComp = ({ label, icon, value, onChange, placeholder = "Ingresar valor...", type = "text" }: any) => (
+    <div className="space-y-3">
+      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest flex items-center gap-2">
+        {icon} <span className="text-text-main">{label}</span>
+      </p>
+      <input 
+        type={type} 
+        value={value}
+        onChange={onChange}
+        className="w-full bg-surface border border-border-main focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 rounded-2xl px-6 py-4 text-text-main font-bold text-base outline-none transition-all placeholder:text-text-muted/50"
+        placeholder={placeholder}
+      />
+    </div>
+);
+
+const SelectCardComp = ({ title, subtitle, active, onClick, icon: Icon }: any) => (
+    <button 
+      type="button"
+      onClick={onClick}
+      className={`p-6 rounded-[24px] border-2 text-left transition-all duration-300 flex flex-col gap-2 relative overflow-hidden group ${active ? 'border-emerald-500/50 bg-emerald-500/5 shadow-sm' : 'border-border-main bg-surface hover:border-emerald-500/30'}`}
+    >
+      <div className="flex justify-between items-start">
+         <p className={`text-xs font-bold uppercase tracking-widest ${active ? 'text-emerald-500' : 'text-text-muted'}`}>{title}</p>
+         {Icon && <Icon size={16} className={active ? 'text-emerald-500' : 'text-text-muted'} />}
+      </div>
+      <p className="text-[10px] text-text-muted uppercase tracking-widest font-bold">{subtitle}</p>
+    </button>
+);
+
+const SummaryItemComp = ({ icon, label, value, highlight }: any) => (
+    <div className="flex justify-between items-center py-3 border-b border-border-main last:border-0">
+      <div className="flex items-center gap-3 text-text-muted">
+        <div className="p-2 bg-text-muted/5 rounded-lg">{icon}</div>
+        <span className="text-[10px] uppercase tracking-widest font-black">{label}</span>
+      </div>
+      <span className={`text-xs font-black uppercase ${highlight ? 'text-emerald-500' : 'text-text-main'}`}>{value}</span>
+    </div>
+);
 
 const StudentFormModal: React.FC<StudentFormModalProps> = ({ 
     isOpen, onClose, onSuccess, student, user, userServices, refreshServices 
@@ -45,11 +96,21 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
     const [loading, setLoading] = useState(false);
     
     const [formSchedules, setFormSchedules] = useState<{ dayOfWeek: number; startTime: string; endTime: string }[]>([]);
-    const [paymentAccounts, setPaymentAccounts] = useState<BusinessPaymentAccount[]>([]);
-    const [showManualAlias, setShowManualAlias] = useState(false);
-    const [newDay, setNewDay] = useState(1);
-    const [newTime, setNewTime] = useState('18:00');
-    const [isSpecialPrice, setIsSpecialPrice] = useState(false);
+    const [existingSchedules, setExistingSchedules] = useState<any[]>([]);
+    const [agendaMode, setAgendaMode] = useState<'custom' | 'existing'>('custom');
+    const [groupSearchTerm, setGroupSearchTerm] = useState('');
+
+    useEffect(() => {
+        const loadAllSchedules = async () => {
+            try {
+                const data = await api.getAllSchedules();
+                setExistingSchedules(data);
+            } catch (err) {
+                console.error("Error fetching schedules", err);
+            }
+        };
+        if (isOpen) loadAllSchedules();
+    }, [isOpen]);
 
     useEffect(() => {
         if (student) {
@@ -92,34 +153,11 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
             });
             setFormSchedules([]);
             setConfigType('weeks');
-            setWeeklyFrequency(1);
+            setFormSchedules([]);
+            setAgendaMode('custom');
+            setGroupSearchTerm('');
         }
         setFormStep(1);
-        
-        // Fetch payment accounts
-        const fetchAccounts = async () => {
-            try {
-                const accounts = await api.getPaymentAccounts();
-                setPaymentAccounts(accounts);
-                
-                // If not editing and have a default account, pre-set it if empty
-                if (!student && !formData.billing_alias) {
-                    const def = accounts.find(a => a.isDefault);
-                    if (def) setFormData(prev => ({ ...prev, billing_alias: def.alias }));
-                }
-
-                // Check for special price status
-                if (student) {
-                    const svc = userServices.find(s => s.name === student.service_name);
-                    if (svc && Number(svc.defaultPrice) > 0 && Number(student.price_per_hour) !== Number(svc.defaultPrice)) {
-                        setIsSpecialPrice(true);
-                    }
-                }
-            } catch (err) {
-                console.error("Error fetching accounts:", err);
-            }
-        };
-        fetchAccounts();
     }, [student, user, isOpen, userServices.length]); // Removido userServices para evitar que el form se limpie al añadir una actividad
 
     const calculateAmount = () => {
@@ -191,144 +229,218 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
 
     if (!isOpen) return null;
 
-    const steps = [
-        { id: 1, label: 'Identidad', icon: User },
-        { id: 2, label: 'Plan', icon: CreditCard },
-        { id: 3, label: 'Agenda', icon: Calendar }
-    ];
-
     const isStep1Complete = formData.name && formData.phone && formData.service_name;
+    
+    // --- LÓGICA DE AGENDA (Restaurada) ---
+    const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+    const DAY_SHORT: { [key: number]: string } = { 1: 'LUN', 2: 'MAR', 3: 'MIÉ', 4: 'JUE', 5: 'VIE', 6: 'SÁB', 0: 'DOM' };
+
+    const toggleDay = (day: number) => {
+        setFormSchedules(prev => {
+            const exists = prev.find(s => s.dayOfWeek === day);
+            if (exists) return prev.filter(s => s.dayOfWeek !== day);
+            
+            // Validar límite si es plan por semana
+            if (configType === 'weeks' && prev.length >= weeklyFrequency) {
+                showToast.error(`Límite alcanzado: El plan es de ${weeklyFrequency} días por semana.`);
+                return prev;
+            }
+
+            const startH = user?.workStartHour ?? 8;
+            const startTimeStr = `${String(startH).padStart(2, '0')}:00`;
+            const endTimeStr = `${String(startH + 1).padStart(2, '0')}:00`;
+
+            return [...prev, { dayOfWeek: day, startTime: startTimeStr, endTime: endTimeStr }];
+        });
+    };
+
+    const updateDayTime = (day: number, time: string) => {
+        setFormSchedules(prev => prev.map(s =>
+            s.dayOfWeek === day ? { ...s, startTime: time } : s
+        ));
+    };
+
+    const adjustDayTime = (day: number, part: 'h' | 'm', delta: number) => {
+        const schedule = formSchedules.find(s => s.dayOfWeek === day);
+        if (!schedule) return;
+
+        let [h, m] = schedule.startTime.split(':').map(Number);
+        
+        if (part === 'h') {
+            h = (h + delta + 24) % 24;
+        } else {
+            m = (m + delta + 60) % 60;
+        }
+
+        const newTime = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        updateDayTime(day, newTime);
+    };
+
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[2000] p-0 md:p-6 backdrop-blur-xl">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[2000] p-0 md:p-6 backdrop-blur-sm">
             <motion.div 
-                layoutId="student-modal"
-                initial={{ opacity: 0, scale: 0.9, y: 40 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 40 }}
-                className="bg-white dark:bg-bg-dark w-full max-w-4xl h-full md:h-auto md:max-h-[90vh] flex flex-col md:rounded-[3rem] shadow-2xl relative border border-border-main overflow-hidden"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="bg-surface border border-border-main w-full max-w-[1100px] h-full md:h-[80vh] md:max-h-[800px] flex flex-col md:rounded-[32px] shadow-2xl relative overflow-hidden mx-auto"
             >
-                {/* Close Button */}
-                <button onClick={onClose} className="absolute right-6 top-6 z-10 p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-2xl transition-all">
-                    <X size={20} className="text-text-muted" />
-                </button>
 
-                {/* Header / Stepper Container */}
-                <div className="p-6 md:p-8 border-b border-border-main bg-zinc-50/50 dark:bg-bg-soft/10">
-                    <div className="flex flex-col gap-4">
-                        <div>
-                            <h2 className="text-2xl md:text-3xl font-black text-text-main tracking-tighter uppercase italic">
-                                {student ? 'Editar Alumno' : 'Nuevo Alumno'}
+                {/* Header SaaS Premium */}
+                <div className="px-6 md:px-10 py-5 md:py-6 border-b border-border-main bg-surface dark:bg-bg-app flex flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-6">
+                        <div className="space-y-1">
+                            <h2 className="text-2xl font-black text-text-main tracking-tight uppercase leading-none">
+                                {student ? 'Actualizar Alumno' : 'Registrar Alumno'}
                             </h2>
-                            <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] mt-0.5 opacity-60">Configuración Premium</p>
+                            <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest opacity-80">Registro de Alumnos</p>
                         </div>
-                        
-                        {/* Stepper Logic */}
-                        <div className="flex items-center gap-4">
-                            {steps.map((s, idx) => (
-                                <React.Fragment key={s.id}>
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${
-                                            formStep >= s.id 
-                                            ? 'bg-primary-main text-white shadow-primary-glow' 
-                                            : 'bg-zinc-100 dark:bg-white/5 text-text-muted'
-                                        }`}>
-                                            <s.icon size={18} />
-                                        </div>
-                                        <span className={`hidden sm:block text-[10px] font-black uppercase tracking-[0.2em] ${
-                                            formStep >= s.id ? 'text-text-main' : 'text-text-muted opacity-40'
-                                        }`}>{s.label}</span>
-                                    </div>
-                                    {idx < steps.length - 1 && (
-                                        <div className={`h-px w-8 md:w-12 transition-all duration-500 ${
-                                            formStep > s.id ? 'bg-primary-main' : 'bg-border-main'
-                                        }`} />
-                                    )}
-                                </React.Fragment>
-                            ))}
+                        <div className="h-10 w-px bg-border-main hidden md:block" />
+                        <div className="flex items-center gap-8">
+                            <StepIndicatorComp currentStep={formStep} stepNum={1} label="Identidad" />
+                            <div className={`h-[2px] w-8 rounded-full ${formStep > 1 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-800'}`} />
+                            <StepIndicatorComp currentStep={formStep} stepNum={2} label="Liquidación" />
+                            <div className={`h-[2px] w-8 rounded-full ${formStep > 2 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-800'}`} />
+                            <StepIndicatorComp currentStep={formStep} stepNum={3} label="Agenda" />
                         </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-all text-zinc-600 hover:text-white">
+                            <X size={20} />
+                        </button>
                     </div>
                 </div>
 
                 {/* Body Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-10 py-6 md:py-8">
                     <form onSubmit={handleSubmit} className="h-full">
                         <AnimatePresence mode="wait">
                             {formStep === 1 && (
                                 <motion.div 
                                     key="step1"
-                                    initial={{ opacity: 0, x: 20 }} 
-                                    animate={{ opacity: 1, x: 0 }} 
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-10"
+                                    initial={{ opacity: 0, y: 10 }} 
+                                    animate={{ opacity: 1, y: 0 }} 
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="grid lg:grid-cols-[1fr_380px] gap-12 h-full items-start"
                                 >
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        <div className="space-y-6">
-                                            <div>
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block">Nombre del Alumno</label>
-                                                <div className="relative group">
-                                                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><User size={20} /></div>
-                                                    <input required type="text" className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all placeholder:text-text-muted/30 italic" placeholder="Nombre completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-                                                </div>
+                                    <div className="space-y-12 max-w-2xl">
+                                        <div className="space-y-8">
+                                            <div className="flex flex-col gap-1 border-b border-border-main pb-4">
+                                                <h3 className="text-sm font-black text-text-main uppercase tracking-widest">Información Personal</h3>
+                                                <p className="text-xs text-text-muted font-bold">Completá los datos básicos de identidad y contacto del alumno.</p>
                                             </div>
-                                            <div>
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block">Número de WhatsApp</label>
-                                                <div className="relative group">
-                                                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><MessageCircle size={20} /></div>
-                                                    <input required type="tel" className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all placeholder:text-text-muted/30 italic" placeholder="Ej: 1122334455" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                                                </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <InputFieldComp 
+                                                    label="Nombre Completo" 
+                                                    icon={<User size={14} />} 
+                                                    value={formData.name} 
+                                                    onChange={(e: any) => setFormData({ ...formData, name: e.target.value })} 
+                                                    placeholder="Ej: Juan Pérez"
+                                                />
+                                                <InputFieldComp 
+                                                    label="Teléfono WhatsApp" 
+                                                    icon={<Phone size={14} />} 
+                                                    value={formData.phone} 
+                                                    onChange={(e: any) => setFormData({ ...formData, phone: e.target.value })} 
+                                                    placeholder="Ej: 351 555 4433"
+                                                />
                                             </div>
+                                            <InputFieldComp 
+                                                label="Etiqueta / Nota Rápida" 
+                                                icon={<Tag size={14} />} 
+                                                value={formData.sub_category} 
+                                                onChange={(e: any) => setFormData({ ...formData, sub_category: e.target.value })} 
+                                                placeholder="Ej: Turno Tarde, Nivel Avanzado..."
+                                            />
                                         </div>
 
                                         <div className="space-y-6">
-                                            <div>
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block">Servicio / Actividad</label>
-                                                <div className="relative group">
-                                                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><Plus size={20} /></div>
-                                                    <select 
-                                                        required
-                                                        className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all appearance-none italic" 
-                                                        value={formData.service_name} 
-                                                        onChange={e => {
-                                                            const sName = e.target.value;
-                                                            if (sName === 'ADD_NEW') {
-                                                                setShowServicePopup(true);
-                                                                return;
-                                                            }
-                                                            const selectedService = userServices.find(s => s.name === sName);
-                                                            setFormData(prev => ({
-                                                                ...prev,
-                                                                service_name: sName,
-                                                                price_per_hour: selectedService ? Number(selectedService.defaultPrice) : prev.price_per_hour
-                                                            }));
-                                                        }}
-                                                    >
-                                                        <option value="" disabled>Seleccioná actividad</option>
-                                                        {userServices.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-                                                        <option value="ADD_NEW" className="text-primary-main font-bold">➕ Agregar Nueva Actividad...</option>
-                                                    </select>
-                                                </div>
+                                            <div className="flex flex-col gap-1 border-b border-border-main pb-4">
+                                                <p className="text-sm font-black text-text-main uppercase tracking-widest flex items-center gap-2">
+                                                    <LayoutGrid size={16} className="text-emerald-500" /> Actividad Principal
+                                                </p>
+                                                <p className="text-xs text-text-muted font-bold">Asigná el módulo de aprendizaje al que pertenece el alumno.</p>
                                             </div>
-                                            <div>
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block">Categoría (Opcional)</label>
-                                                <div className="relative group">
-                                                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><Target size={20} /></div>
-                                                    <input type="text" className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all placeholder:text-text-muted/30 italic" placeholder="Nombre de categoría" value={formData.sub_category || ''} onChange={e => setFormData({ ...formData, sub_category: e.target.value })} />
-                                                </div>
+                                            <div className="flex flex-wrap gap-3">
+                                                {userServices.map(s => (
+                                                    <button
+                                                        key={s.id}
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, service_name: s.name, price_per_hour: Number(s.defaultPrice) || prev.price_per_hour }))}
+                                                        className={`px-5 py-2.5 rounded-xl text-[10px] font-bold transition-all border uppercase tracking-widest ${
+                                                            formData.service_name === s.name
+                                                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/50 shadow-sm'
+                                                            : 'bg-surface dark:bg-bg-dark border-border-main text-text-muted hover:border-emerald-500/30'
+                                                        }`}
+                                                    >
+                                                        {s.name}
+                                                    </button>
+                                                ))}
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setShowServicePopup(true)} 
+                                                    className="px-5 py-2.5 rounded-xl text-[10px] font-bold border border-dashed border-border-main text-text-muted hover:text-emerald-500 hover:border-emerald-500/50 transition-all uppercase tracking-widest bg-black/[0.02] dark:bg-white/5"
+                                                >
+                                                    + Crear
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Action Step 1 */}
-                                    <div className="pt-6 border-t border-border-main flex justify-end">
-                                        <button 
-                                            type="button" 
-                                            disabled={!isStep1Complete}
-                                            onClick={() => setFormStep(2)} 
-                                            className="px-12 py-4 bg-zinc-900 dark:bg-white text-white dark:text-black font-black uppercase tracking-[0.2em] text-xs rounded-[1.5rem] shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale disabled:scale-100 italic flex items-center gap-3"
-                                        >
-                                            Sig. Paso <ArrowRight size={18} />
-                                        </button>
+                                    {/* Sidebar Resumen (Paso 1) */}
+                                    <div className="bg-surface dark:bg-bg-soft border border-border-main rounded-[2.5rem] shadow-sm sticky top-0 overflow-hidden">
+                                        
+                                        {/* Avatar Preview */}
+                                        <div className="p-8 pb-6 flex flex-col items-center gap-4 border-b border-border-main">
+                                            <div className="relative">
+                                                <div className={`w-20 h-20 rounded-[28px] flex items-center justify-center font-black text-2xl text-white transition-all duration-300 shadow-lg ${formData.name ? 'bg-emerald-500 shadow-emerald-500/20 scale-100' : 'bg-black/10 dark:bg-white/5 scale-95'}`}>
+                                                    {formData.name
+                                                        ? formData.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+                                                        : <User size={32} className="text-text-muted/30" />
+                                                    }
+                                                </div>
+                                                {formData.name && (
+                                                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-sm">
+                                                        <Check size={12} className="text-black" strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="font-black text-text-main text-base uppercase tracking-tight leading-tight">
+                                                    {formData.name || <span className="text-text-muted/40 text-sm">Sin nombre aún</span>}
+                                                </p>
+                                                {formData.service_name && (
+                                                    <span className="mt-1.5 inline-flex px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                                                        {formData.service_name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Summary Items */}
+                                        <div className="p-6 space-y-1">
+                                            <SummaryItemComp icon={<Phone size={14} />} label="Contacto" value={formData.phone || '---'} />
+                                            <SummaryItemComp icon={<LayoutGrid size={14} />} label="Módulo" value={formData.service_name || '---'} highlight={!!formData.service_name} />
+                                        </div>
+
+                                        <div className="px-6 pb-6">
+                                            <button 
+                                                type="button" 
+                                                disabled={!isStep1Complete}
+                                                onClick={() => setFormStep(2)} 
+                                                className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] rounded-[20px] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-3 group"
+                                            >
+                                                Siguiente Paso
+                                                <ArrowRight size={18} strokeWidth={3} className="group-hover:translate-x-1 transition-transform" />
+                                            </button>
+                                            {!isStep1Complete && (
+                                                <p className="text-center text-[9px] font-bold text-text-muted/50 uppercase tracking-widest mt-3">
+                                                    Completá nombre y módulo
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}
@@ -336,273 +448,209 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                             {formStep === 2 && (
                                 <motion.div 
                                     key="step2"
-                                    initial={{ opacity: 0, x: 20 }} 
-                                    animate={{ opacity: 1, x: 0 }} 
-                                    exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-10"
+                                    initial={{ opacity: 0, y: 10 }} 
+                                    animate={{ opacity: 1, y: 0 }} 
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="grid lg:grid-cols-[1fr_380px] gap-12 h-full items-start"
                                 >
-                                    <div className="flex flex-col lg:flex-row gap-12">
-                                        {/* Plan Builder Left */}
-                                        <div className="flex-1 space-y-10">
-                                            <div className="space-y-4">
-                                                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4 opacity-60">Seleccioná cómo vas a medir el cobro</p>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                    {[
-                                                        { id: 'weeks', label: 'POR SEMANAS', desc: '1, 2 O 3 VECES X SEM.', icon: Calendar },
-                                                        { id: 'month', label: 'POR MES', desc: 'TOTAL CLASES FIJAS', icon: CreditCard },
-                                                        { id: 'unique', label: 'CLASE ÚNICA', desc: 'PAGO POR VEZ', icon: Target }
-                                                    ].map(t => (
-                                                        <button
-                                                            key={t.id}
-                                                            type="button"
-                                                            onClick={() => setConfigType(t.id as any)}
-                                                            className={`p-5 rounded-[1.5rem] border-2 transition-all text-left flex flex-col gap-2 group relative overflow-hidden ${
-                                                                configType === t.id
-                                                                ? 'border-primary-main bg-primary-main/10 shadow-xl shadow-primary-main/5'
-                                                                : 'border-zinc-100 dark:border-white/5 bg-zinc-50 dark:bg-bg-dark hover:border-border-main'
-                                                            }`}
-                                                        >
-                                                            {configType === t.id && (
-                                                                <div className="absolute top-0 right-0 p-3 text-primary-main"><Check size={16} /></div>
-                                                            )}
-                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${configType === t.id ? 'bg-primary-main text-white' : 'bg-white dark:bg-white/5 text-text-muted'}`}>
-                                                                <t.icon size={20} />
-                                                            </div>
-                                                            <div className="space-y-0.5">
-                                                                <span className="text-[10px] font-black text-text-main uppercase tracking-tight">{t.label}</span>
-                                                                <p className="text-[8px] font-bold text-text-muted leading-tight uppercase opacity-60">{t.desc}</p>
-                                                            </div>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Dynamic Inputs Based on Choice */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                                {configType === 'weeks' && (
-                                                    <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 opacity-60">Frecuencia Semanal</label>
-                                                        <div className="flex items-center gap-4 bg-zinc-100 dark:bg-white/5 p-3 rounded-[2rem] border border-border-main">
-                                                            <button type="button" onClick={() => setWeeklyFrequency(prev => Math.max(1, prev - 1))} className="w-12 h-12 rounded-2xl bg-white dark:bg-bg-dark border border-border-main flex items-center justify-center text-text-main hover:bg-primary-main hover:text-white transition-all"><Minus size={18} /></button>
-                                                            <div className="flex-1 text-center">
-                                                                <span className="text-xl font-black text-text-main uppercase italic">{weeklyFrequency} veces</span>
-                                                            </div>
-                                                            <button type="button" onClick={() => setWeeklyFrequency(prev => prev + 1)} className="w-12 h-12 rounded-2xl bg-white dark:bg-bg-dark border border-border-main flex items-center justify-center text-text-main hover:bg-primary-main hover:text-white transition-all"><Plus size={18} /></button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {configType === 'month' && (
-                                                    <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 opacity-60">Total Clases al Mes</label>
-                                                        <div className="relative group">
-                                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><Sparkles size={18} /></div>
-                                                            <input type="number" className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all italic" placeholder="Cantidad de clases" value={formData.classes_per_month} onChange={e => setFormData({ ...formData, classes_per_month: Number(e.target.value) })} />
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="space-y-4">
-                                                    <div className="flex items-center justify-between px-4">
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-text-muted opacity-60">
-                                                            Precio {isSpecialPrice ? 'Especial' : 'por Hora'}
-                                                        </label>
-                                                        {Number(userServices.find(s => s.name === formData.service_name)?.defaultPrice) > 0 && (
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-[8px] font-bold text-text-muted uppercase tracking-tighter">Especial</span>
-                                                                <button 
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const newSpecial = !isSpecialPrice;
-                                                                        setIsSpecialPrice(newSpecial);
-                                                                        if (!newSpecial) {
-                                                                            const svc = userServices.find(s => s.name === formData.service_name);
-                                                                            if (svc) setFormData(prev => ({ ...prev, price_per_hour: Number(svc.defaultPrice) }));
-                                                                        }
-                                                                    }}
-                                                                    className={`w-8 h-4 rounded-full relative transition-all ${isSpecialPrice ? 'bg-primary-main' : 'bg-zinc-200 dark:bg-white/10'}`}
-                                                                >
-                                                                    <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${isSpecialPrice ? 'left-4.5' : 'left-0.5'}`} />
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="relative group">
-                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors">
-                                                            {isSpecialPrice ? <Unlock size={18} /> : <Lock size={18} />}
-                                                        </div>
-                                                        <input 
-                                                            required 
-                                                            type="number" 
-                                                            readOnly={Number(userServices.find(s => s.name === formData.service_name)?.defaultPrice) > 0 && !isSpecialPrice}
-                                                            className={`w-full pl-16 pr-20 py-4 rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all italic ${
-                                                                !isSpecialPrice && Number(userServices.find(s => s.name === formData.service_name)?.defaultPrice) > 0 
-                                                                ? 'bg-zinc-100/50 dark:bg-bg-dark/50 text-text-muted/50 cursor-not-allowed' 
-                                                                : 'bg-zinc-50 dark:bg-bg-dark dark:text-white'
-                                                            }`} 
-                                                            placeholder="Precio" 
-                                                            value={formData.price_per_hour || ''} 
-                                                            onChange={e => setFormData({ ...formData, price_per_hour: Number(e.target.value) })} 
-                                                        />
-                                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-text-muted font-black text-sm italic opacity-40">
-                                                            {user?.currency || '$'} / hora
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                                <div>
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block opacity-60">Duración Clase</label>
-                                                    <div className="relative group">
-                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><Clock size={18} /></div>
-                                                        <select className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner appearance-none italic" value={formData.class_duration_min} onChange={e => setFormData({ ...formData, class_duration_min: Number(e.target.value) })}>
-                                                            <option value={30}>30 min</option>
-                                                            <option value={45}>45 min</option>
-                                                            <option value={60}>1 hora</option>
-                                                            <option value={90}>1.5 hs</option>
-                                                            <option value={120}>2 hs</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block opacity-60">Método de Pago</label>
-                                                        <div className="relative group">
-                                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><Wallet size={18} /></div>
-                                                            <select className="w-full pl-16 pr-8 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border-none outline-none font-bold text-base shadow-inner appearance-none italic" value={formData.payment_method} onChange={e => {
-                                                                const method = e.target.value;
-                                                                let alias = '';
-                                                                if (method === 'Transferencia') {
-                                                                    const def = paymentAccounts.find(a => a.isDefault) || paymentAccounts[0];
-                                                                    if (def) alias = def.alias;
-                                                                }
-                                                                setFormData({ ...formData, payment_method: method, billing_alias: alias });
-                                                                setShowManualAlias(false);
-                                                            }}>
-                                                                <option value="Efectivo">Efectivo 💵</option>
-                                                                <option value="Transferencia">Transferencia 🏦</option>
-                                                                <option value="Mercado Pago">Mercado Pago 🔵</option>
-                                                                <option value="Otro">Otro 💳</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {formData.payment_method === 'Transferencia' && (
-                                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                                                            {paymentAccounts.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 px-2">
-                                                                    {paymentAccounts.map(acc => (
-                                                                        <button
-                                                                            key={acc.id}
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                setFormData({ ...formData, billing_alias: acc.alias });
-                                                                                setShowManualAlias(false);
-                                                                            }}
-                                                                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                                                                                formData.billing_alias === acc.alias && !showManualAlias
-                                                                                ? 'bg-primary-main text-white border-primary-main shadow-lg shadow-primary-main/20 scale-105'
-                                                                                : 'bg-zinc-100 dark:bg-white/5 text-text-muted border-transparent hover:border-text-muted/20'
-                                                                            }`}
-                                                                        >
-                                                                            {acc.name}
-                                                                        </button>
-                                                                    ))}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setShowManualAlias(true)}
-                                                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                                                                            showManualAlias
-                                                                            ? 'bg-zinc-900 dark:bg-white text-white dark:text-black border-zinc-900 dark:border-white scale-105 shadow-xl'
-                                                                            : 'bg-zinc-100 dark:bg-white/5 text-text-muted border-transparent hover:border-text-muted/20'
-                                                                        }`}
-                                                                    >
-                                                                        + Personalizado
-                                                                    </button>
-                                                                </div>
-                                                            )}
-
-                                                            {(paymentAccounts.length === 0 || showManualAlias) && (
-                                                                <div className="relative group animate-in slide-in-from-top-2 duration-300">
-                                                                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-main transition-colors"><Banknote size={16} /></div>
-                                                                    <input 
-                                                                        type="text" 
-                                                                        className="w-full pl-16 pr-8 py-4 bg-primary-main/5 dark:bg-bg-dark dark:text-white rounded-[1.5rem] border border-primary-main/20 outline-none font-bold text-sm shadow-inner focus:ring-4 focus:ring-primary-main/10 transition-all placeholder:text-text-muted/30 italic" 
-                                                                        placeholder="Alias de transferencia" 
-                                                                        value={formData.billing_alias || ''} 
-                                                                        onChange={e => setFormData({ ...formData, billing_alias: e.target.value })} 
-                                                                    />
-                                                                </div>
-                                                            )}
-                                                        </motion.div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                                {/* Action items removed from here and moved to fixed footer */}
+                                    <div className="space-y-10">
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest flex items-center gap-2">
+                                                <CreditCard size={14} /> Modalidad de Cobro
+                                            </p>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <SelectCardComp 
+                                                    title="Por Semana" 
+                                                    subtitle="Clases por semana" 
+                                                    active={configType === 'weeks'} 
+                                                    onClick={() => setConfigType('weeks')} 
+                                                    icon={Calendar}
+                                                />
+                                                <SelectCardComp 
+                                                    title="Pack Mensual" 
+                                                    subtitle="Total clases al mes" 
+                                                    active={configType === 'month'} 
+                                                    onClick={() => setConfigType('month')} 
+                                                    icon={CreditCard}
+                                                />
+                                                <SelectCardComp 
+                                                    title="Clase Suelta" 
+                                                    subtitle="Pago por sesión" 
+                                                    active={configType === 'unique'} 
+                                                    onClick={() => setConfigType('unique')} 
+                                                    icon={Target}
+                                                />
                                             </div>
                                         </div>
 
-                                        {/* Ticket Builder Real-Time */}
-                                        <div className="w-full lg:w-[280px] shrink-0">
-                                            <div className="bg-zinc-900 dark:bg-bg-soft/40 p-6 rounded-[2rem] text-white shadow-2xl relative overflow-hidden border border-white/5 space-y-4">
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-main/20 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
-                                                
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 italic">Total a Cobrar</p>
-                                                    <div className="flex items-end gap-1">
-                                                        <span className="text-xl font-bold mb-2 text-primary-main tracking-tighter">{user?.currency || '$'}</span>
-                                                        <span className="text-5xl font-black tracking-tighter italic">
-                                                            {calculateAmount().toLocaleString('es-AR')}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="h-px bg-white/5" />
-
+                                        <div className="bg-surface dark:bg-[#111113] p-8 rounded-[2.5rem] border border-border-main space-y-8 shadow-sm">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                                {/* Frequency / Capacity */}
                                                 <div className="space-y-4">
-                                                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.1em]">
-                                                        <span className="text-white/40">Frecuencia:</span>
-                                                        <span className="text-white">{configType === 'unique' ? 'Única' : (configType === 'weeks' ? 'Semanal' : 'Mensual')}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.1em]">
-                                                        <span className="text-white/40">Cant Clase:</span>
-                                                        <span className="text-white">{configType === 'unique' ? '1' : (configType === 'weeks' ? weeklyFrequency * 4 : formData.classes_per_month)}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.1em]">
-                                                        <span className="text-white/40">Estado:</span>
-                                                        <span className="text-primary-main italic">PENDIENTE</span>
-                                                    </div>
-                                                    {formData.payment_method === 'Transferencia' && formData.billing_alias && (
-                                                        <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.1em]">
-                                                            <span className="text-white/40">Alias:</span>
-                                                            <span className="text-white truncate max-w-[120px]">{formData.billing_alias}</span>
+                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">
+                                                        {configType === 'weeks' ? 'Frecuencia Semanal' : configType === 'month' ? 'Carga Horaria Mensual' : 'Sesión Única'}
+                                                    </p>
+                                                    {configType !== 'unique' ? (
+                                                        <div className="group relative">
+                                                            
+                                                            <div className="relative flex items-center bg-black/[0.02] dark:bg-white/5 rounded-[24px] border border-border-main p-1 transition-all duration-500">
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => configType === 'weeks' ? setWeeklyFrequency(prev => Math.max(1, prev - 1)) : setFormData(prev => ({ ...prev, classes_per_month: Math.max(1, (prev.classes_per_month || 1) - 1) }))} 
+                                                                    className="w-14 h-14 rounded-[20px] bg-surface dark:bg-bg-dark hover:bg-emerald-500/10 hover:text-emerald-500 transition-all flex items-center justify-center text-text-muted font-black border border-border-main active:scale-90"
+                                                                >
+                                                                    <div className="w-4 h-0.5 bg-current rounded-full" />
+                                                                </button>
+                                                                
+                                                                <div className="flex-1 text-center">
+                                                                    <div className="text-3xl font-bold text-text-main tracking-tight">
+                                                                        {configType === 'weeks' ? weeklyFrequency : formData.classes_per_month}
+                                                                        <span className="text-sm text-text-muted ml-2 font-bold uppercase tracking-widest text-[10px]">
+                                                                            {configType === 'weeks' ? (weeklyFrequency === 1 ? 'vez' : 'veces') : 'clases'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => configType === 'weeks' ? setWeeklyFrequency(prev => Math.min(7, prev + 1)) : setFormData(prev => ({ ...prev, classes_per_month: (prev.classes_per_month || 0) + 1 }))} 
+                                                                    className="w-14 h-14 rounded-[20px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-all flex items-center justify-center font-black border border-emerald-500/20 active:scale-90"
+                                                                >
+                                                                    <Plus size={24} strokeWidth={3} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-12 flex items-center px-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl">
+                                                            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Modo Sesión Independiente</p>
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                <div className="pt-2">
-                                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center relative overflow-hidden group">
-                                                        <div className="absolute inset-0 bg-primary-main/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        <p className="text-[9px] font-black uppercase text-white/30 tracking-widest mb-1">Monto Sugerido por Clase</p>
-                                                        <p className="text-sm font-black text-primary-main italic relative z-10">{user?.currency || '$'} {Math.round(Number(formData.price_per_hour || 0) * (Number(formData.class_duration_min || 60) / 60)).toLocaleString('es-AR')}</p>
-                                                        <p className="text-[7px] font-bold text-white/20 uppercase tracking-[0.2em] mt-2 relative z-10">Método: {formData.payment_method}</p>
+                                                {/* Price / Rate - Mechanical Upgrade */}
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Tasa de Intercambio</p>
+                                                    </div>
+                                                    
+                                                    <div className="relative group">
+                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-500 font-black text-2xl group-focus-within:scale-110 transition-transform">
+                                                            {user?.currency || '$'}
+                                                        </div>
+                                                        <input 
+                                                            type="number" 
+                                                            className="w-full bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-white/5 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 rounded-2xl px-6 py-5 pl-14 pr-[110px] text-zinc-900 dark:text-emerald-50 font-black text-3xl outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600 tracking-tight"
+                                                            placeholder="0" 
+                                                            value={formData.price_per_hour || ''} 
+                                                            onChange={e => setFormData({ ...formData, price_per_hour: Number(e.target.value) })} 
+                                                        />
+                                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                                                            <div className="hidden sm:flex items-center px-3 py-1.5 bg-zinc-200/50 dark:bg-white/5 rounded-xl border border-zinc-300/30 dark:border-white/10">
+                                                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-black uppercase tracking-widest">/ CL</span>
+                                                            </div>
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => setFormData(prev => ({ ...prev, price_per_hour: (prev.price_per_hour || 0) + 500 }))}
+                                                                    className="p-1 hover:bg-emerald-500 hover:text-black rounded-lg transition-all text-emerald-500 cursor-pointer active:scale-90"
+                                                                >
+                                                                    <ChevronUp size={18} strokeWidth={3} />
+                                                                </button>
+                                                                <button 
+                                                                    type="button" 
+                                                                    onClick={() => setFormData(prev => ({ ...prev, price_per_hour: Math.max(0, (prev.price_per_hour || 0) - 500) }))}
+                                                                    className="p-1 hover:bg-zinc-200 dark:hover:bg-white/10 rounded-lg transition-all text-zinc-400 cursor-pointer active:scale-90"
+                                                                >
+                                                                    <ChevronDown size={18} strokeWidth={3} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="h-px bg-border-main" />
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                                {/* Duration */}
+                                                <div className="space-y-4">
+                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Bloque de Tiempo</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {[30, 45, 60, 90, 120].map(val => (
+                                                            <button
+                                                                key={val}
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, class_duration_min: val })}
+                                                                className={`px-5 py-2.5 rounded-[14px] text-[10px] font-bold transition-all border uppercase ${
+                                                                    formData.class_duration_min === val
+                                                                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/50'
+                                                                    : 'bg-surface dark:bg-bg-dark border-border-main text-text-muted hover:border-emerald-500/30'
+                                                                }`}
+                                                            >
+                                                                {val >= 60 ? `${val/60} hs` : `${val} m`}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Method */}
+                                                <div className="space-y-4">
+                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Medio Preferido</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {['Efectivo', 'Transferencia', 'MP', 'Otro'].map(opt => (
+                                                            <button
+                                                                key={opt}
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, payment_method: opt as any })}
+                                                                className={`px-5 py-2.5 rounded-[14px] text-[10px] font-bold transition-all border uppercase ${
+                                                                    formData.payment_method === opt
+                                                                    ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/50'
+                                                                    : 'bg-surface dark:bg-bg-dark border-border-main text-text-muted hover:border-emerald-500/30'
+                                                                }`}
+                                                            >
+                                                                {opt}
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Action Step 2 */}
-                                    <div className="mt-10 flex justify-end gap-4">
-                                        <button type="button" onClick={() => setFormStep(1)} className="flex items-center gap-2 text-text-muted font-black uppercase tracking-widest text-[10px] hover:text-text-main transition-colors">
-                                            <ArrowLeft size={16} /> Volver
-                                        </button>
-                                        <button type="button" onClick={() => setFormStep(3)} className="px-12 py-4 bg-zinc-900 dark:bg-white text-white dark:text-black font-black uppercase tracking-[0.2em] text-xs rounded-[1.5rem] shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 italic">
-                                            Config. Agenda <ArrowRight size={18} />
-                                        </button>
+                                    {/* Sidebar Liquidación (Paso 2) */}
+                                    <div className="bg-surface dark:bg-[#111113] border border-border-main p-8 rounded-[2.5rem] shadow-sm space-y-8 sticky top-0 overflow-hidden group">
+                                        
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">Liquidación Proyectada</p>
+                                            <div className="flex items-end gap-2">
+                                                <span className="text-2xl font-black mb-1.5 text-emerald-500">{user?.currency || '$'}</span>
+                                                <span className="text-5xl font-black tracking-tight leading-none text-text-main">
+                                                    {calculateAmount().toLocaleString('es-AR')}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="h-px bg-border-main" />
+
+                                        <div className="space-y-4">
+                                            <SummaryItemComp icon={<Calendar size={14} />} label="Modalidad" value={configType === 'unique' ? 'Único' : (configType === 'weeks' ? 'Semanal' : 'Mensual')} highlight />
+                                            <SummaryItemComp icon={<Clock size={14} />} label="Capacidad" value={configType === 'unique' ? '1 cl' : (configType === 'weeks' ? `${weeklyFrequency * 4} cl/mes` : `${formData.classes_per_month} cl/mes`)} />
+                                            <SummaryItemComp icon={<DollarSign size={14} />} label="Tasa Base" value={`${user?.currency || '$'}${formData.price_per_hour}/cl`} />
+                                        </div>
+
+                                        <div className="pt-4 space-y-4">
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setFormStep(3)}
+                                                className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] rounded-[24px] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                            >
+                                                Siguiente Paso
+                                                <ArrowRight size={18} strokeWidth={3} />
+                                            </button>
+                                            <button type="button" onClick={() => setFormStep(1)} className="w-full text-center text-[10px] font-bold text-text-muted hover:text-text-main uppercase tracking-widest transition-colors py-2">
+                                                <span className="mr-2">←</span> Volver a Datos
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}
@@ -610,131 +658,232 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                             {formStep === 3 && (
                                 <motion.div 
                                     key="step3"
-                                    initial={{ opacity: 0, y: 20 }} 
+                                    initial={{ opacity: 0, y: 10 }} 
                                     animate={{ opacity: 1, y: 0 }} 
-                                    exit={{ opacity: 0, y: -20 }}
-                                    className="space-y-8"
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="grid lg:grid-cols-[1fr_380px] gap-12 h-full items-start"
                                 >
-                                    {/* Flexible Schedule Toggle (Classic Style) */}
-                                    <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-bg-dark rounded-2xl border border-border-main">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-primary-main/10 flex items-center justify-center text-xl">🚀</div>
-                                            <div>
-                                                <p className="text-sm font-black text-text-main uppercase italic">Horario Flexible</p>
-                                                <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Sin días fijos</p>
+                                    <div className="space-y-10">
+                                        {/* Header and Mode Selector */}
+                                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Protocolo Final</p>
+                                                <h3 className="text-3xl font-black text-text-main tracking-tight uppercase">Definir Agenda</h3>
+                                            </div>
+
+                                            <div className="flex p-1 bg-black/[0.03] dark:bg-white/5 rounded-2xl border border-border-main self-start md:self-auto">
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setAgendaMode('custom')}
+                                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${agendaMode === 'custom' ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'text-text-muted hover:text-text-main'}`}
+                                                >
+                                                    Personalizado
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setAgendaMode('existing')}
+                                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${agendaMode === 'existing' ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'text-text-muted hover:text-text-main'}`}
+                                                >
+                                                    Unirse a Grupo
+                                                </button>
                                             </div>
                                         </div>
-                                        <button 
-                                            type="button"
-                                            onClick={() => {
-                                                const newFlex = !formData.isFlexible;
-                                                setFormData(prev => ({ ...prev, isFlexible: newFlex }));
-                                                if (newFlex) setFormSchedules([]);
-                                            }}
-                                            className={`w-12 h-6 rounded-full relative transition-all ${formData.isFlexible ? 'bg-primary-main' : 'bg-zinc-200 dark:bg-white/10'}`}
-                                        >
-                                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.isFlexible ? 'left-7' : 'left-1'}`} />
-                                        </button>
-                                    </div>
 
-                                    {!formData.isFlexible && (
-                                        <div className="space-y-6 animate-in fade-in duration-500">
-                                            {/* Adder Concept */}
-                                            <div className="p-6 rounded-[2rem] bg-white dark:bg-bg-soft shadow-xl border border-border-main space-y-4">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-2 block opacity-60">
-                                                    Agregar Día y Horario
-                                                </label>
-                                                <div className="flex flex-col sm:flex-row items-end gap-4">
-                                                    <div className="flex-1 w-full">
-                                                        <label className="text-[9px] font-bold text-text-muted uppercase mb-1.5 block ml-1">Día</label>
-                                                        <select 
-                                                            value={newDay} 
-                                                            onChange={e => setNewDay(Number(e.target.value))}
-                                                            className="w-full p-3 rounded-xl border border-border-main bg-zinc-50 dark:bg-bg-dark text-sm font-bold text-text-main outline-none focus:border-primary-main transition-all"
-                                                        >
-                                                            <option value={1}>Lunes</option>
-                                                            <option value={2}>Martes</option>
-                                                            <option value={3}>Miércoles</option>
-                                                            <option value={4}>Jueves</option>
-                                                            <option value={5}>Viernes</option>
-                                                            <option value={6}>Sábado</option>
-                                                            <option value={0}>Domingo</option>
-                                                        </select>
+                                        {agendaMode === 'existing' ? (
+                                            <div className="space-y-6">
+                                                <div className="flex items-center justify-between border-b border-border-main pb-4">
+                                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Seleccionar horario existente</p>
+                                                    <div className="relative w-48">
+                                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted opacity-40" />
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder="Buscar grupo o especialidad..."
+                                                            className="w-full bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-white/5 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 rounded-xl pl-9 pr-3 py-2 text-[11px] font-bold outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600 text-zinc-900 dark:text-emerald-50"
+                                                            value={groupSearchTerm}
+                                                            onChange={(e) => setGroupSearchTerm(e.target.value)}
+                                                        />
                                                     </div>
-                                                    <div className="flex-1 w-full">
-                                                        <label className="text-[9px] font-bold text-text-muted uppercase mb-1.5 block ml-1">Horario de Inicio</label>
-                                                        <div className="relative">
-                                                            <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-main/50" />
-                                                            <input 
-                                                                type="time" 
-                                                                value={newTime}
-                                                                onChange={e => setNewTime(e.target.value)}
-                                                                className="w-full p-3 pl-11 rounded-xl border border-border-main bg-zinc-50 dark:bg-bg-dark text-sm font-black text-primary-main outline-none focus:border-primary-main transition-all [color-scheme:dark]"
-                                                            />
-                                                        </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[450px] overflow-y-auto custom-scrollbar p-1">
+                                                    {existingSchedules
+                                                        .filter(s => {
+                                                            const students = s.students || (s.student ? [s.student] : []);
+                                                            const groupNames = students.map((st: any) => st?.name || '').join(' ').toLowerCase();
+                                                            const service = (students[0]?.service_name || '').toLowerCase();
+                                                            const DAYS_MAP = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                                                            const day = DAYS_MAP[s.dayOfWeek === 7 ? 0 : s.dayOfWeek].toLowerCase();
+                                                            const search = groupSearchTerm.toLowerCase();
+                                                            return groupNames.includes(search) || service.includes(search) || day.includes(search);
+                                                        })
+                                                        .map((s, idx) => {
+                                                            const isSelected = formSchedules.some(fs => fs.dayOfWeek === s.dayOfWeek && fs.startTime === s.startTime);
+                                                            const participants = s.students || (s.student ? [s.student] : []);
+                                                            const service = participants[0]?.service_name || "General";
+                                                            
+                                                            return (
+                                                                <button 
+                                                                    key={idx}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setFormSchedules([{ dayOfWeek: s.dayOfWeek, startTime: s.startTime, endTime: s.endTime }]);
+                                                                        if (participants[0]) {
+                                                                            setFormData(prev => ({ ...prev, service_name: service }));
+                                                                        }
+                                                                    }}
+                                                                    className={`flex items-center gap-4 p-5 rounded-[24px] border-2 transition-all text-left group ${isSelected ? 'border-emerald-500 bg-emerald-500/5' : 'border-border-main bg-surface dark:bg-bg-soft hover:border-emerald-500/30'}`}
+                                                                >
+                                                                    <div className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center shrink-0 ${isSelected ? 'bg-emerald-500 text-black' : 'bg-black/5 dark:bg-white/5 text-text-muted'}`}>
+                                                                        <span className="text-[9px] font-black leading-none mb-0.5">{['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][s.dayOfWeek === 7 ? 0 : s.dayOfWeek].substring(0,3).toUpperCase()}</span>
+                                                                        <span className="text-sm font-black leading-none">{s.startTime.split(':')[0]}</span>
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-xs font-black uppercase tracking-tight truncate">{service}</span>
+                                                                            <span className="px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/5 text-[8px] font-black text-text-muted">{participants.length} / {s.capacity || 10}</span>
+                                                                        </div>
+                                                                        <p className="text-[10px] font-bold text-text-muted truncate mt-0.5">
+                                                                            {s.startTime} a {s.endTime}
+                                                                        </p>
+                                                                    </div>
+                                                                    {isSelected && <Check size={18} className="text-emerald-500" />}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-10">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest flex items-center gap-2">
+                                                            <Calendar size={14} /> Cronograma Semanal
+                                                        </p>
+                                                        <h4 className="text-3xl font-black text-text-main uppercase tracking-tight">Elegir Días</h4>
                                                     </div>
+
                                                     <button 
                                                         type="button"
                                                         onClick={() => {
-                                                            setFormSchedules(prev => [...prev, { dayOfWeek: newDay, startTime: newTime, endTime: '19:00' }]);
-                                                            showToast.success('Día agregado');
+                                                            const newFlex = !formData.isFlexible;
+                                                            setFormData(prev => ({ ...prev, isFlexible: newFlex }));
+                                                            if (newFlex) setFormSchedules([]);
                                                         }}
-                                                        className="h-[48px] px-6 bg-primary-main text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-primary-main/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                                        className={`flex items-center gap-3 px-5 py-2.5 rounded-[14px] border transition-all ${formData.isFlexible ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500' : 'bg-surface dark:bg-[#161618] border-border-main text-text-muted hover:border-emerald-500/30'}`}
                                                     >
-                                                        <Plus size={18} /> AGREGAR
+                                                        <div className={`w-2 h-2 rounded-full ${formData.isFlexible ? 'bg-emerald-500' : 'bg-border-main'}`} />
+                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Horario Flexible</span>
                                                     </button>
                                                 </div>
-                                            </div>
 
-                                            {/* Summary List */}
-                                            {formSchedules.length > 0 && (
-                                                <div className="space-y-3">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-2 block opacity-60">
-                                                        Cronograma Seleccionado ({formSchedules.length})
-                                                    </label>
-                                                    <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                                                        {[...formSchedules].sort((a,b) => (a.dayOfWeek === 0 ? 7 : a.dayOfWeek) - (b.dayOfWeek === 0 ? 7 : b.dayOfWeek)).map((s, i) => {
-                                                            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-                                                            return (
-                                                                <div key={i} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-bg-dark/50 rounded-2xl border border-border-main/50 group animate-in slide-in-from-left-2 duration-300">
-                                                                    <div className="flex items-center gap-4">
-                                                                        <div className="w-8 h-8 rounded-lg bg-primary-main/10 text-primary-main flex items-center justify-center font-black text-[10px]">
-                                                                            {dayNames[s.dayOfWeek].substring(0, 1)}
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-sm font-black text-text-main italic uppercase tracking-wider">{dayNames[s.dayOfWeek]}</p>
-                                                                            <p className="text-[10px] font-bold text-text-muted mt-0.5 uppercase tracking-tighter">Turno: {s.startTime} hs</p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <button 
-                                                                        type="button" 
-                                                                        onClick={() => setFormSchedules(prev => prev.filter(item => item !== s))}
-                                                                        className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
-                                                                    >
-                                                                        <X size={18} />
-                                                                    </button>
+                                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                                                    {DAY_ORDER.map(day => {
+                                                        const active = formSchedules.some(s => s.dayOfWeek === day);
+                                                        const schedule = formSchedules.find(s => s.dayOfWeek === day);
+                                                        
+                                                        return (
+                                                            <div 
+                                                                key={day}
+                                                                onClick={() => !formData.isFlexible && toggleDay(day)}
+                                                                className={`relative h-44 rounded-[28px] p-5 border transition-all duration-500 flex flex-col cursor-pointer group overflow-hidden ${
+                                                                    active 
+                                                                    ? 'bg-emerald-500/10 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/20' 
+                                                                    : 'bg-zinc-50 dark:bg-black/20 border-zinc-200 dark:border-white/5 hover:border-emerald-500/30 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5'
+                                                                } ${formData.isFlexible ? 'opacity-20 grayscale pointer-events-none' : ''}`}
+                                                            >
+                                                                {/* Day label + indicator dot */}
+                                                                <div className="flex items-start justify-between mb-4 relative z-10">
+                                                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                                                                        active ? 'text-emerald-500' : 'text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-emerald-50 transition-colors'
+                                                                    }`}>
+                                                                        {DAY_SHORT[day]}
+                                                                    </span>
+                                                                    <div className={`w-3 h-3 rounded-full border-2 border-white dark:border-zinc-900 transition-all duration-500 ${active ? 'bg-emerald-500 scale-125 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-200 dark:bg-white/10'}`} />
                                                                 </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
 
-                                    {/* Footer Actions */}
-                                    <div className="pt-6 border-t border-border-main flex items-center justify-between gap-4">
-                                        <button type="button" onClick={() => setFormStep(2)} className="flex items-center gap-2 text-text-muted font-black uppercase tracking-widest text-[10px] hover:text-text-main transition-colors">
-                                            <ArrowLeft size={16} /> Volver
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            disabled={loading}
-                                            className="px-12 py-4 bg-primary-main text-white font-black uppercase tracking-[0.2em] text-xs rounded-[2rem] shadow-xl shadow-primary-main/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 italic"
-                                        >
-                                            {loading ? 'Guardando...' : student ? 'Actualizar Alumno' : 'Finalizar Registro'}
-                                            {!loading && (student ? <Check size={18} /> : <Sparkles size={18} />)}
-                                        </button>
+                                                                {/* Background glow for active */}
+                                                                {active && (
+                                                                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[40px] -mr-16 -mt-16 pointer-events-none" />
+                                                                )}
+
+                                                                {/* Content Area */}
+                                                                <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+                                                                    {active && schedule ? (
+                                                                        <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-500" onClick={e => e.stopPropagation()}>
+                                                                            <div className="text-2xl font-black text-zinc-900 dark:text-emerald-50 font-mono tracking-tighter flex items-center">
+                                                                                <div className="flex flex-col items-center">
+                                                                                    <button type="button" onClick={() => adjustDayTime(day, 'h', 1)} className="p-1 opacity-0 group-hover:opacity-100 transition-all hover:text-emerald-500 -mb-1"><ChevronUp size={14} strokeWidth={3} /></button>
+                                                                                    <input 
+                                                                                        type="text" 
+                                                                                        className="w-8 text-center bg-transparent outline-none focus:text-emerald-500 transition-colors" 
+                                                                                        value={schedule.startTime.split(':')[0]} 
+                                                                                        onChange={(e) => {
+                                                                                            const v = e.target.value.replace(/\D/g, '');
+                                                                                            if (v.length <= 2 && Number(v) < 24) {
+                                                                                                updateDayTime(day, `${v.padStart(2, '0')}:${schedule.startTime.split(':')[1]}`);
+                                                                                            }
+                                                                                        }}
+                                                                                    />
+                                                                                    <button type="button" onClick={() => adjustDayTime(day, 'h', -1)} className="p-1 opacity-0 group-hover:opacity-100 transition-all hover:text-emerald-500 -mt-1"><ChevronDown size={14} strokeWidth={3} /></button>
+                                                                                </div>
+                                                                                <span className="text-zinc-300 dark:text-zinc-600 mb-1">:</span>
+                                                                                <div className="flex flex-col items-center">
+                                                                                    <button type="button" onClick={() => adjustDayTime(day, 'm', 30)} className="p-1 opacity-0 group-hover:opacity-100 transition-all hover:text-emerald-500 -mb-1"><ChevronUp size={14} strokeWidth={3} /></button>
+                                                                                    <input 
+                                                                                        type="text" 
+                                                                                        className="w-8 text-center bg-transparent outline-none focus:text-emerald-500 transition-colors" 
+                                                                                        value={schedule.startTime.split(':')[1]} 
+                                                                                        onChange={(e) => {
+                                                                                            const v = e.target.value.replace(/\D/g, '');
+                                                                                            if (v.length <= 2 && Number(v) < 60) {
+                                                                                                updateDayTime(day, `${schedule.startTime.split(':')[0]}:${v.padStart(2, '0')}`);
+                                                                                            }
+                                                                                        }}
+                                                                                    />
+                                                                                    <button type="button" onClick={() => adjustDayTime(day, 'm', -30)} className="p-1 opacity-0 group-hover:opacity-100 transition-all hover:text-emerald-500 -mt-1"><ChevronDown size={14} strokeWidth={3} /></button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="flex flex-col items-center gap-2 opacity-10 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500">
+                                                                            <div className="w-10 h-10 rounded-2xl bg-zinc-200 dark:bg-white/10 flex items-center justify-center">
+                                                                                <Plus size={20} className="text-zinc-400 group-hover:text-emerald-500" />
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Sidebar Finalización (Paso 3) */}
+                                    <div className="bg-surface dark:bg-[#111113] border border-border-main p-8 rounded-[2.5rem] shadow-sm space-y-8 sticky top-0 overflow-hidden group">
+                                        
+                                        <div className="space-y-6">
+                                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">Resumen Final</p>
+                                            <div className="space-y-4">
+                                                <SummaryItemComp icon={<Calendar size={14} />} label="Actividad" value={formData.service_name} highlight />
+                                                <SummaryItemComp icon={<Clock size={14} />} label="Clases" value={formData.isFlexible ? 'Flexible' : `${formSchedules.length} p/ sem`} />
+                                                <SummaryItemComp icon={<DollarSign size={14} />} label="Total Plan" value={`${user?.currency || '$'}${calculateAmount().toLocaleString('es-AR')}`} highlight />
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4 space-y-4">
+                                            <button 
+                                                type="submit" 
+                                                disabled={loading}
+                                                className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] rounded-[24px] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-3"
+                                            >
+                                                {loading ? 'Sincronizando...' : (student ? 'Guardar Cambios' : 'Completar Registro')}
+                                            </button>
+                                            <button type="button" onClick={() => setFormStep(2)} className="w-full text-center text-[10px] font-bold text-text-muted hover:text-text-main uppercase tracking-widest transition-colors py-2">
+                                                <span className="mr-2">←</span> Revisar Liquidación
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.div>
                             )}
@@ -742,54 +891,49 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({
                     </form>
                 </div>
 
-                {/* Sub-modal Overlay for New Service */}
+                {/* Sub-modal Overlay for New Service - Refactored Emerald */}
                 <AnimatePresence>
                     {showServicePopup && (
-                        <div className="absolute inset-0 z-[3000] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md">
+                        <div className="absolute inset-0 z-[3000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl">
                             <motion.div 
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="bg-white dark:bg-bg-soft w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-border-main"
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                                className="bg-[#0c0c0e] w-full max-w-sm rounded-[3rem] p-10 shadow-2xl border border-white/10"
                             >
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-black text-text-main italic tracking-tight">NUEVA ACTIVIDAD</h3>
-                                    <button onClick={() => setShowServicePopup(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-all">
-                                        <X size={20} className="text-text-muted" />
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="space-y-1">
+                                        <h3 className="text-xl font-black text-white italic tracking-tight">NUEVA ACTIVIDAD</h3>
+                                        <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Protocolo de Alta</p>
+                                    </div>
+                                    <button onClick={() => setShowServicePopup(false)} className="p-2 hover:bg-white/5 rounded-full transition-all text-zinc-600">
+                                        <Zap size={18} />
                                     </button>
                                 </div>
                                 <div className="space-y-6">
-                                    <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block">Nombre de Actividad</label>
-                                        <input 
-                                            autoFocus
-                                            type="text" 
-                                            className="w-full px-6 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner italic" 
-                                            placeholder="Nombre de actividad" 
-                                            value={newServiceData.name}
-                                            onChange={e => setNewServiceData({ ...newServiceData, name: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-4 mb-2 block">Precio Sugerido (Opcional)</label>
-                                        <div className="relative">
-                                            <span className="absolute left-6 top-1/2 -translate-y-1/2 text-text-muted font-bold">$</span>
-                                            <input 
-                                                type="number" 
-                                                className="w-full pl-12 pr-6 py-4 bg-zinc-50 dark:bg-bg-dark dark:text-white rounded-2xl border-none outline-none font-bold text-sm shadow-inner italic" 
-                                                placeholder="0" 
-                                                value={newServiceData.price || ''}
-                                                onChange={e => setNewServiceData({ ...newServiceData, price: Number(e.target.value) })}
-                                            />
-                                        </div>
-                                    </div>
+                                    <InputFieldComp 
+                                        label="Nombre de Actividad" 
+                                        icon={<LayoutGrid size={14} />} 
+                                        value={newServiceData.name} 
+                                        onChange={(e: any) => setNewServiceData({ ...newServiceData, name: e.target.value })} 
+                                        placeholder="Ej: Yoga, Crossfit..."
+                                    />
+                                    <InputFieldComp 
+                                        label="Precio Sugerido" 
+                                        icon={<DollarSign size={14} />} 
+                                        type="number"
+                                        value={newServiceData.price} 
+                                        onChange={(e: any) => setNewServiceData({ ...newServiceData, price: Number(e.target.value) })} 
+                                        placeholder="0"
+                                    />
+                                    
                                     <button 
                                         type="button"
                                         disabled={isSavingService}
                                         onClick={handleCreateService}
-                                        className="w-full bg-primary-main text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl shadow-xl shadow-primary-glow flex items-center justify-center gap-2 hover:scale-105 transition-all"
+                                        className="w-full bg-emerald-500 text-black font-black uppercase tracking-widest text-xs py-5 rounded-2xl shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 italic"
                                     >
-                                        {isSavingService ? 'Guardando...' : <><Plus size={16} /> Crear Actividad</>}
+                                        {isSavingService ? 'Procesando...' : <><Plus size={16} /> Crear Protocolo</>}
                                     </button>
                                 </div>
                             </motion.div>

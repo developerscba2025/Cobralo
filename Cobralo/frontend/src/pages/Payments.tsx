@@ -278,7 +278,7 @@ const Payments = () => {
                         </div>
 
                         <div className="flex gap-4">
-                            <div className="px-6 py-3 bg-surface/80 dark:bg-white/5 backdrop-blur-xl border border-border-main/50 rounded-2xl flex items-center gap-4 shadow-sm">
+                            <div className="px-6 py-3 bg-surface/80 backdrop-blur-xl border border-border-main/50 rounded-2xl flex items-center gap-4 shadow-sm">
                                 <div className="w-10 h-10 rounded-xl bg-primary-main/10 flex items-center justify-center text-primary-main">
                                     <DollarSign size={22} strokeWidth={3} />
                                 </div>
@@ -293,8 +293,8 @@ const Payments = () => {
                     </header>
 
                     {/* Control Bar: Tabs + Search */}
-                    <div className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface/50 dark:bg-white/[0.02] border border-border-main/50 p-2 rounded-[28px]">
-                        <div className="flex p-1 bg-bg-app dark:bg-black/20 rounded-2xl w-full sm:w-auto">
+                    <div className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface/50 border border-border-main/50 p-2 rounded-[28px]">
+                        <div className="flex p-1 bg-bg-app rounded-2xl w-full sm:w-auto">
                             {[
                                 { id: 'pending', label: 'Pendientes', icon: Clock },
                                 { id: 'history', label: 'Historial', icon: Banknote },
@@ -326,7 +326,7 @@ const Payments = () => {
                                 placeholder={activeTab === 'receipts' ? "Buscar por alumno o N°..." : "Buscar alumno..."}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 bg-bg-app dark:bg-black/20 border border-transparent focus:border-primary-main/30 rounded-2xl transition-all outline-none text-text-main font-bold text-xs"
+                                className="w-full pl-11 pr-4 py-3 bg-bg-app border border-transparent focus:border-primary-main/30 rounded-2xl transition-all outline-none text-text-main font-bold text-xs"
                             />
                         </div>
                     </div>
@@ -367,7 +367,7 @@ const Payments = () => {
                                                     <motion.div 
                                                         key={student.id} 
                                                         layout
-                                                        className="group bg-surface/50 dark:bg-white/[0.03] backdrop-blur-sm p-5 2xl:p-6 rounded-[32px] border border-border-main/50 hover:border-primary-main/30 hover:bg-surface dark:hover:bg-white/[0.05] transition-all duration-300 relative flex flex-col justify-between"
+                                                        className="group bg-surface/50 backdrop-blur-sm p-5 2xl:p-6 rounded-[32px] border border-border-main/50 hover:border-primary-main/30 hover:bg-surface transition-all duration-300 relative flex flex-col justify-between"
                                                     >
                                                         <div className="flex items-center justify-between mb-4">
                                                             <div className="flex items-center gap-3">
@@ -386,7 +386,7 @@ const Payments = () => {
                                                         </div>
 
                                                         <div className="flex flex-col gap-4">
-                                                            <div className="flex items-end justify-between p-4 bg-bg-app dark:bg-black/20 rounded-[20px] border border-border-main/30 group-hover:bg-primary-main/[0.02] transition-colors">
+                                                            <div className="flex items-end justify-between p-4 bg-bg-app rounded-[20px] border border-border-main/30 group-hover:bg-primary-main/[0.02] transition-colors">
                                                                 <div>
                                                                     <p className="text-[9px] font-black text-primary-main/60 uppercase tracking-widest leading-none mb-1">Monto Total</p>
                                                                     <p className="text-2xl font-black text-text-main leading-none tabular-nums">
@@ -439,9 +439,9 @@ const Payments = () => {
                                 {/* HISTORIAL TAB - Modern List */}
                                 {activeTab === 'history' && (
                                     <div className="flex-1 min-h-0 flex flex-col gap-4">
-                                        <div className="flex-shrink-0 bg-surface/30 dark:bg-white/[0.02] backdrop-blur-md border border-border-main/50 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                                        <div className="flex-shrink-0 bg-surface/30 backdrop-blur-md border border-border-main/50 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex items-center gap-2 bg-bg-app dark:bg-black/20 p-1 rounded-xl border border-border-main/30">
+                                                <div className="flex items-center gap-2 bg-bg-app p-1 rounded-xl border border-border-main/30">
                                                     <select
                                                         value={selectedYear}
                                                         onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -481,10 +481,10 @@ const Payments = () => {
                                                             key={payment.id} 
                                                             initial={{ opacity: 0, x: -10 }}
                                                             animate={{ opacity: 1, x: 0 }}
-                                                            className="bg-surface/50 dark:bg-white/[0.02] border border-border-main/30 rounded-2xl p-4 flex items-center justify-between hover:border-primary-main/20 hover:bg-surface transition-all group"
+                                                            className="bg-surface/50 border border-border-main/30 rounded-2xl p-4 flex items-center justify-between hover:border-primary-main/20 hover:bg-surface transition-all group"
                                                         >
                                                             <div className="flex items-center gap-4 min-w-0">
-                                                                <div className="w-10 h-10 rounded-xl bg-bg-app dark:bg-black/20 flex items-center justify-center text-primary-main font-black text-sm border border-border-main/30">
+                                                                <div className="w-10 h-10 rounded-xl bg-bg-app flex items-center justify-center text-primary-main font-black text-sm border border-border-main/30">
                                                                     {payment.student?.name.charAt(0)}
                                                                 </div>
                                                                 <div className="truncate">
@@ -540,11 +540,11 @@ const Payments = () => {
                                                     <motion.div 
                                                         key={receipt.id} 
                                                         layout
-                                                        className="bg-surface/50 dark:bg-white/[0.03] p-5 rounded-[28px] border border-border-main/50 hover:border-primary-main/30 group transition-all"
+                                                        className="bg-surface/50 p-5 rounded-[28px] border border-border-main/50 hover:border-primary-main/30 group transition-all"
                                                     >
                                                         <div className="flex items-start justify-between mb-4">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-12 h-12 bg-bg-app dark:bg-black/20 text-primary-main rounded-2xl flex flex-col items-center justify-center border border-border-main/30">
+                                                                <div className="w-12 h-12 bg-bg-app text-primary-main rounded-2xl flex flex-col items-center justify-center border border-border-main/30">
                                                                     <span className="text-[7px] font-black uppercase text-text-muted/60 tracking-widest mb-0.5">Día</span>
                                                                     <span className="text-lg font-black leading-none">{new Date(receipt.paidAt).getDate()}</span>
                                                                 </div>
@@ -559,7 +559,7 @@ const Payments = () => {
                                                         </div>
 
                                                         <div className="flex items-center justify-between gap-4">
-                                                            <div className="px-3 py-1.5 bg-bg-app dark:bg-black/20 rounded-xl border border-border-main/20">
+                                                            <div className="px-3 py-1.5 bg-bg-app rounded-xl border border-border-main/20">
                                                                 <p className="text-[11px] font-black text-primary-main tabular-nums">{user?.currency || '$'}{receipt.amount.toLocaleString()}</p>
                                                             </div>
                                                             <div className="flex items-center gap-2">

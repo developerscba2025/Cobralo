@@ -15,6 +15,7 @@ import SearchModal from './SearchModal';
 import BottomNav from './BottomNav';
 import { api } from '../services/api';
 import Container from './ui/Container';
+import Tooltip from './ui/Tooltip';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -150,28 +151,29 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                     <div className="mb-6 2xl:mb-10 flex items-center justify-between px-1">
                         <div className="flex items-center gap-2.5 group cursor-pointer transition-all">
                             <div className="relative shrink-0">
-                                <div className="w-7 h-7 2xl:w-8 2xl:h-8 rounded-xl bg-primary-main flex items-center justify-center text-white shadow-lg shadow-primary-main/20">
-                                    <span className="font-black italic text-xs 2xl:text-sm">C</span>
+                                <div className="w-7 h-7 2xl:w-8 2xl:h-8 rounded-[10px] bg-emerald-500 flex items-center justify-center text-black shadow-lg shadow-emerald-500/20">
+                                    <span className="font-black text-xs 2xl:text-sm">C</span>
                                 </div>
                                 <span className="absolute -bottom-1 -right-2 text-[5px] 2xl:text-[6px] font-black px-1 py-0.5 bg-surface text-text-main rounded-md border border-border-main animate-pulse shadow-sm">BETA</span>
                             </div>
-                            <span className="text-sm 2xl:text-base font-black italic tracking-tighter uppercase text-text-main group-hover:text-primary-main transition-colors">
+                            <span className="text-sm 2xl:text-base font-black tracking-widest uppercase text-text-main group-hover:text-emerald-500 transition-colors">
                                 COBRALO
                             </span>
                         </div>
 
                         {/* Notification Bell next to logo */}
-                        <Link
-                            to="/app/notifications"
-                            className={`p-2 rounded-xl transition-all relative touch-target ${
-                                location.pathname === '/app/notifications' 
-                                ? 'bg-primary-main/10 text-primary-main' 
-                                : 'text-text-muted hover:bg-bg-app hover:text-text-main'
-                            }`}
-                            title="Notificaciones"
-                        >
-                            <Bell size={20} className={location.pathname === '/app/notifications' ? 'fill-primary-main/20' : ''} />
-                        </Link>
+                        <Tooltip content="Ver Notificaciones" position="right">
+                            <Link
+                                to="/app/notifications"
+                                className={`p-2 rounded-xl transition-all relative touch-target ${
+                                    location.pathname === '/app/notifications' 
+                                    ? 'bg-emerald-500/10 text-emerald-500' 
+                                    : 'text-text-muted hover:bg-bg-app hover:text-text-main'
+                                }`}
+                            >
+                                <Bell size={20} className={location.pathname === '/app/notifications' ? 'fill-emerald-500/20' : ''} />
+                            </Link>
+                        </Tooltip>
                     </div>
 
                     {/* Search trigger */}
@@ -202,17 +204,17 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                                 >
                                     <Link 
                                         to={item.to} 
-                                        className={`relative flex items-center gap-3 p-2.5 2xl:p-3 rounded-2xl transition-all duration-300 group z-10 ${
+                                        className={`relative flex items-center gap-3 p-2.5 2xl:p-3 rounded-[14px] transition-all duration-300 group z-10 ${
                                             active 
-                                            ? 'text-white font-bold' 
-                                            : 'text-text-muted hover:bg-primary-main/5 hover:text-primary-main font-semibold'
+                                            ? 'text-black font-bold' 
+                                            : 'text-text-muted hover:bg-emerald-500/5 hover:text-emerald-500 font-bold'
                                         }`}
                                     >
                                         {/* Active Background Pill */}
                                         {active && (
                                             <motion.div 
                                                 layoutId="activeTabPill"
-                                                className="absolute inset-0 bg-primary-main shadow-lg shadow-primary-main/20 rounded-2xl -z-10"
+                                                className="absolute inset-0 bg-emerald-500 shadow-lg shadow-emerald-500/20 rounded-[14px] -z-10"
                                                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                             />
                                         )}
@@ -229,9 +231,9 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                     <div className="pt-2 shrink-0">
                         <Link 
                             to="/app/support" 
-                            className={`flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 group ${location.pathname === '/app/support' ? 'bg-primary-main/10 text-primary-main border border-primary-main/20' : 'text-text-muted hover:bg-primary-main/5 hover:text-primary-main'}`}
+                            className={`flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 group ${location.pathname === '/app/support' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'text-text-muted hover:bg-emerald-500/5 hover:text-emerald-500'}`}
                         >
-                            <div className={`p-2 rounded-xl transition-all ${location.pathname === '/app/support' ? 'bg-primary-main text-white' : 'bg-primary-main/10 text-primary-main group-hover:scale-110'}`}>
+                            <div className={`p-2 rounded-[14px] transition-all ${location.pathname === '/app/support' ? 'bg-emerald-500 text-black' : 'bg-emerald-500/10 text-emerald-500 group-hover:scale-110'}`}>
                                 <HelpCircle size={18} />
                             </div>
                             <div className="flex-1">
@@ -245,13 +247,13 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                     <div className="pt-2 border-t border-border-main/30 space-y-2 px-1">
                         {user && (
                             <div className="flex items-center gap-2 mb-2 group cursor-pointer">
-                                <div className="w-8 h-8 2xl:w-9 2xl:h-9 rounded-xl bg-gradient-to-br from-green-600 to-emerald-800 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-emerald-900/10 uppercase shrink-0 transition-transform group-hover:scale-105 active:scale-95">
+                                <div className="w-8 h-8 2xl:w-9 2xl:h-9 rounded-[14px] bg-emerald-500 flex items-center justify-center text-black font-black text-xs shadow-lg shadow-emerald-500/10 uppercase shrink-0 transition-transform group-hover:scale-105 active:scale-95">
                                     {user.name.charAt(0)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-text-main text-[11px] 2xl:text-xs truncate leading-tight uppercase tracking-tight">{user?.name}</p>
-                                    <p className="text-[8px] font-black text-primary-main uppercase tracking-widest mt-0.5 font-accent flex items-center gap-1">
-                                        <span className="w-1 h-1 rounded-full bg-primary-main animate-pulse" />
+                                    <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest mt-0.5 font-accent flex items-center gap-1">
+                                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                                         {user?.plan === 'PRO' ? 'PRO' : (user?.plan === 'INITIAL' ? 'BÁSICO' : 'FREE')}
                                     </p>
                                 </div>
@@ -279,30 +281,32 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                                           showToast.error('Cargando perfil... reintenta en un momento.');
                                         }
                                     }}
-                                    className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${isPro ? 'text-text-muted hover:bg-primary-main/10 hover:text-primary-main' : 'text-zinc-500/50 bg-zinc-100/50 dark:bg-zinc-800/30 cursor-not-allowed'} group`}
+                                    className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${isPro ? 'text-text-muted hover:bg-emerald-500/10 hover:text-emerald-500' : 'text-zinc-500/50 bg-zinc-100/50 dark:bg-zinc-800/30 cursor-not-allowed'} group`}
                                 >
                                     <ExternalLink size={16} className={`${isPro ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5' : ''} transition-transform shrink-0`} /> 
                                     <span className="flex-1 text-left">Enlace Público</span>
-                                    {!isPro && <Lock size={12} className="text-primary-main" />}
+                                    {!isPro && <Lock size={12} className="text-emerald-500" />}
                                 </button>
                         </div>
 
                         <div className="pt-1.5 border-t border-border-main/30 flex items-center justify-between gap-1.5">
-                            <button
-                                onClick={toggleTheme}
-                                className="p-2.5 rounded-xl text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-primary-main transition-all active:scale-95 border border-transparent hover:border-border-main/20"
-                                title={theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
-                            >
-                                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                            </button>
-                            <button
-                                onClick={logout}
-                                className="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl text-red-500/70 hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 border border-transparent hover:border-red-500/10"
-                                title="Cerrar Sesión"
-                            >
-                                <LogOut size={20} />
-                                <span className="text-[10px] font-black uppercase tracking-widest hidden 2xl:block">Salir</span>
-                            </button>
+                            <Tooltip content={theme === 'dark' ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}>
+                                <button
+                                    onClick={toggleTheme}
+                                    className="p-2.5 rounded-xl text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-emerald-500 transition-all active:scale-95 border border-transparent hover:border-border-main/20"
+                                >
+                                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                                </button>
+                            </Tooltip>
+                            <Tooltip content="Salir de la aplicación">
+                                <button
+                                    onClick={logout}
+                                    className="flex-1 flex items-center justify-center gap-2 p-2.5 rounded-xl text-red-500/70 hover:bg-red-500/10 hover:text-red-500 transition-all active:scale-95 border border-transparent hover:border-red-500/10"
+                                >
+                                    <LogOut size={20} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest hidden 2xl:block">Salir</span>
+                                </button>
+                            </Tooltip>
                         </div>
                     </div>
                 </div>
@@ -334,10 +338,10 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                 <div className="md:hidden sticky top-0 z-30 bg-surface/90 backdrop-blur-md border-b border-border-main px-4 py-3 flex items-center justify-between">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
-                        className="rounded-full hover:opacity-80 transition active:scale-95 touch-target"
+                        className="rounded-[12px] hover:opacity-80 transition active:scale-95 touch-target"
                     >
                         {user ? (
-                            <div className="w-8 h-8 rounded-full bg-primary-main flex items-center justify-center text-white font-black text-xs uppercase shadow-sm">
+                            <div className="w-8 h-8 rounded-[12px] bg-emerald-500 flex items-center justify-center text-black font-black text-xs uppercase shadow-sm">
                                 {user.name.charAt(0)}
                             </div>
                         ) : (
@@ -346,7 +350,7 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                             </div>
                         )}
                     </button>
-                    <span className="text-lg font-black italic text-primary-main tracking-tighter">COBRALO</span>
+                    <span className="text-lg font-black text-emerald-500 tracking-widest uppercase">COBRALO</span>
                     <div className="flex items-center gap-1">
                         <Link
                             to="/app/notifications"

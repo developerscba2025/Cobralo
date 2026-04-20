@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, ShoppingBag } from 'lucide-react';
+import { TrendingUp, ShoppingBag, Users, CheckCircle2, Clock } from 'lucide-react';
 import { useStudents } from '../hooks/useStudents';
 import { api, type Student, type UserService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -125,45 +125,82 @@ const Students = () => {
 
     // Stats
     const totalStudents = students.length;
+    const activeStudents = students.filter(s => s.status === 'paid').length;
+    const pendingStudents = students.filter(s => s.status === 'pending').length;
 
     return (
         <Layout fitted scrollable={false}>
-            <div className="flex flex-col h-full min-h-0 space-y-6 w-full overflow-y-auto custom-scrollbar pr-1 -mr-1">
+            <div className="flex flex-col h-full min-h-0 space-y-8 w-full overflow-y-auto custom-scrollbar pr-1 -mr-1">
                 {/* Header / Stats */}
-                <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                    <div className="space-y-2">
-                        <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter uppercase italic flex items-center gap-4">
-                            ALUMNOS <span className="text-xs font-black px-2 py-1 bg-primary-main/10 text-primary-main rounded-lg not-italic shadow-lg shadow-primary-main/5 animate-pulse">{totalStudents}</span>
+                <header className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    <div>
+                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Users size={12} /> Módulo de Alumnos
+                        </p>
+                        <h1 className="text-4xl md:text-5xl font-black text-text-main tracking-tight uppercase leading-none">
+                            Directorio
                         </h1>
-                        <p className="text-sm font-bold text-text-muted uppercase tracking-[0.2em] opacity-60">Gestioná tu academia con precisión PRO</p>
+                        <p className="text-sm font-medium text-text-muted mt-2 tracking-tight">
+                            Gestión integral de clientes, pagos y suscripciones
+                        </p>
                     </div>
-                </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-2 px-6 py-5 bg-surface border border-border-main rounded-[24px] min-w-[100px] shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                    <Users size={12} className="text-emerald-500" />
+                                </div>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-text-muted">Totales</p>
+                            </div>
+                            <p className="font-black text-text-main text-3xl leading-none tracking-tighter">{totalStudents}</p>
+                        </div>
+                        <div className="flex flex-col gap-2 px-6 py-5 bg-surface border border-border-main rounded-[24px] min-w-[100px] shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                    <CheckCircle2 size={12} className="text-emerald-500" />
+                                </div>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-text-muted">Activos</p>
+                            </div>
+                            <p className="font-black text-text-main text-3xl leading-none tracking-tighter">{activeStudents}</p>
+                        </div>
+                        <div className="flex flex-col gap-2 px-6 py-5 bg-surface border border-border-main rounded-[24px] min-w-[100px] shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                    <Clock size={12} className="text-amber-500" />
+                                </div>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-text-muted">Deuda</p>
+                            </div>
+                            <p className="font-black text-amber-500 text-3xl leading-none tracking-tighter">{pendingStudents}</p>
+                        </div>
+                    </div>
+                </header>
 
                 {/* Mass Actions Bar */}
                 {selectedIds.length > 0 && (
                     <motion.div 
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-wrap items-center gap-3 p-4 bg-primary-main rounded-[24px] shadow-lg shadow-primary-main/20 text-white"
+                        className="flex flex-wrap items-center gap-3 p-4 bg-emerald-500 rounded-[24px] shadow-lg shadow-emerald-500/20 text-black"
                     >
-                        <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-black/10 rounded-[12px] text-[10px] font-black uppercase tracking-wider">
                             {selectedIds.length} seleccionados
                         </div>
-                        <div className="h-4 w-px bg-white/20 hidden md:block" />
+                        <div className="h-4 w-px bg-black/20 hidden md:block" />
                         <button 
                             onClick={() => openModal('adjustment')}
-                            className="flex items-center gap-2 px-4 py-1.5 bg-white text-primary-main rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                            className="flex items-center gap-2 px-4 py-1.5 bg-black text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all"
                         >
                             <TrendingUp size={14} /> Ajustar Cuotas
                         </button>
                         <button 
                             onClick={() => openModal('whatsapp')}
-                            className="flex items-center gap-2 px-4 py-1.5 bg-white/20 hover:bg-white text-white hover:text-primary-main rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            className="flex items-center gap-2 px-4 py-1.5 bg-black/10 hover:bg-black text-black hover:text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                             <ShoppingBag size={14} /> Mensaje Masivo
                         </button>
                         <button 
                             onClick={() => setSelectedIds([])}
-                            className="ml-auto text-[10px] font-black uppercase tracking-widest hover:underline"
+                            className="ml-auto text-[10px] font-black uppercase tracking-widest hover:bg-black/10 px-3 py-1.5 rounded-lg transition-colors"
                         >
                             Deshacer
                         </button>

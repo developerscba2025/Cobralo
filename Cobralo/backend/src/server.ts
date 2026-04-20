@@ -53,7 +53,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) 
   : defaultOrigins;
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // RUTA TEMPORAL - DEBUG PARA COPIAR IMÁGENES (Bypass de sandbox)
 app.get('/api/debug/copy-assets', (req, res) => {

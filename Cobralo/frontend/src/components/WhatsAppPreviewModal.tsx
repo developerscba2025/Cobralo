@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, MessageCircle, AlertCircle, Check, ChevronRight, FileText, Sparkles } from 'lucide-react';
+import { X, Send, MessageCircle, ChevronRight, FileText, Sparkles, CheckCheck } from 'lucide-react';
 import { showToast } from './Toast';
-import { api } from '../services/api';
+
 import Portal from './Portal';
 
 interface Student {
@@ -26,368 +26,311 @@ interface WhatsAppPreviewModalProps {
     customTemplate?: string;
 }
 
-
-
-const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onClose, students, user, isPro }) => {
+const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onClose, students = [], user, isPro }) => {
     const predefinedTemplates = React.useMemo(() => [
         {
             id: 'billing',
             name: 'Recordatorio de Pago',
             icon: FileText,
-            text: user?.reminderTemplate ?? `👋 Hola *{alumno}*,\n\nTe saludamos de *{negocio}*. Te enviamos este recordatorio por tu pago de *{servicio}*.\n\n📌 *Detalles:*\n💰 *Monto:* {moneda}{monto}\n🏦 *Mi Alias:* {alias}\n\n✅ Podés realizar el pago o cargar tu comprobante aquí:\n🔗 {pago}\n\n¡Muchas gracias!`
+            text: user?.reminderTemplate ?? `{saludo} {nombre_pila}! \uD83D\uDC4B\n\nTe escribo de *{negocio}* para recordarte que ya pod\u00E9s realizar el pago de *{servicio}* de {mes_actual}. \uD83D\uDCDD\n\n\uD83D\uDCB0 *Monto:* {moneda}{monto}\n\uD83D\uDCB3 *Alias:* {alias}\n\nUna vez que lo realices, por favor enviame el comprobante por ac\u00E1. \u00A1Muchas gracias! \uD83D\uDE0A`
         },
         {
             id: 'welcome',
             name: 'Bienvenida',
             icon: Sparkles,
-            text: user?.welcomeTemplate ?? `✨ ¡Hola *{alumno}*! Te damos la bienvenida oficial a *{negocio}*.\n\nEstamos muy felices de que te sumes a nuestras clases de *{servicio}*.\n\nCualquier duda que tengas, podés escribirnos por acá. ¡Nos vemos en clase! 🚀`
+            text: user?.welcomeTemplate ?? `\u00A1Hola {nombre_pila}! \uD83D\uDC4B\n\n\u00A1Qu\u00E9 alegr\u00EDa saludarte! Te damos la bienvenida oficial a *{negocio}*. \u2728\n\nEstamos muy felices de que te sumes a tus clases de *{servicio}*. Queremos que tengas la mejor experiencia con nosotros.\n\nCualquier duda o consulta que tengas, pod\u00E9s escribirme por este medio. \u00A1Nos vemos pronto! \uD83D\uDE0A`
         },
         {
             id: 'generic',
             name: 'Aviso General',
             icon: MessageCircle,
-            text: user?.generalTemplate ?? `📢 *AVISO IMPORTANTE*\n\nHola *{alumno}*, te escribimos de *{negocio}* para informarte lo siguiente:\n\n[ESCRIBIR MENSAJE AQUÍ]\n\n¡Saludos!`
+            text: user?.generalTemplate ?? `\uD83D\uDE80 *COMUNICADO IMPORTANTE*\n\n{saludo} {nombre_pila}, te escribimos de *{negocio}* para informarte que:\n\n[ESCRIBIR MENSAJE AQU\u00ED]\n\nCualquier duda quedamos a disposici\u00F3n. \u00A1Saludos! \uD83D\uDC4B`
         }
     ], [user]);
 
     const [selectedTemplate, setSelectedTemplate] = React.useState(predefinedTemplates[0]);
     const [templateText, setTemplateText] = React.useState(selectedTemplate.text);
-    
     const [isSending, setIsSending] = React.useState(false);
     const [currentIndex, setCurrentIndex] = React.useState(0);
     const [selectedAccountId, setSelectedAccountId] = React.useState<number | 'default'>(
         user?.paymentAccounts?.find((a: any) => a.isDefault)?.id || 'default'
     );
 
-    // Sync template text when selecting a predefined one
-    const handleSelectTemplate = (tpl: typeof predefinedTemplates[0]) => {
+    const handleSelectTemplate = (tpl: any) => {
         setSelectedTemplate(tpl);
         setTemplateText(tpl.text);
     };
 
-    // Get current alias based on selection
     const getActiveAlias = () => {
         if (selectedAccountId === 'default') return user?.bizAlias || 'Alias';
         const account = user?.paymentAccounts?.find((a: any) => a.id === selectedAccountId);
         return account?.alias || user?.bizAlias || 'Alias';
     };
 
-    // Reset state when opened
     React.useEffect(() => {
         if (isOpen) {
             setIsSending(false);
             setCurrentIndex(0);
-            const defaultAcc = user?.paymentAccounts?.find((a: any) => a.isDefault);
+            const defaultAcc = user?.paymentAccounts?.find((a: any) => (a as any).isDefault);
             setSelectedAccountId(defaultAcc?.id || 'default');
             
-            // Use user's custom template if available as default
-            if (isPro && user?.reminderTemplate) {
-                setTemplateText(user.reminderTemplate);
-            } else {
-                setTemplateText(predefinedTemplates[0].text);
-            }
+            // Set initial template only on open
+            const initialTemplate = (isPro && user?.reminderTemplate) 
+                ? user.reminderTemplate 
+                : predefinedTemplates[0].text;
+            
+            setTemplateText(initialTemplate);
+            setSelectedTemplate(predefinedTemplates[0]);
         }
-    }, [isOpen, user, isPro, predefinedTemplates]);
+    }, [isOpen, user?.reminderTemplate, isPro, predefinedTemplates]);
+
+    const buildMessage = (student: Student, text: string) => {
+        const activeAlias = getActiveAlias();
+        const alias = student.billing_alias || activeAlias;
+        const amount = Number(student.amount) || 0;
+        const serviceName = (student.service_name === 'General' && student.sub_category) ? student.sub_category : (student.service_name || '');
+        const hour = new Date().getHours();
+        
+        const b_dias = `Buenos d\u00EDas`;
+        const b_tardes = `Buenas tardes`;
+        const b_noches = `Buenas noches`;
+        const saludo = hour < 12 ? b_dias : hour < 20 ? b_tardes : b_noches;
+        
+        const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        const mesActual = meses[new Date().getMonth()];
+        const nombrePila = student.name ? student.name.split(' ')[0] : '';
+        
+        const sanitize = (val: string) => val.replace(/[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim();
+
+        return text
+            .replace(/{alumno}/g, sanitize(student.name || ''))
+            .replace(/{nombre_pila}/g, sanitize(nombrePila))
+            .replace(/{saludo}/g, saludo)
+            .replace(/{mes_actual}/g, mesActual)
+            .replace(/{monto}/g, amount.toLocaleString('es-AR'))
+            .replace(/{negocio}/g, sanitize(user?.bizName || 'Tu Profe'))
+            .replace(/{servicio}/g, sanitize(serviceName))
+            .replace(/{subcategoria}/g, sanitize(student.sub_category || ''))
+            .replace(/{metodo}/g, sanitize(student.payment_method || ''))
+            .replace(/{vencimiento}/g, (student.deadline_day || '').toString())
+            .replace(/{alias}/g, sanitize(alias))
+            .replace(/{pago}/g, (student.payment_method === 'Mercado Pago' && isPro && user?.mpAccessToken) ? 'Enlace de pago adjunto' : '')
+            .replace(/{moneda}/g, user?.currency || '$')
+            .replace(/{dia}/g, new Date().toLocaleDateString('es-AR', { weekday: 'long' }))
+            .replace(/{fecha}/g, new Date().toLocaleDateString('es-AR'));
+    };
+
+    const openWhatsApp = (student: Student, text: string) => {
+        const message = buildMessage(student, text);
+        const cleanPhone = student.phone ? student.phone.replace(/\D/g, '') : '';
+        const url = cleanPhone
+            ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
+            : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
+    const handleQuickSend = (student: Student) => {
+        openWhatsApp(student, templateText);
+        onClose();
+    };
 
     const handleStartSending = () => {
         setIsSending(true);
         setCurrentIndex(0);
     };
 
-    const handleSendNext = async () => {
+    const handleSendNext = () => {
         if (currentIndex >= students.length) return;
-        
         const s = students[currentIndex];
-        const activeAlias = getActiveAlias();
-        const alias = s.billing_alias || activeAlias;
-        const amount = Number(s.amount) || 0;
-        const serviceName = (s.service_name === 'General' && s.sub_category) ? s.sub_category : (s.service_name || '');
-        
-        let payLink = '';
-        if (s.payment_method === 'Mercado Pago' && isPro && user?.mpAccessToken) {
-            try {
-                const now = new Date();
-                const res = await api.createStudentPaymentLink({
-                    studentId: s.id,
-                    amount: amount,
-                    title: `Pago - ${s.name}`,
-                    year: now.getFullYear(),
-                    month: now.getMonth() + 1
-                });
-                payLink = res.init_point;
-            } catch (err) {
-                console.error('Error generating payment link:', err);
-            }
-        }
-
-        const message = templateText
-            .replace(/{alumno}/g, s.name || '')
-            .replace(/{monto}/g, amount.toLocaleString('es-AR'))
-            .replace(/{negocio}/g, user?.bizName || 'Tu Profe')
-            .replace(/{servicio}/g, serviceName)
-            .replace(/{subcategoria}/g, s.sub_category || '')
-            .replace(/{metodo}/g, s.payment_method || '')
-            .replace(/{vencimiento}/g, (s.deadline_day || '').toString())
-            .replace(/{alias}/g, alias)
-            .replace(/{pago}/g, payLink || '')
-            .replace(/{moneda}/g, user?.currency || '$')
-            .replace(/{dia}/g, new Date().toLocaleDateString('es-AR', { weekday: 'long' }))
-            .replace(/{fecha}/g, new Date().toLocaleDateString('es-AR'));
-            
-        const cleanPhone = s.phone ? s.phone.replace(/\D/g, '') : '';
-        const url = cleanPhone 
-            ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
-            : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-            
-        window.open(url, '_blank');
-        
+        openWhatsApp(s, templateText);
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
-        
         if (nextIndex >= students.length) {
-            showToast.success('¡Envío finalizado!');
+            showToast.success(`Envío finalizado!`);
             onClose();
         }
     };
 
-    const getPreviewMessage = (student: Student) => {
-        const activeAlias = getActiveAlias();
-        const alias = student.billing_alias || activeAlias;
-        const amount = Number(student.amount) || 0;
-        const serviceName = (student.service_name === 'General' && student.sub_category) ? student.sub_category : (student.service_name || '');
-        
-        return templateText
-            .replace(/{alumno}/g, student.name || '')
-            .replace(/{monto}/g, amount.toLocaleString('es-AR'))
-            .replace(/{negocio}/g, user?.bizName || 'Tu Profe')
-            .replace(/{servicio}/g, serviceName)
-            .replace(/{subcategoria}/g, student.sub_category || '')
-            .replace(/{metodo}/g, student.payment_method || '')
-            .replace(/{vencimiento}/g, (student.deadline_day || '').toString())
-            .replace(/{alias}/g, alias)
-            .replace(/{pago}/g, (student.payment_method === 'Mercado Pago' && isPro && user?.mpAccessToken) ? 'https://mpago.la/...' : '')
-            .replace(/{moneda}/g, user?.currency || '$')
-            .replace(/{dia}/g, new Date().toLocaleDateString('es-AR', { weekday: 'long' }))
-            .replace(/{fecha}/g, new Date().toLocaleDateString('es-AR'));
-    };
+    const livePreviewHtml = React.useMemo(() => {
+        const student = students[0];
+        const raw = student ? buildMessage(student, templateText) : templateText;
+        return raw.replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/\*(.*?)\*/g, '<strong class="font-extrabold text-white">$1</strong>')
+                  .replace(/_(.*?)_/g, '<em class="italic opacity-90">$1</em>')
+                  .replace(/~(.*?)~/g, '<del class="line-through opacity-50">$1</del>')
+                  .replace(/[\uFFFD]/g, '');
+    }, [students, templateText, user, isPro, getActiveAlias]); // buildMessage depends on user, isPro, getActiveAlias
 
     return (
         <Portal>
             <AnimatePresence>
                 {isOpen && (
-                    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-0 md:p-4">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="absolute inset-0 bg-black/90 backdrop-blur-xl"
-                    />
-                    
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 40 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 40 }}
-                        className="relative w-full max-w-5xl h-full md:h-auto md:max-h-[90vh] bg-white dark:bg-bg-dark md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border border-border-main"
-                    >
-                        {/* Header */}
-                        <div className="p-6 md:p-8 border-b border-border-main flex items-center justify-between bg-zinc-50/50 dark:bg-bg-soft/20">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-primary-main/10 flex items-center justify-center">
-                                    <MessageCircle className="text-primary-main" size={24} />
-                                </div>
-                                <div className="flex flex-col">
-                                    <h3 className="text-xl md:text-2xl font-black text-text-main uppercase tracking-tighter italic">
-                                        Envío Masivo <span className="text-xs font-black px-2 py-1 bg-primary-main/10 text-primary-main rounded-lg not-italic shadow-lg shadow-primary-main/5 ml-2">PRO</span>
-                                    </h3>
-                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mt-1">{students.length} Alumnos seleccionados</p>
-                                </div>
-                            </div>
-                            <button onClick={onClose} className="p-3 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-2xl transition-all active:scale-95">
-                                <X size={24} className="text-text-muted" />
-                            </button>
-                        </div>
+                    <div className="fixed inset-0 z-[2000] flex items-end md:items-center justify-center p-0 md:p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={onClose}
+                            className="absolute inset-0 bg-black/85 backdrop-blur-xl"
+                        />
 
-                        {/* Mixed Content: Sidebar + Preview */}
-                        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
-                            
-                            {!isSending && (
-                                <aside className="w-full lg:w-[350px] border-b lg:border-b-0 lg:border-r border-border-main p-6 space-y-8 overflow-y-auto custom-scrollbar bg-zinc-50/30 dark:bg-black/10">
-                                    
-                                    {/* Template Library */}
-                                    <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1 opacity-60 italic">Librería de Plantillas</p>
-                                        <div className="grid gap-2">
-                                            {predefinedTemplates.map((tpl) => (
-                                                <button
-                                                    key={tpl.id}
-                                                    onClick={() => handleSelectTemplate(tpl)}
-                                                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${
-                                                        selectedTemplate.id === tpl.id
-                                                        ? 'bg-primary-main border-primary-main text-white shadow-xl shadow-primary-main/20'
-                                                        : 'bg-white dark:bg-bg-soft border-border-main text-text-main hover:bg-black/5 dark:hover:bg-white/5'
-                                                    }`}
-                                                >
-                                                    <tpl.icon size={20} className={selectedTemplate.id === tpl.id ? 'text-white' : 'text-primary-main'} />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">{tpl.name}</span>
-                                                </button>
-                                            ))}
+                        <motion.div
+                            initial={{ opacity: 0, y: 60 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 60 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            className="relative w-full max-w-lg md:max-w-xl h-full md:h-auto md:max-h-[92vh] bg-surface dark:bg-bg-soft md:rounded-[28px] shadow-2xl flex flex-col overflow-hidden border border-border-main"
+                        >
+                            {!isSending ? (
+                                <>
+                                    {/* Header */}
+                                    <div className="px-5 pt-5 pb-4 flex items-center justify-between shrink-0">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                                                <span className="text-sm font-black text-emerald-400 uppercase">
+                                                    {(students.length === 1 && students[0]) ? students[0].name?.charAt(0) : students.length}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-text-main leading-none">
+                                                    {students.length === 1 ? (students[0]?.name || 'Alumno') : `${students.length} alumnos`}
+                                                </p>
+                                                <p className="text-[11px] font-medium text-text-muted mt-0.5 leading-none">
+                                                    {students.length === 1
+                                                        ? (students[0]?.phone || <span className="text-amber-500">Sin teléfono</span>)
+                                                        : 'Envio masivo'
+                                                    }
+                                                </p>
+                                            </div>
                                         </div>
+                                        <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-all active:scale-95">
+                                            <X size={20} className="text-text-muted hover:text-text-main transition-colors" />
+                                        </button>
                                     </div>
 
-                                    {/* Account / Alias Selection */}
-                                    <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1 opacity-60 italic">Pagar a (Alias)</p>
-                                        <div className="grid gap-2">
+                                    {/* Template chips */}
+                                    <div className="px-5 pb-3 flex gap-2 flex-wrap shrink-0">
+                                        {predefinedTemplates.map(tpl => (
                                             <button
-                                                onClick={() => setSelectedAccountId('default')}
-                                                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left ${
-                                                    selectedAccountId === 'default'
-                                                    ? 'border-primary-main ring-2 ring-primary-main/20 bg-primary-main/5 text-primary-main'
-                                                    : 'bg-white dark:bg-bg-soft border-border-main text-text-muted'
+                                                key={tpl.id}
+                                                onClick={() => handleSelectTemplate(tpl)}
+                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+                                                    selectedTemplate.id === tpl.id
+                                                        ? 'bg-emerald-500 border-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                                                        : 'bg-black/5 dark:bg-white/5 border-border-main text-text-muted hover:border-emerald-500/40 hover:text-text-main'
                                                 }`}
                                             >
-                                                <div className="flex flex-col">
-                                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Global</span>
-                                                    <span className="text-[10px] font-black uppercase truncate">{user?.bizAlias || 'Alias Global'}</span>
-                                                </div>
-                                                {selectedAccountId === 'default' && <Check size={16} />}
+                                                <tpl.icon size={12} />
+                                                <span className="truncate max-w-[120px]">{tpl.name}</span>
                                             </button>
-                                            
-                                            {user?.paymentAccounts?.map((acc: any) => (
-                                                <button
-                                                    key={acc.id}
-                                                    onClick={() => setSelectedAccountId(acc.id)}
-                                                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left ${
-                                                        selectedAccountId === acc.id
-                                                        ? 'border-primary-main ring-2 ring-primary-main/20 bg-primary-main/5 text-primary-main'
-                                                        : 'bg-white dark:bg-bg-soft border-border-main text-text-muted'
-                                                    }`}
-                                                >
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[8px] font-black uppercase tracking-widest opacity-60">{acc.name}</span>
-                                                        <span className="text-[10px] font-black uppercase truncate">{acc.alias}</span>
+                                        ))}
+                                    </div>
+
+                                    {/* WhatsApp chat area */}
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-bg-app px-4 py-4 relative min-h-0">
+                                        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
+                                        <div className="relative space-y-3">
+                                            {/* Live preview bubble */}
+                                            <div className="flex justify-end">
+                                                <div className="bg-[#075E54] dark:bg-[#054740] border border-white/5 rounded-[20px] rounded-tr-none px-3.5 pt-3 pb-1.5 shadow-xl relative overflow-hidden group max-w-[90%]">
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                                                    <div className="absolute top-0 -right-2 w-3 h-3 overflow-hidden">
+                                                        <div className="w-4 h-4 bg-[#075E54] dark:bg-[#054740] rounded-bl-[12px] -translate-y-2 -translate-x-1" />
                                                     </div>
-                                                    {selectedAccountId === acc.id && <Check size={16} />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
 
-                                    <div className="p-4 bg-primary-main/5 rounded-2xl border border-primary-main/10">
-                                        <div className="flex gap-3 text-primary-main mb-2">
-                                            <Sparkles size={16} />
-                                            <p className="text-[10px] font-black uppercase tracking-widest">Sugerencia</p>
-                                        </div>
-                                        <p className="text-[10px] font-bold text-text-muted leading-relaxed italic opacity-70">
-                                            Cualquier cambio que hagas en el Alias de Ajustes se reflejará automáticamente aquí en tu próximo envío.
-                                        </p>
-                                    </div>
-                                </aside>
-                            )}
-
-                            {/* Main Content Area */}
-                            <div className="flex-1 flex flex-col p-6 md:p-8 overflow-y-auto custom-scrollbar">
-                                {!isSending ? (
-                                    <div className="space-y-8 h-full flex flex-col">
-                                        {/* Editor */}
-                                        <div className="space-y-3 flex-1">
-                                            <div className="flex items-center justify-between ml-2">
-                                                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest italic opacity-60">Personalizar Plantilla</p>
-                                                <div className="flex gap-2 relative">
-                                                    {['{alumno}', '{monto}', '{servicio}', '{alias}', '{pago}', '{mensaje}', '{dia}', '{fecha}'].map(v => (
-                                                        <button 
-                                                            key={v}
-                                                            onClick={() => setTemplateText((prev: string) => prev + ' ' + v)}
-                                                            className="px-2 py-1 bg-zinc-100 dark:bg-white/5 text-[9px] font-black text-text-muted hover:text-primary-main rounded-md transition-colors"
-                                                        >
-                                                            +{v.replace(/[{}]/g, '')}
-                                                        </button>
-                                                    ))}
+                                                    <p 
+                                                        className="text-white text-[14px] leading-[1.55] font-medium whitespace-pre-wrap relative z-10"
+                                                        dangerouslySetInnerHTML={{ __html: livePreviewHtml }}
+                                                    />
+                                                    <div className="flex justify-end items-center gap-1.5 mt-1 select-none opacity-80 relative z-10">
+                                                        <span className="text-[10px] text-white/80 font-bold uppercase tracking-tighter tabular-nums text-right">
+                                                            {new Date().toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit', hour12: false})}
+                                                        </span>
+                                                        <div className="flex items-center -space-x-1.5">
+                                                            <CheckCheck size={14} strokeWidth={3} className="text-[#34b7f1]" />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <textarea 
-                                                value={templateText}
-                                                onChange={(e) => setTemplateText(e.target.value)}
-                                                className="w-full h-full min-h-[250px] p-6 lg:p-10 bg-surface dark:bg-black/20 text-sm font-bold text-text-main rounded-[2.5rem] border border-border-main focus:ring-4 focus:ring-primary-main/10 transition-all outline-none leading-relaxed resize-none shadow-inner font-accent italic"
-                                                placeholder="Personalizá el mensaje masivo..."
-                                            />
-                                        </div>
-
-                                        {/* Preview Drawer */}
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic opacity-60">Vista Previa Real ({students[0]?.name})</p>
-                                            <div className="p-6 bg-zinc-50 dark:bg-white/5 rounded-[2rem] border border-dashed border-border-main/50 relative overflow-hidden italic">
-                                                <p className="text-[11px] font-bold text-text-main whitespace-pre-wrap leading-relaxed opacity-70">
-                                                    {students[0] ? getPreviewMessage(students[0]) : 'No hay alumnos seleccionados'}
-                                                </p>
-                                            </div>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="h-full flex flex-col items-center justify-center space-y-12 animate-in zoom-in duration-500">
-                                        <div className="relative w-48 h-48 flex items-center justify-center">
-                                            <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                                                <circle cx="96" cy="96" r="90" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-100 dark:text-white/5" />
-                                                <circle cx="96" cy="96" r="90" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray={565} strokeDashoffset={565 - (565 * currentIndex) / students.length} className="text-primary-main transition-all duration-700 ease-out stroke-round" />
-                                            </svg>
-                                            <div className="text-center group">
-                                                <p className="text-6xl font-black text-text-main tracking-tighter tabular-nums mb-1 italic translate-x-1">{currentIndex}</p>
-                                                <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-40">de {students.length}</p>
-                                            </div>
-                                        </div>
 
-                                        <div className="text-center space-y-4 max-w-sm">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <span className="text-[10px] font-black text-primary-main uppercase tracking-[0.4em] mb-2 animate-pulse">Siguiente Alumno</span>
-                                                <h4 className="text-3xl font-black text-text-main tracking-tight uppercase italic truncate w-full">{students[currentIndex]?.name}</h4>
-                                                <p className="text-xs font-bold text-text-muted flex items-center gap-2">
-                                                    <AlertCircle size={14} className="text-primary-main" /> Haz clic para abrir WhatsApp
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Mini Queue Preview */}
-                                        <div className="flex gap-2 overflow-hidden w-full justify-center opacity-40 grayscale blur-[1px]">
-                                            {students.slice(currentIndex + 1, currentIndex + 5).map(s => (
-                                                <div key={s.id} className="px-4 py-2 bg-zinc-100 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase whitespace-nowrap">
-                                                    {s.name}
-                                                </div>
-                                            ))}
-                                            {students.length > currentIndex + 5 && <div className="px-4 py-2 text-[10px] font-black opacity-30">...</div>}
-                                        </div>
+                                    {/* Footer */}
+                                    <div className="px-5 py-4 border-t border-border-main flex gap-3 shrink-0">
+                                        <button
+                                            onClick={onClose}
+                                            className="px-5 py-3.5 text-text-muted font-bold rounded-2xl border border-border-main hover:bg-black/5 dark:hover:bg-white/5 transition-all text-[11px] uppercase tracking-widest"
+                                        >
+                                            Cerrar
+                                        </button>
+                                        {students.length === 1 ? (
+                                            <button
+                                                onClick={() => handleQuickSend(students[0])}
+                                                className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] uppercase tracking-widest"
+                                            >
+                                                <Send size={16} strokeWidth={2.5} />
+                                                Enviar
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={handleStartSending}
+                                                className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] uppercase tracking-widest"
+                                            >
+                                                <Send size={16} strokeWidth={2.5} />
+                                                Iniciar envío ({students.length})
+                                            </button>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div className="p-8 border-t border-border-main bg-zinc-50/50 dark:bg-bg-soft/20 flex gap-4">
-                            <button
-                                onClick={() => isSending ? setIsSending(false) : onClose()}
-                                className="px-8 py-4 bg-white dark:bg-bg-dark text-text-muted font-black rounded-2xl border border-border-main transition-all uppercase tracking-widest text-[10px] hover:bg-zinc-100 dark:hover:bg-white/5"
-                            >
-                                {isSending ? 'Cancelar Envío' : 'Cancelar'}
-                            </button>
-                            
-                            {!isSending ? (
-                                <button
-                                    onClick={handleStartSending}
-                                    className="flex-1 py-4 bg-primary-main text-white font-black rounded-2xl shadow-xl shadow-primary-glow hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 uppercase tracking-[0.3em] text-[11px] italic"
-                                >
-                                    <Send size={20} /> Iniciar Envío Masivo
-                                </button>
+                                </>
                             ) : (
-                                <button
-                                    onClick={handleSendNext}
-                                    className="flex-1 py-4 bg-primary-main text-white font-black rounded-2xl shadow-xl shadow-primary-glow hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 uppercase tracking-[0.3em] text-[11px] italic"
-                                >
-                                    Enviar a {students[currentIndex]?.name} <ChevronRight size={20} />
-                                </button>
+                                /* Sending flow */
+                                <>
+                                    <div className="flex-1 flex flex-col items-center justify-center space-y-10 p-8 animate-in zoom-in duration-500 bg-emerald-500/5">
+                                        <div className="relative w-48 h-48 flex items-center justify-center">
+                                            <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-pulse scale-110" />
+                                            <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                                <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-black/5 dark:text-white/5" />
+                                                <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="10" fill="transparent" strokeDasharray={553} strokeDashoffset={553 - (553 * currentIndex) / students.length} className="text-emerald-500 transition-all duration-1000 ease-in-out" />
+                                            </svg>
+                                            <div className="text-center relative z-10">
+                                                <p className="text-6xl font-black text-text-main tracking-tighter tabular-nums drop-shadow-sm">{currentIndex}</p>
+                                                <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] mt-1">de {students.length}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center space-y-4 w-full px-4">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.3em]">Preparado</p>
+                                            </div>
+                                            <h4 className="text-3xl font-black text-text-main tracking-tight truncate">{students[currentIndex]?.name}</h4>
+                                            <p className="text-xs text-text-muted flex items-center justify-center gap-2 font-medium">
+                                                <Sparkles size={14} className="text-emerald-500" />
+                                                Presioná el botón para abrir WhatsApp
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-5 py-4 border-t border-border-main flex gap-3 shrink-0">
+                                        <button
+                                            onClick={() => setIsSending(false)}
+                                            className="px-5 py-3.5 text-text-muted font-bold rounded-2xl border border-border-main hover:bg-black/5 dark:hover:bg-white/5 transition-all text-[11px] uppercase tracking-widest"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            onClick={handleSendNext}
+                                            className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] uppercase tracking-widest"
+                                        >
+                                            Enviar a {students[currentIndex]?.name?.split(' ')[0]} <ChevronRight size={18} strokeWidth={3} />
+                                        </button>
+                                    </div>
+                                </>
                             )}
-                        </div>
-                    </motion.div>
-                </div>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
         </Portal>

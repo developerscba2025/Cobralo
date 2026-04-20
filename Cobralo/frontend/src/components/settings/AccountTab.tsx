@@ -116,6 +116,25 @@ const AccountTab: React.FC<AccountTabProps> = ({
                             </div>
                         </div>
                     </div>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-zinc-400 dark:text-emerald-400/70 uppercase mb-2 ml-4 tracking-widest">Hora de inicio laboral</label>
+                            <div className="relative">
+                                <select
+                                    className="w-full py-3.5 px-5 bg-surface text-text-main rounded-xl border-none font-bold shadow-sm focus:ring-2 focus:ring-primary-main/20 transition-all outline-none text-sm appearance-none cursor-pointer"
+                                    value={user.workStartHour !== undefined ? user.workStartHour : 8}
+                                    onChange={e => setUser({ ...user, workStartHour: Number(e.target.value) })}
+                                >
+                                    {[...Array(24)].map((_, i) => (
+                                        <option key={i} value={i}>{String(i).padStart(2, '0')}:00</option>
+                                    ))}
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-zinc-400">
+                                    <span className="text-xs">▼</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

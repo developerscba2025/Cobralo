@@ -30,6 +30,7 @@ interface User {
     }[];
     mpAccessToken?: string;
     mpPublicKey?: string;
+    workStartHour?: number;
 }
 
 interface AuthContextType {

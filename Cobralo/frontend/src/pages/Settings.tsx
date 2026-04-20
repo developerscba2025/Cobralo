@@ -367,7 +367,7 @@ const Settings = () => {
                         exit={{ y: 50, opacity: 0 }}
                         className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-2xl px-4"
                     >
-                        <div className="bg-zinc-900/90 dark:bg-zinc-900/95 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[40px] p-3 pl-6 pr-3 flex items-center justify-between gap-4 backdrop-blur-2xl">
+                        <div className="bg-surface/90 border border-border-main shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[40px] p-3 pl-6 pr-3 flex items-center justify-between gap-4 backdrop-blur-2xl">
                             <div className="flex items-center gap-4 min-w-0">
                                 <div className="hidden sm:flex w-10 h-10 rounded-2xl bg-primary-main/20 items-center justify-center text-primary-main flex-shrink-0">
                                     <RotateCcw size={20} className="animate-pulse" />

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { Student } from '../services/api';
 import EmptyState from '../components/EmptyState';
 import TiltCard from '../components/TiltCard';
+import Tooltip from '../components/ui/Tooltip';
 import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 
 interface BasicDashboardProps {
@@ -109,10 +110,12 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                                 <div className="w-1.5 h-1.5 rounded-full bg-primary-main animate-pulse" />
                                 Mes actual
                             </div>
-                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-primary-main border border-primary-main/20"
-                                 style={{ background: 'rgba(34,197,94,0.08)' }}>
-                                <DollarSign size={18} />
-                            </div>
+                            <Tooltip content="Total recaudado este mes (sin incluir lo pendiente)">
+                                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-primary-main border border-primary-main/20"
+                                     style={{ background: 'rgba(34,197,94,0.08)' }}>
+                                    <DollarSign size={18} />
+                                </div>
+                            </Tooltip>
                         </div>
                         <div className="mt-4 md:mt-6">
                             <p className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 italic">Ingresos (Mes Actual)</p>
@@ -147,10 +150,12 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                     >
                         <div className="flex justify-between items-start">
                             <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Alumnos</h3>
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-border-main"
-                                 style={{ background: 'rgba(255,255,255,0.03)' }}>
-                                <Users2 size={16} className="text-text-muted" />
-                            </div>
+                            <Tooltip content="Cantidad total de personas inscriptas">
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-border-main"
+                                     style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                    <Users2 size={16} className="text-text-muted" />
+                                </div>
+                            </Tooltip>
                         </div>
                         <div className="mt-4">
                             <p className="text-4xl font-black text-text-main tracking-tighter">{stats.totalStudents}</p>
@@ -170,10 +175,12 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                     >
                         <div className="flex justify-between items-start">
                             <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Cobrado</h3>
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-primary-main/20"
-                                 style={{ background: 'rgba(34,197,94,0.06)' }}>
-                                <TrendingUp size={16} className="text-primary-main" />
-                            </div>
+                            <Tooltip content="Porcentaje de alumnos que ya pagaron este mes">
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-primary-main/20"
+                                     style={{ background: 'rgba(34,197,94,0.06)' }}>
+                                    <TrendingUp size={16} className="text-primary-main" />
+                                </div>
+                            </Tooltip>
                         </div>
                         <div className="mt-4">
                             <p className="text-4xl font-black text-primary-main tracking-tighter">{collectionRate}%</p>
@@ -212,7 +219,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                                 const studentsList = schedule.students || (schedule.student ? [schedule.student] : []);
                                 const name = studentsList.length > 1 ? `${studentsList[0]?.name?.split(' ')[0]} +${studentsList.length - 1}` : (studentsList[0]?.name || 'Grupal');
                                 return (
-                                    <div key={schedule.id} className="min-w-[140px] p-3 rounded-2xl bg-black/5 dark:bg-white/[0.03] border border-border-main shrink-0 snap-start">
+                                    <div key={schedule.id} className="min-w-[140px] p-3 rounded-2xl bg-black/5 border border-border-main shrink-0 snap-start">
                                         <p className="text-[12px] font-black text-text-main truncate max-w-full">{schedule.startTime}</p>
                                         <p className="text-[10px] font-bold text-text-muted truncate mt-1">{name}</p>
                                     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Plus, FileSpreadsheet, MessageCircle, Filter } from 'lucide-react';
 import PremiumSelect from '../ui/PremiumSelect';
+import Tooltip from '../ui/Tooltip';
 
 interface StudentFiltersProps {
     searchTerm: string;
@@ -44,40 +45,44 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
         <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
                 <div className="relative w-full md:w-full md:max-w-2xl">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
                     <input 
                         type="text"
                         placeholder="Buscar por nombre, teléfono o servicio..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-surface dark:bg-bg-soft border border-border-main rounded-2xl pl-10 pr-4 py-3 text-sm font-bold text-text-main focus:outline-none focus:ring-2 focus:ring-primary-main/20 transition-all placeholder:text-text-muted/50"
+                        className="w-full pl-12 pr-4 py-3.5 bg-surface dark:bg-[#111113] border border-border-main rounded-2xl outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 shadow-sm transition-all text-sm font-bold text-text-main placeholder:text-text-muted/50"
                     />
                 </div>
 
                 <div className="flex items-center gap-2 w-full md:w-auto">
-                    <button 
-                        onClick={onNewStudent}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary-main text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary-main/20"
-                    >
-                        <Plus size={18} />
-                        <span>Nuevo</span>
-                    </button>
+                    <Tooltip content="Crear una nueva ficha de alumno">
+                        <button 
+                            onClick={onNewStudent}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-black rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20"
+                        >
+                            <Plus size={18} />
+                            <span>Nuevo</span>
+                        </button>
+                    </Tooltip>
                     
                     <div className="flex items-center gap-2">
-                        <button 
-                            onClick={onExport}
-                            className="p-3 bg-surface dark:bg-bg-soft border border-border-main rounded-2xl text-text-muted hover:text-primary-main transition-all"
-                            title="Exportar Excel"
-                        >
-                            <FileSpreadsheet size={18} />
-                        </button>
-                        <button 
-                            onClick={onWhatsAppMass}
-                            className={`p-3 rounded-2xl transition-all ${selectedCount > 0 ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-surface dark:bg-bg-soft border border-border-main text-text-muted'}`}
-                            title="WhatsApp Masivo"
-                        >
-                            <MessageCircle size={18} />
-                        </button>
+                        <Tooltip content="Descargar lista de alumnos a Excel">
+                            <button 
+                                onClick={onExport}
+                                className="p-3 bg-surface dark:bg-bg-soft border border-border-main rounded-2xl text-text-muted hover:text-emerald-500 hover:border-emerald-500/30 transition-all"
+                            >
+                                <FileSpreadsheet size={18} />
+                            </button>
+                        </Tooltip>
+                        <Tooltip content="Enviar mensajes a los alumnos seleccionados">
+                            <button 
+                                onClick={onWhatsAppMass}
+                                className={`p-3 rounded-2xl transition-all ${selectedCount > 0 ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-surface dark:bg-bg-soft border border-border-main text-text-muted hover:text-emerald-500 hover:border-emerald-500/30'}`}
+                            >
+                                <MessageCircle size={18} />
+                            </button>
+                        </Tooltip>
                     </div>
                 </div>
             </div>

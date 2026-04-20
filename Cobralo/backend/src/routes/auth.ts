@@ -260,7 +260,12 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                 calendarToken: true,
                 ratingToken: true,
                 ratingTokenExpires: true,
-                isAdmin: true
+                isAdmin: true,
+                workStartHour: true,
+                notificationsEnabled: true,
+                classRemindersEnabled: true,
+                classReminderMinutes: true,
+                isPublicProfileVisible: true
             }
         });
 
@@ -284,7 +289,8 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
             billingAddress, reminderTemplate, classReminderTemplate, welcomeTemplate, generalTemplate, defaultPrice, defaultService, 
             defaultSurcharge, currency, receiptFooter,
             notificationsEnabled, isPublicProfileVisible,
-            biography, photoUrl, instagramUrl, facebookUrl, mpAccessToken
+            biography, photoUrl, instagramUrl, facebookUrl, mpAccessToken,
+            workStartHour, classRemindersEnabled, classReminderMinutes
         } = req.body;
 
         // Fetch current user data for comparison
@@ -338,6 +344,9 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
             billingAddress,
             notificationsEnabled: notificationsEnabled !== undefined ? Boolean(notificationsEnabled) : undefined,
             isPublicProfileVisible: isPublicProfileVisible !== undefined ? Boolean(isPublicProfileVisible) : undefined,
+            workStartHour: workStartHour !== undefined ? Number(workStartHour) : undefined,
+            classRemindersEnabled: classRemindersEnabled !== undefined ? Boolean(classRemindersEnabled) : undefined,
+            classReminderMinutes: classReminderMinutes !== undefined ? Number(classReminderMinutes) : undefined,
             biography, 
             photoUrl, 
             instagramUrl, 
@@ -378,7 +387,10 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                 isPro: true,
                 plan: true,
                 notificationsEnabled: true,
+                classRemindersEnabled: true,
+                classReminderMinutes: true,
                 isPublicProfileVisible: true,
+                workStartHour: true,
                 biography: true,
                 photoUrl: true,
                 instagramUrl: true,
@@ -426,7 +438,12 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                     calendarToken: true,
                     ratingToken: true,
                     ratingTokenExpires: true,
-                    isAdmin: true
+                    isAdmin: true,
+                    workStartHour: true,
+                    notificationsEnabled: true,
+                    classRemindersEnabled: true,
+                    classReminderMinutes: true,
+                    isPublicProfileVisible: true
                 }
             });
             res.json(userWithToken);

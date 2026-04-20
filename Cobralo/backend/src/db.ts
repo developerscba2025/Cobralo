@@ -5,11 +5,6 @@ dotenv.config();
 export const prisma = new PrismaClient({
     log: ['error', 'warn'],
     errorFormat: 'minimal',
-    datasources: {
-        db: {
-            url: process.env.DATABASE_URL
-        }
-    }
 });
 
 // Optional: Ensure connection is valid on startup
