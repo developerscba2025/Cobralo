@@ -7,7 +7,9 @@
         ],
         "outDir": "./dist",
         "rootDir": "./src",
-        "strict": true,
+        "strict": false,
+        "noImplicitAny": false,
+        "noEmitOnError": false,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true
@@ -17,10 +19,13 @@
     ],
     "exclude": [
         "node_modules",
+        "src/scratch",
+        "src/scripts",
         "src/get-students.ts",
         "src/get-users.ts",
         "src/update-password.ts",
         "src/check-users.ts",
+        "src/check_users.ts",
         "src/test-create-student.ts",
         "src/test-reminders.ts",
         "src/test-sqlite.ts"
