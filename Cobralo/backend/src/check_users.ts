@@ -13,9 +13,9 @@ async function main() {
 
   console.log('--- Cobralo User Accounts ---');
   console.log('PRO Accounts:');
-  console.log(users.filter(u => u.isPro || u.plan === 'PRO').map(u => `  - ${u.email} (${u.plan})`));
+  console.log(users.filter((u: any) => u.isPro || u.plan === 'PRO').map((u: any) => `  - ${u.email} (${u.plan})`));
   console.log('\nFREE Accounts:');
-  console.log(users.filter(u => !u.isPro && u.plan !== 'PRO').map(u => `  - ${u.email} (${u.plan})`));
+  console.log(users.filter((u: any) => !u.isPro && u.plan !== 'PRO').map((u: any) => `  - ${u.email} (${u.plan})`));
 }
 
 main()

@@ -14,7 +14,7 @@ async function checkTemplates() {
     });
 
     console.log("Checking user templates for corruption...");
-    users.forEach(u => {
+    users.forEach((u: any) => {
         console.log(`User ID: ${u.id} (${u.email})`);
         const templates = {
             reminder: u.reminderTemplate,
@@ -26,7 +26,7 @@ async function checkTemplates() {
         for (const [name, val] of Object.entries(templates)) {
             if (val) {
                 const hasFFFD = val.includes('\uFFFD');
-                const hex = val.split('').map(c => c.charCodeAt(0).toString(16).padStart(4, '0')).join(' ');
+                const hex = val.split('').map((c: string) => c.charCodeAt(0).toString(16).padStart(4, '0')).join(' ');
                 console.log(`  - ${name}: ${hasFFFD ? '❌ HAS REPLACEMENT CHAR' : '✅ OK'}`);
                 if (hasFFFD) {
                     console.log(`    Content: ${val}`);

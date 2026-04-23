@@ -5,7 +5,7 @@ async function checkAllData() {
     console.log("Checking ALL users and students for corruption...");
     
     const users = await prisma.user.findMany();
-    users.forEach(u => {
+    users.forEach((u: any) => {
         const fields = ['name', 'bizName', 'biography'];
         fields.forEach(f => {
             const val = (u as any)[f];
@@ -16,7 +16,7 @@ async function checkAllData() {
     });
 
     const students = await prisma.student.findMany();
-    students.forEach(s => {
+    students.forEach((s: any) => {
         const fields = ['name', 'service_name'];
         fields.forEach(f => {
             const val = (s as any)[f];

@@ -1,8 +1,24 @@
 import { prisma } from '../db';
-// We import types from @prisma/client if available, otherwise use any as fallback
-// This helps during build if prisma generate wasn't run yet
-import type { Student, User } from '@prisma/client';
 import axios from 'axios';
+
+// Use inline types to avoid build failures when `prisma generate` hasn't run yet
+type Student = {
+    id: number;
+    name: string | null;
+    service_name: string | null;
+    amount: any;
+    due_day?: number | null;
+    deadline_day?: number | null;
+    [key: string]: any;
+};
+
+type User = {
+    id: number;
+    name: string | null;
+    bizName?: string | null;
+    currency?: string | null;
+    [key: string]: any;
+};
 
 export type NotificationType = 'UPCOMING' | 'OVERDUE' | 'CLASS_REMINDER' | 'PAYMENT_RECEIVED' | 'PRO_REMINDER_SENT';
 

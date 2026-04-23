@@ -22,7 +22,7 @@ async function migrate() {
         // Clave: title (o service_name) + startTime + dayOfWeek (opcional, pero mejor agrupar todos los días del mismo servicio)
         const potentialGroups: Record<string, typeof allSchedules> = {};
 
-        allSchedules.forEach(s => {
+        allSchedules.forEach((s: any) => {
             const serviceName = s.students?.[0]?.service_name || s.student?.service_name || 'Clase';
             const groupName = s.title || serviceName;
             
@@ -42,9 +42,9 @@ async function migrate() {
         for (const [name, schedules] of Object.entries(potentialGroups)) {
             // Unificamos alumnos de todos los horarios que coinciden en nombre
             const allStudentIds = new Set<number>();
-            schedules.forEach(s => {
+            schedules.forEach((s: any) => {
                 if (s.studentId) allStudentIds.add(s.studentId);
-                s.students?.forEach(st => allStudentIds.add(st.id));
+                s.students?.forEach((st: any) => allStudentIds.add(st.id));
             });
 
             if (allStudentIds.size === 0) continue;
@@ -57,7 +57,7 @@ async function migrate() {
                 data: {
                     name: originalName,
                     ownerId: ownerId,
-                    capacity: Math.max(...schedules.map(s => s.capacity || 10), allStudentIds.size),
+                    capacity: Math.max(...schedules.map((s: any) => s.capacity || 10), allStudentIds.size),
                     students: {
                         connect: Array.from(allStudentIds).map(id => ({ id }))
                     }
@@ -65,7 +65,7 @@ async function migrate() {
             });
 
             // Vincular los schedules
-            const scheduleIds = schedules.map(s => s.id);
+            const scheduleIds = schedules.map((s: any) => s.id);
             await prisma.classSchedule.updateMany({
                 where: { id: { in: scheduleIds } },
                 data: { groupId: group.id }
