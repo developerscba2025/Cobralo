@@ -131,7 +131,7 @@ export const recordAttendance = async (req: AuthRequest, res: Response) => {
             return;
         }
 
-        const result = await prisma.$transaction(async (prismaTransaction) => {
+        const result = await prisma.$transaction(async (prismaTransaction: any) => {
             // Anti-double-click logic
             const checkDate = date ? new Date(date) : new Date();
             const startOfDay = new Date(checkDate.setHours(0, 0, 0, 0));
@@ -308,7 +308,7 @@ export const recordBulkAttendance = async (req: AuthRequest, res: Response) => {
 
         const attendanceDate = date ? new Date(date) : new Date();
 
-        const results = await prisma.$transaction(async (tx) => {
+        const results = await prisma.$transaction(async (tx: any) => {
             const createdRecords = [];
 
             for (const record of records) {

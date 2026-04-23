@@ -83,7 +83,7 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response) => {
         const weekly = DAYS.map((dayName, index) => ({
             day: index,
             dayName,
-            classes: schedules.filter(s => s.dayOfWeek === index)
+            classes: schedules.filter((s: any) => s.dayOfWeek === index)
         }));
 
         res.json(weekly);

@@ -364,7 +364,7 @@ router.get('/prices', async (req: AuthRequest, res: Response) => {
         };
 
         const result: Record<string, string> = { ...defaultPrices };
-        settings.forEach(s => {
+        settings.forEach((s: any) => {
             result[s.key] = s.value;
         });
 

@@ -1,4 +1,7 @@
-import { Student, User } from '@prisma/client';
+import { prisma } from '../db';
+// We import types from @prisma/client if available, otherwise use any as fallback
+// This helps during build if prisma generate wasn't run yet
+import type { Student, User } from '@prisma/client';
 import axios from 'axios';
 
 export type NotificationType = 'UPCOMING' | 'OVERDUE' | 'CLASS_REMINDER' | 'PAYMENT_RECEIVED' | 'PRO_REMINDER_SENT';
@@ -9,14 +12,14 @@ export type NotificationType = 'UPCOMING' | 'OVERDUE' | 'CLASS_REMINDER' | 'PAYM
 export const notificationService = {
     formatMessage(template: string | null, student: Student, user: any, type: NotificationType, extraData?: any): string {
         const defaultTemplates = {
-            UPCOMING: "! RECORDATORIO DE PAGO !\n------------------------\nHola *{nombre}* \u00BB\n\nTe escribimos de *{negocio}*.\nTu cuota est\u00E1 por vencer.\n\n[ RESUMEN DE CUENTA ]\n\u00B7 Servicio: {servicio}\n\u00B7 Vencimiento: D\u00EDa {vencimiento}\n\u00B7 Monto: {monto}\n\nPara abonar de forma segura:\n\u00BB {pago_url}\n\nQue tengas un excelente d\u00EDa \u00B7",
-            OVERDUE: "! AVISO DE DEUDA !\n------------------------\nHola *{nombre}*,\n\nTe enviamos este aviso desde *{negocio}* por un pago pendiente.\n\n[ DETALLE ]\n\u00B7 Servicio: {servicio}\n\u00B7 Total pendiente: {monto}\n\nSi ya pagaste, carga el comprobante aqu\u00ED:\n\u00BB {pago_url}\n\nQuedamos a tu disposici\u00F3n \u00B7",
-            CLASS_REMINDER: "! RECORDATORIO DE CLASE !\n------------------------\nHola *{nombre}*, confirmamos tu turno en *{negocio}*.\n\n[ HORARIO ] \u00B7 {hora_inicio}\n[ SERVICIO ] \u00B7 {servicio}\n\nConfirm\u00E1 tu asistencia:\n[ SI ] \u00BB {url_confirmar}\n[ NO ] \u00BB {url_cancelar}\n\nTe esperamos \u00B7",
+            UPCOMING: "! RECORDATORIO DE PAGO !\n------------------------\nHola *{nombre}* \u00BB\n\nTe escribimos de *{negocio}*.\nTu cuota está por vencer.\n\n[ RESUMEN DE CUENTA ]\n\u00B7 Servicio: {servicio}\n\u00B7 Vencimiento: Día {vencimiento}\n\u00B7 Monto: {monto}\n\nPara abonar de forma segura:\n\u00BB {pago_url}\n\nQue tengas un excelente día \u00B7",
+            OVERDUE: "! AVISO DE DEUDA !\n------------------------\nHola *{nombre}*,\n\nTe enviamos este aviso desde *{negocio}* por un pago pendiente.\n\n[ DETALLE ]\n\u00B7 Servicio: {servicio}\n\u00B7 Total pendiente: {monto}\n\nSi ya pagaste, carga el comprobante aquí:\n\u00BB {pago_url}\n\nQuedamos a tu disposición \u00B7",
+            CLASS_REMINDER: "! RECORDATORIO DE CLASE !\n------------------------\nHola *{nombre}*, confirmamos tu turno en *{negocio}*.\n\n[ HORARIO ] \u00B7 {hora_inicio}\n[ SERVICIO ] \u00B7 {servicio}\n\nConfirmá tu asistencia:\n[ SI ] \u00BB {url_confirmar}\n[ NO ] \u00BB {url_cancelar}\n\nTe esperamos \u00B7",
             PRO_REMINDER_SENT: "Recordatorio PRO enviado a {alumno} ({monto})",
-            PAYMENT_RECEIVED: "! PAGO RECIBIDO !\n------------------------\nHola *{nombre}*. Tu pago ha sido acreditado exitosamente.\n\n```\nCOMPROBANTE DIGITAL\n------------------\n\u00B7 Servicio: {servicio}\n\u00B7 Monto: {monto}\n\u00B7 Estado: Al d\u00EDa\n```\n\nGracias por confiar en *{negocio}* \u00BB"
+            PAYMENT_RECEIVED: "! PAGO RECIBIDO !\n------------------------\nHola *{nombre}*. Tu pago ha sido acreditado exitosamente.\n\n```\nCOMPROBANTE DIGITAL\n------------------\n\u00B7 Servicio: {servicio}\n\u00B7 Monto: {monto}\n\u00B7 Estado: Al día\n```\n\nGracias por confiar en *{negocio}* \u00BB"
         };
 
-        const message = template || defaultTemplates[type];
+        const message = template || (defaultTemplates as any)[type];
         return this.replaceVariables(message, student, user, extraData);
     },
 

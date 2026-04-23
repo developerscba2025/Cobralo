@@ -77,7 +77,7 @@ export const getPaymentStats = async (req: AuthRequest, res: Response) => {
         
         // Map the results to a 12-month array
         const stats = Array.from({ length: 12 }, (_, i) => {
-            const found = monthlyStats.find(s => s.month === i + 1);
+            const found = monthlyStats.find((s: any) => s.month === i + 1);
             return {
                 month: i + 1,
                 total: found?._sum?.amount ? Number(found._sum.amount) : 0,
@@ -162,7 +162,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
         });
 
         const enrichedTopStudents = await Promise.all(
-            topStudents.map(async (item) => {
+            topStudents.map(async (item: any) => {
                 const student = await prisma.student.findUnique({
                     where: { 
                         id: item.studentId,

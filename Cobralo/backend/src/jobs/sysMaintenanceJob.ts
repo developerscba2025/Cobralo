@@ -23,7 +23,7 @@ export const initSysMaintenanceCron = () => {
                 where: { status: 'CANCEL_AT_PERIOD_END' },
                 select: { userId: true }
             });
-            const cancelledUserIds = cancelledSubs.map(s => s.userId);
+            const cancelledUserIds = cancelledSubs.map((s: any) => s.userId);
 
             const expiredUsers = await prisma.user.findMany({
                 where: {

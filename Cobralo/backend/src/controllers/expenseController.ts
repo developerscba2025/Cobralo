@@ -214,7 +214,7 @@ export const getExpenseSummary = async (req: AuthRequest, res: Response) => {
             categories: {} as Record<string, number>
         }));
 
-        expenses.forEach(exp => {
+        expenses.forEach((exp: any) => {
             const monthIdx = exp.month - 1;
             summary[monthIdx].total += parseFloat(exp.amount.toString());
             summary[monthIdx].count += 1;

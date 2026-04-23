@@ -53,16 +53,16 @@ router.get('/top-teachers', async (req, res) => {
             }
         });
 
-        const formattedTeachers = topTeachers.map(user => {
+        const formattedTeachers = topTeachers.map((user: any) => {
             const ratingsCount = user.ratings.length;
             const avgRating = ratingsCount > 0 
-                ? user.ratings.reduce((acc, r) => acc + r.value, 0) / ratingsCount 
+                ? user.ratings.reduce((acc: number, r: any) => acc + r.value, 0) / ratingsCount 
                 : 0;
             
             // Get latest featured review (one with showComment=true)
             const latestReview = user.ratings
-                .filter(r => r.showComment)
-                .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+                .filter((r: any) => r.showComment)
+                .sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime())[0];
 
             return {
                 id: user.id,
@@ -81,8 +81,8 @@ router.get('/top-teachers', async (req, res) => {
                 } : null
             };
         })
-        .filter(t => t.reviewCount > 0)
-        .sort((a, b) => b.avgRating - a.avgRating)
+        .filter((t: any) => t.reviewCount > 0)
+        .sort((a: any, b: any) => b.avgRating - a.avgRating)
         .slice(0, 6);
 
         res.json(formattedTeachers);
@@ -123,7 +123,7 @@ router.get('/public/profile/:id', async (req, res) => {
         }
 
         const avgRating = user.ratings.length > 0
-            ? user.ratings.reduce((acc, r) => acc + r.value, 0) / user.ratings.length
+            ? user.ratings.reduce((acc: number, r: any) => acc + r.value, 0) / user.ratings.length
             : 0;
 
         res.json({

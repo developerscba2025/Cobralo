@@ -42,7 +42,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.$transaction(async (tx) => {
+        const user = await prisma.$transaction(async (tx: any) => {
             let newUser;
 
             if (existingUser && existingUser.password === 'PRE_APPROVED_DUMMY_ACCOUNT') {
@@ -406,7 +406,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
 
         // Remove undefined values to prevent Prisma from overwriting with null
         const dataToUpdate: any = Object.fromEntries(
-            Object.entries(rawData).filter(([_, v]) => v !== undefined)
+            Object.entries(rawData).filter(([_, v]: [string, any]) => v !== undefined)
         );
 
         if (mpAccessToken && mpAccessToken !== 'TOKEN_CONFIGURADO_Y_ENCRIPTADO') {

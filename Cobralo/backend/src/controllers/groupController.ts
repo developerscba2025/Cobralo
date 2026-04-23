@@ -184,7 +184,7 @@ export const addStudentsToGroup = async (req: AuthRequest, res: Response) => {
         if (!group) return res.status(404).json({ error: 'Grupo no encontrado' });
 
         if (group.capacity) {
-            const newTotal = group.students.length + idsToAdd.filter(id => !group.students.find(s => s.id === id)).length;
+            const newTotal = group.students.length + idsToAdd.filter((id: number) => !group.students.find((s: any) => s.id === id)).length;
             if (newTotal > group.capacity) {
                 return res.status(400).json({ error: `El grupo tiene un cupo máximo de ${group.capacity} alumnos` });
             }
@@ -291,7 +291,7 @@ export const addScheduleToGroup = async (req: AuthRequest, res: Response) => {
                 capacity: group.capacity,
                 subcategory: group.subcategory,
                 students: {
-                    connect: group.students.map(s => ({ id: s.id }))
+                    connect: group.students.map((s: any) => ({ id: s.id }))
                 }
             },
             include: {
@@ -331,7 +331,7 @@ export const linkScheduleToGroup = async (req: AuthRequest, res: Response) => {
             data: {
                 groupId,
                 title: schedule.title || group.name,
-                students: { connect: group.students.map(s => ({ id: s.id })) }
+                students: { connect: group.students.map((s: any) => ({ id: s.id })) }
             },
             include: {
                 students: { select: { id: true, name: true } },

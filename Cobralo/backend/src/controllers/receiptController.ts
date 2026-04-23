@@ -30,7 +30,7 @@ export const getAllReceipts = async (req: AuthRequest, res: Response) => {
             orderBy: { paidAt: 'desc' }
         });
 
-        const receipts = payments.map(payment => ({
+        const receipts = payments.map((payment: any) => ({
             id: payment.id,
             receiptNumber: `RCP-${payment.id}-${payment.year}`,
             studentName: payment.student.name,
