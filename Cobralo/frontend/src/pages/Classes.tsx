@@ -294,7 +294,7 @@ const Classes = () => {
                                                             if (group.schedules.length === 1) {
                                                                 setAttendanceModal({ isOpen: true, schedule: group.schedules[0] });
                                                             } else {
-                                                                showToast.info('Selecciona un horario desde el calendario para registrar asistencia');
+                                                                showToast.success('Selecciona un horario desde el calendario para registrar asistencia');
                                                             }
                                                         }}
                                                         className="flex-1 py-3 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-black transition-all"

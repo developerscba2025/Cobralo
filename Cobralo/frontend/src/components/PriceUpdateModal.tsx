@@ -270,7 +270,7 @@ const PriceUpdateModal: React.FC<PriceUpdateModalProps> = ({
                                             {updatedStudents.map((student) => (
                                                 <motion.div 
                                                     key={student.id}
-                                                    variants={cardVariants}
+                                                    variants={cardVariants as any}
                                                     className="group relative p-5 bg-white/[0.03] dark:bg-black/20 border border-white/[0.05] rounded-[32px] hover:bg-white/[0.07] dark:hover:bg-white/[0.03] transition-all duration-300 hover:border-emerald-500/30"
                                                 >
                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

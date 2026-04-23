@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { api } from '../services/api';
 import type { UnifiedSchedule, Student } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight, CheckCircle2, Edit2, Search, MessageCircle, Send } from 'lucide-react';
+import { Plus, Trash2, X, AlertCircle, Download, Calendar as CalendarIcon, Lock, ChevronLeft, ChevronRight, CheckCircle2, Edit2, Search, MessageCircle, Send, Clock } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import { useAuth } from '../context/AuthContext';
@@ -334,6 +334,23 @@ const Calendar = () => {
         }
     };
 
+    const confirmDropGroup = async (mode: 'SESSION' | 'GROUP') => {
+        if (!groupDropModal) return;
+        try {
+            await api.updateSchedule(groupDropModal.scheduleId, {
+                dayOfWeek: groupDropModal.dayOfWeek,
+                startTime: groupDropModal.newStartTime,
+                endTime: groupDropModal.newEndTime
+            });
+            showToast.success(mode === 'GROUP' ? 'Horario del grupo actualizado' : 'Sesión actualizada');
+            fetchData();
+        } catch (error: any) {
+            showToast.error(error.message || 'Error al mover el turno');
+        } finally {
+            setGroupDropModal(null);
+        }
+    };
+
     const handleDelete = async () => {
         if (!deleteModal.id) return;
         try {
@@ -631,8 +648,8 @@ const Calendar = () => {
                                                                 key={s.id} 
                                                                 onClick={() => setActionModal({ isOpen: true, schedule: { ...s, date: d.dateStr } as any })} 
                                                                 draggable="true"
-                                                                onDragStart={(e: React.DragEvent) => handleDragStart(e, s.id)}
-                                                                onDragEnd={handleDragEnd}
+                                                                onDragStart={(e: any) => handleDragStart(e as React.DragEvent, s.id)}
+                                                                onDragEnd={(e: any) => handleDragEnd(e as React.DragEvent)}
                                                                 className={`${s.group?.color ? '' : 'bg-primary-main/10 dark:bg-primary-main/15 border-primary-main'} border-l-4 shadow-sm p-3 rounded-xl group cursor-pointer hover:brightness-110 transition-all active:scale-[0.98] select-none`}
                                                                 style={s.group?.color ? { backgroundColor: `${s.group.color}20`, borderColor: s.group.color } : {}}
                                                             >

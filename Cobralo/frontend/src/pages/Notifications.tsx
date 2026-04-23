@@ -99,6 +99,7 @@ const NotificationsPage: React.FC = () => {
             const snoozedSystem = JSON.parse(localStorage.getItem('snoozed-system-notifications') || '{}');
             const now = new Date();
 
+            const readSystemIds = JSON.parse(localStorage.getItem('read-system-notifications') || '[]');
             const systemWithReadState = SYSTEM_NOTIFICATIONS
                 .filter(n => !dismissedSystemIds.includes(n.id))
                 .filter(n => {

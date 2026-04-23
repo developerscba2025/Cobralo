@@ -434,6 +434,8 @@ export const api = {
         isRecurring: boolean;
         date?: string;
         title?: string;
+        groupId?: number | null;
+        subcategory?: string | null;
     }): Promise<ClassSchedule> {
         const res = await fetchWithTimeout(`${API_URL}/calendar`, {
             method: 'POST',
@@ -453,6 +455,8 @@ export const api = {
         isRecurring?: boolean;
         date?: string;
         title?: string | null;
+        groupId?: number | null;
+        subcategory?: string | null;
     }): Promise<ClassSchedule> {
         const res = await fetchWithTimeout(`${API_URL}/calendar/${id}`, {
             method: 'PUT',
@@ -497,6 +501,7 @@ export const api = {
         color?: string; 
         notes?: string;
         studentIds?: number[];
+        subcategory?: string | null;
     }): Promise<Group> {
         const res = await fetchWithTimeout(`${API_URL}/groups`, {
             method: 'POST',
