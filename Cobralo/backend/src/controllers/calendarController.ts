@@ -22,6 +22,9 @@ export const getAllSchedules = async (req: AuthRequest, res: Response) => {
                 },
                 students: {
                     select: { id: true, name: true, service_name: true, phone: true }
+                },
+                group: {
+                    select: { id: true, name: true, color: true, subcategory: true }
                 }
             },
             orderBy: [
@@ -68,6 +71,9 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response) => {
                 },
                 students: {
                     select: { id: true, name: true, service_name: true }
+                },
+                group: {
+                    select: { id: true, name: true, color: true, subcategory: true }
                 }
             },
             orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }]
@@ -91,10 +97,18 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response) => {
  */
 export const createSchedule = async (req: AuthRequest, res: Response) => {
     try {
-        const { studentId, studentIds, dayOfWeek, startTime, endTime, date, isRecurring } = req.body;
+        const { studentId, studentIds, dayOfWeek, startTime, endTime, date, isRecurring, title, capacity, groupId, subcategory } = req.body;
 
-        if ((studentId === undefined && (!studentIds || studentIds.length === 0)) || !startTime || !endTime) {
-            res.status(400).json({ error: 'Todos los campos son requeridos' });
+        // If title is provided, student selection is optional
+        const hasStudents = (studentId !== undefined || (studentIds && studentIds.length > 0));
+        
+        if (!title && !hasStudents) {
+            res.status(400).json({ error: 'Debes seleccionar al menos un alumno o dar nombre al grupo' });
+            return;
+        }
+
+        if (!startTime || !endTime) {
+            res.status(400).json({ error: 'La hora de inicio y fin son obligatorias' });
             return;
         }
 
@@ -104,17 +118,19 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
         }
 
         // Verificar que los estudiantes pertenezcan al usuario
-        const idsToVerify = studentIds ? studentIds.map(Number) : [Number(studentId)];
-        const validCount = await prisma.student.count({
-            where: {
-                id: { in: idsToVerify },
-                ownerId: req.userId
-            }
-        });
+        const idsToVerify = studentIds ? studentIds.map(Number) : (studentId ? [Number(studentId)] : []);
+        if (idsToVerify.length > 0) {
+            const validCount = await prisma.student.count({
+                where: {
+                    id: { in: idsToVerify },
+                    ownerId: req.userId
+                }
+            });
 
-        if (validCount !== idsToVerify.length) {
-            res.status(403).json({ error: 'Uno o más alumnos especificados no te pertenecen' });
-            return;
+            if (validCount !== idsToVerify.length) {
+                res.status(403).json({ error: 'Uno o más alumnos especificados no te pertenecen' });
+                return;
+            }
         }
 
         // For dated classes, derive dayOfWeek from the date (0=Sun, 1=Mon...)
@@ -152,7 +168,7 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        const connectIds = studentIds ? studentIds.map((id: number) => ({ id: Number(id) })) : [{ id: Number(studentId) }];
+        const connectIds = studentIds ? studentIds.map((id: number) => ({ id: Number(id) })) : (studentId ? [{ id: Number(studentId) }] : []);
 
         const requestedCapacity = req.body.capacity ? Number(req.body.capacity) : null;
         if (requestedCapacity !== null && connectIds.length > requestedCapacity) {
@@ -162,20 +178,24 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
         const schedule = await prisma.classSchedule.create({
             data: {
                 ownerId: req.userId,
-                studentId: studentIds ? null : Number(studentId),
+                title: title || null,
+                studentId: (studentIds || !studentId) ? null : Number(studentId),
                 dayOfWeek: resolvedDayOfWeek,
                 date: date || null,
                 isRecurring: recurring,
                 startTime,
                 endTime,
-                capacity: req.body.capacity ? Number(req.body.capacity) : null,
+                capacity: capacity ? Number(capacity) : null,
+                groupId: groupId ? Number(groupId) : null,
+                subcategory: subcategory || null,
                 students: {
                     connect: connectIds
                 }
             },
             include: {
                 student: { select: { id: true, name: true } },
-                students: { select: { id: true, name: true } }
+                students: { select: { id: true, name: true } },
+                group: { select: { id: true, name: true, color: true, subcategory: true } }
             }
         });
 
@@ -192,7 +212,7 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
 export const updateSchedule = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { dayOfWeek, startTime, endTime, studentIds, capacity } = req.body;
+        const { dayOfWeek, startTime, endTime, studentIds, capacity, title, groupId, subcategory } = req.body;
 
         const scheduleId = Number(id);
 
@@ -244,7 +264,10 @@ export const updateSchedule = async (req: AuthRequest, res: Response) => {
         if (dayOfWeek !== undefined) scalarData.dayOfWeek = Number(dayOfWeek);
         if (startTime !== undefined) scalarData.startTime = startTime;
         if (endTime !== undefined) scalarData.endTime = endTime;
+        if (title !== undefined) scalarData.title = title === '' ? null : title;
         if (capacity !== undefined) scalarData.capacity = capacity === null ? null : Number(capacity);
+        if (groupId !== undefined) scalarData.groupId = groupId === null ? null : Number(groupId);
+        if (subcategory !== undefined) scalarData.subcategory = subcategory === null ? null : subcategory;
 
         if (Object.keys(scalarData).length > 0) {
             await prisma.classSchedule.update({
@@ -258,7 +281,8 @@ export const updateSchedule = async (req: AuthRequest, res: Response) => {
             where: { id: scheduleId, ownerId: req.userId },
             include: {
                 student: { select: { id: true, name: true } },
-                students: { select: { id: true, name: true } }
+                students: { select: { id: true, name: true } },
+                group: { select: { id: true, name: true, color: true, subcategory: true } }
             }
         });
 

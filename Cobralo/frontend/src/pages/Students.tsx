@@ -32,7 +32,7 @@ const Students = () => {
 
     const loadExtras = async () => {
         try {
-            const [s] = await Promise.all([api.getServices()]);
+            const s = await api.getServices();
             setUserServices(Array.isArray(s) ? s : []);
         } catch (err) {
             console.error('Error loading extras', err);
@@ -72,11 +72,12 @@ const Students = () => {
         renew: { isOpen: false, student: null as Student | null },
         whatsapp: { isOpen: false, student: null as Student | null },
         adjustment: false,
+        bulkMessage: false,
         upsell: false
     });
 
     const openModal = (type: string, student: Student | null = null) => {
-        if (type === 'adjustment') {
+        if (type === 'adjustment' || type === 'bulkMessage') {
             if (selectedIds.length === 0) return;
         }
 
@@ -90,6 +91,12 @@ const Students = () => {
             if (user?.plan === 'BÁSICO') setModals(prev => ({ ...prev, upsell: true }));
             else setModals(prev => ({ ...prev, adjustment: true }));
         }
+        else if (type === 'bulkMessage') {
+            setModals(prev => ({ ...prev, bulkMessage: true }));
+        }
+        else if (type === 'create') {
+            setModals(prev => ({ ...prev, create: true }));
+        }
         else {
             setModals(prev => ({ ...prev, [type]: { isOpen: true, student } }));
         }
@@ -98,6 +105,7 @@ const Students = () => {
     const closeModal = (type: string) => {
         if (type === 'create') setModals(prev => ({ ...prev, create: false }));
         else if (type === 'adjustment') setModals(prev => ({ ...prev, adjustment: false }));
+        else if (type === 'bulkMessage') setModals(prev => ({ ...prev, bulkMessage: false }));
         else if (type === 'upsell') setModals(prev => ({ ...prev, upsell: false }));
         else {
             setModals(prev => ({ ...prev, [type]: { isOpen: false, student: null } }));
@@ -146,30 +154,30 @@ const Students = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="flex flex-col gap-2 px-6 py-5 bg-surface border border-border-main rounded-[24px] min-w-[100px] shadow-sm">
+                        <div className="flex flex-col gap-2 px-6 py-5 glass-emerald rounded-[28px] min-w-[120px] transition-all hover:scale-[1.02]">
                             <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                                     <Users size={12} className="text-emerald-500" />
                                 </div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-text-muted">Totales</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500/70">Totales</p>
                             </div>
                             <p className="font-black text-text-main text-3xl leading-none tracking-tighter">{totalStudents}</p>
                         </div>
-                        <div className="flex flex-col gap-2 px-6 py-5 bg-surface border border-border-main rounded-[24px] min-w-[100px] shadow-sm">
+                        <div className="flex flex-col gap-2 px-6 py-5 glass-emerald rounded-[28px] min-w-[120px] transition-all hover:scale-[1.02]">
                             <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                                     <CheckCircle2 size={12} className="text-emerald-500" />
                                 </div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-text-muted">Activos</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500/70">Activos</p>
                             </div>
                             <p className="font-black text-text-main text-3xl leading-none tracking-tighter">{activeStudents}</p>
                         </div>
-                        <div className="flex flex-col gap-2 px-6 py-5 bg-surface border border-border-main rounded-[24px] min-w-[100px] shadow-sm">
+                        <div className="flex flex-col gap-2 px-6 py-5 bg-amber-500/5 dark:bg-amber-500/[0.03] backdrop-blur-2xl border border-amber-500/20 rounded-[28px] min-w-[120px] transition-all hover:scale-[1.02]">
                             <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center">
                                     <Clock size={12} className="text-amber-500" />
                                 </div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-text-muted">Deuda</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-amber-500/70">Deuda</p>
                             </div>
                             <p className="font-black text-amber-500 text-3xl leading-none tracking-tighter">{pendingStudents}</p>
                         </div>
@@ -179,8 +187,7 @@ const Students = () => {
                 {/* Mass Actions Bar */}
                 {selectedIds.length > 0 && (
                     <motion.div 
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-wrap items-center gap-3 p-4 bg-emerald-500 rounded-[24px] shadow-lg shadow-emerald-500/20 text-black"
+                        className="flex flex-wrap items-center gap-3 p-4 bg-emerald-500 rounded-[24px] shadow-lg shadow-emerald-500/20 text-text-main"
                     >
                         <div className="flex items-center gap-2 px-3 py-1 bg-black/10 rounded-[12px] text-[10px] font-black uppercase tracking-wider">
                             {selectedIds.length} seleccionados
@@ -193,8 +200,8 @@ const Students = () => {
                             <TrendingUp size={14} /> Ajustar Cuotas
                         </button>
                         <button 
-                            onClick={() => openModal('whatsapp')}
-                            className="flex items-center gap-2 px-4 py-1.5 bg-black/10 hover:bg-black text-black hover:text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            onClick={() => openModal('bulkMessage')}
+                            className="flex items-center gap-2 px-4 py-1.5 bg-black/10 hover:bg-black text-text-main hover:text-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                             <ShoppingBag size={14} /> Mensaje Masivo
                         </button>
@@ -236,6 +243,7 @@ const Students = () => {
                     onClose={closeModal}
                     onAction={fetchData}
                     selectedStudents={selectedStudents}
+                    selectedIds={selectedIds}
                     allStudents={students}
                     user={user}
                     userServices={userServices}

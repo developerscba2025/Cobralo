@@ -68,7 +68,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
             });
         }
 
-        const account = await prisma.businessPaymentAccount.update({
+        const updateResult = await prisma.businessPaymentAccount.updateMany({
             where: { 
                 id: Number(id),
                 ownerId: req.userId 
@@ -79,6 +79,12 @@ router.put('/:id', async (req: AuthRequest, res) => {
                 isDefault
             }
         });
+
+        if (updateResult.count === 0) {
+            return res.status(404).json({ error: 'Cuenta no encontrada o no autorizada' });
+        }
+
+        const account = await prisma.businessPaymentAccount.findUnique({ where: { id: Number(id) } });
         res.json(account);
     } catch (error) {
         res.status(500).json({ error: 'Error al actualizar cuenta' });
@@ -91,15 +97,16 @@ router.delete('/:id', async (req: AuthRequest, res) => {
         const { id } = req.params;
         
         // Find if this was default
-        const account = await prisma.businessPaymentAccount.findUnique({
-            where: { id: Number(id) }
+        const account = await prisma.businessPaymentAccount.findFirst({
+            where: { id: Number(id), ownerId: req.userId }
         });
 
+        if (!account) {
+            return res.status(404).json({ error: 'Cuenta no encontrada' });
+        }
+
         await prisma.businessPaymentAccount.delete({
-            where: { 
-                id: Number(id),
-                ownerId: req.userId 
-            }
+            where: { id: Number(id) }
         });
 
         // If it was default, pick another one to be default

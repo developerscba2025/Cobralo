@@ -95,12 +95,7 @@ const Settings = () => {
         ]},
         { id: 'ayuda', label: 'Ayuda', icon: HelpCircle, tabs: [
             { id: 'legal', label: 'Legales', icon: FileText, description: 'Términos de uso' }
-        ]},
-        ...(user.isAdmin ? [{
-            id: 'admin', label: 'Admin', icon: Zap, tabs: [
-                { id: 'admin_panel', label: 'Super Admin', icon: Zap, description: 'Modo Dios (Solo vos)' }
-            ]
-        }] : []),
+        ]}
     ];
 
     const getAllTabs = () => categories.flatMap(c => c.tabs);
@@ -142,13 +137,21 @@ const Settings = () => {
 
     const fetchMetrics = async () => {
         try {
-            const [students, schedules, payments] = await Promise.all([api.getStudents(), api.getSchedules(), api.getPayments()]);
-            setStudentCount(students.length);
+            // Use lightweight count endpoint instead of loading all students
+            const count = await api.getPendingCount();
+            setStudentCount(count);
+
+            // Load schedules and check recent payments in parallel but independently
+            const [schedules, payments] = await Promise.all([
+                api.getSchedules(),
+                api.getPayments({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 })
+            ]);
             setScheduleCount(schedules.length);
             const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
             setHasRecentPayments(payments.some(p => new Date(p.paidAt) >= thirtyDaysAgo));
         } catch (e) { console.error(e); }
     };
+
 
     const fetchSubscriptionPlans = async () => {
         try {
@@ -279,7 +282,7 @@ const Settings = () => {
     return (
         <Layout fitted scrollable={false}>
             {/* ═══ UNIFIED CONTAINER ═══ */}
-            <div className="bg-surface lg:rounded-[32px] h-full overflow-hidden border-x border-b lg:border border-border-main shadow-xl flex flex-col lg:flex-row">
+            <div className="glass-premium lg:rounded-[32px] h-full overflow-hidden border-x border-b lg:border border-border-main shadow-xl flex flex-col lg:flex-row">
 
                     {/* ── SIDEBAR (Accordion Nav) ── */}
                     <div className={`shrink-0 lg:h-full lg:overflow-y-auto hide-scrollbar border-b lg:border-b-0 lg:border-r border-border-main w-full lg:w-[280px] xl:w-[300px] 2xl:w-[320px] ${
@@ -367,14 +370,14 @@ const Settings = () => {
                         exit={{ y: 50, opacity: 0 }}
                         className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-2xl px-4"
                     >
-                        <div className="bg-surface/90 border border-border-main shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[40px] p-3 pl-6 pr-3 flex items-center justify-between gap-4 backdrop-blur-2xl">
+                        <div className="glass-premium border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-[40px] p-3 pl-6 pr-3 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4 min-w-0">
                                 <div className="hidden sm:flex w-10 h-10 rounded-2xl bg-primary-main/20 items-center justify-center text-primary-main flex-shrink-0">
                                     <RotateCcw size={20} className="animate-pulse" />
                                 </div>
                                 <div className="text-left min-w-0">
-                                    <h4 className="text-white font-black text-xs uppercase tracking-tight leading-none mb-1 truncate">Cambios pendientes</h4>
-                                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis opacity-80">Configuración sin guardar</p>
+                                    <h4 className="text-text-main font-black text-xs uppercase tracking-tight leading-none mb-1 truncate">Cambios pendientes</h4>
+                                    <p className="text-text-muted text-[10px] font-bold uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis opacity-80">Configuración sin guardar</p>
                                 </div>
                             </div>
 
@@ -388,7 +391,7 @@ const Settings = () => {
                                 <button 
                                     onClick={() => handleSave()}
                                     disabled={saving}
-                                    className="px-6 py-3.5 bg-primary-main text-white font-black text-[10px] uppercase tracking-widest rounded-[24px] shadow-xl shadow-primary-glow flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap"
+                                    className="px-6 py-3.5 bg-primary-main text-black font-black text-[10px] uppercase tracking-widest rounded-[24px] shadow-xl shadow-primary-glow flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap"
                                 >
                                     {saving ? <RefreshCw className="animate-spin" size={14} /> : <><Check size={14} /> Guardar</>}
                                 </button>

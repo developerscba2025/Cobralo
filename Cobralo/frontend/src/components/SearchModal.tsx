@@ -22,7 +22,7 @@ interface SearchModalProps {
 const PAGES: SearchResult[] = [
     { type: 'page', title: 'Panel Principal', path: '/app', icon: <Home size={18} /> },
     { type: 'page', title: 'Mis Alumnos', path: '/app/students', icon: <Users size={18} /> },
-    { type: 'page', title: 'Historial de Pagos', path: '/app/history', icon: <Calendar size={18} /> },
+    { type: 'page', title: 'Historial de Pagos', path: '/app/payments?tab=history', icon: <Calendar size={18} /> },
     { type: 'page', title: 'Calendario Semanal', path: '/app/calendar', icon: <Calendar size={18} /> },
     { type: 'page', title: 'Configuración', path: '/app/settings', icon: <Settings size={18} /> },
 ];
@@ -126,7 +126,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md z-[2000] flex items-start justify-center pt-24 p-4"
+                    className="fixed inset-0 modal-overlay z-[2000] flex items-start justify-center pt-24 p-4"
                     onClick={onClose}
                 >
                     <motion.div
@@ -135,7 +135,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
                         exit={{ opacity: 0, scale: 0.95, y: -20 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        className="card-premium w-full max-w-xl overflow-hidden shadow-2xl border-white/5"
+                        className="glass-premium rounded-[32px] w-full max-w-xl overflow-hidden shadow-2xl"
                     >
                         {/* Search Input */}
                         <div className="flex items-center gap-4 p-5 border-b border-zinc-100 dark:border-border-emerald bg-zinc-50/30 dark:bg-bg-soft/30">

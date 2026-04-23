@@ -78,7 +78,7 @@ router.get('/feed/:token', async (req: Request, res: Response) => {
             const serviceName = s.student?.service_name || 'General';
 
             icsContent += "BEGIN:VEVENT\r\n";
-            icsContent += `UID:cobralo-${s.id}@cobraloapp.com\r\n`;
+            icsContent += `UID:cobralo-${s.id}@cobralo.info\r\n`;
             icsContent += `DTSTAMP:${nowStamp}\r\n`;
             icsContent += `SUMMARY:Clase: ${studentName}\r\n`;
             icsContent += `DESCRIPTION:Servicio: ${serviceName}\\nAlumno: ${studentName}\r\n`;

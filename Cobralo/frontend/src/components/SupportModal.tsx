@@ -45,14 +45,14 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 modal-overlay"
         />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-lg bg-surface border border-border-main rounded-3xl p-8 shadow-2xl overflow-hidden"
+          className="relative glass-premium w-full max-w-lg rounded-[32px] p-8 overflow-hidden"
         >
           {/* Background Glow */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary-main/10 blur-[60px] rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -92,7 +92,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
                     name="email"
                     type="email" 
                     required
-                    placeholder="tu@email.com"
+                    placeholder="Tu email"
                     className="w-full px-4 py-3 rounded-xl bg-bg-app border border-border-main outline-none focus:border-primary-main/40 focus:ring-2 focus:ring-primary-main/10 transition-all text-sm font-medium text-text-main" 
                   />
                 </div>
@@ -123,7 +123,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
               <button 
                 type="submit"
                 disabled={isSending}
-                className={`w-full py-4 mt-2 ${isSending ? 'bg-primary-main/50 cursor-not-allowed' : 'bg-primary-main hover:opacity-90'} text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-main/20`}
+                className="w-full btn btn-primary py-4 mt-2 justify-center gap-2 uppercase tracking-widest text-[11px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSending ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

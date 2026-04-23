@@ -7,8 +7,10 @@ const getEncryptionKey = (): Buffer => {
     if (!key) {
         throw new Error('ENCRYPTION_KEY environment variable is required for secure operations.');
     }
-    // Ensures key is exactly 32 bytes for aes-256-gcm
-    return crypto.scryptSync(key, 'salt', 32);
+    // Ensures key is exactly 32 bytes for aes-256-gcm using SHA-256 (no static salts)
+    // or use it directly if it spans exactly 32 bytes.
+    if (Buffer.from(key).length === 32) return Buffer.from(key);
+    return crypto.createHash('sha256').update(key).digest();
 };
 
 export const encrypt = (text: string): string => {
@@ -34,7 +36,6 @@ export const decrypt = (encryptedData: string): string => {
     try {
         const parts = encryptedData.split(':');
         
-        // Return original if it doesn't match the new encrypted format (for backwards compatibility/migration if needed, though here we expect strict format)
         if (parts.length !== 3) {
             console.warn('Attempted to decrypt data that does not match expected format. Returning original string.');
             return encryptedData;
@@ -45,13 +46,23 @@ export const decrypt = (encryptedData: string): string => {
         const encryptedText = parts[2];
         const key = getEncryptionKey();
         
-        const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-        decipher.setAuthTag(authTag);
-        
-        let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
-        
-        return decrypted;
+        try {
+            const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+            decipher.setAuthTag(authTag);
+            
+            let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+            decrypted += decipher.final('utf8');
+            
+            return decrypted;
+        } catch (e) {
+            // Fallback for previously encrypted data with static salt
+            const legacyKey = crypto.scryptSync(process.env.ENCRYPTION_KEY!, 'salt', 32);
+            const legacyDecipher = crypto.createDecipheriv(ALGORITHM, legacyKey, iv);
+            legacyDecipher.setAuthTag(authTag);
+            let decrypted = legacyDecipher.update(encryptedText, 'hex', 'utf8');
+            decrypted += legacyDecipher.final('utf8');
+            return decrypted;
+        }
     } catch (error) {
         console.error('Decryption error:', error);
         throw new Error('Failed to decrypt data');

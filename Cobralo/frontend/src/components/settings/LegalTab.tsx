@@ -90,7 +90,7 @@ const LegalTab: React.FC = () => {
                 Solo compartimos datos con servicios esenciales para la operación: Mercado Pago (pagos), Google Cloud (alojamiento), Twilio/WhatsApp API (notificaciones), servicios de envío de correo electrónico (comunicaciones transaccionales) y herramientas de analítica anónima. **No vendemos, alquilamos ni compartimos datos personales a terceros con fines publicitarios bajo ninguna circunstancia.**
 
                 ### 6. Transferencia Internacional
-                Los datos pueden ser procesados en servidores ubicados fuera de Argentina (p. ej. EE.UU. — Google Cloud), garantizando siempre niveles de protección adecuados según estándares internacionales y las disposiciones de la Dirección Nacional de Protección de Datos Personales.
+                Los datos pueden ser procesados en servidores ubicados fuera de Argentina (p. ej. servidores remotos), garantizando siempre niveles de protección adecuados según estándares internacionales y las disposiciones de la Dirección Nacional de Protección de Datos Personales.
 
                 ### 7. Período de Conservación
                 Los datos se conservan mientras la cuenta esté activa. Al darse de baja, se otorga un plazo de **30 (treinta) días corridos** para exportar la información. Transcurrido este plazo, los datos serán eliminados de forma permanente o anonimizados de manera irreversible, salvo aquellos que deban conservarse por obligaciones legales o fiscales.

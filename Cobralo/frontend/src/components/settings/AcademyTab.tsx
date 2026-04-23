@@ -111,7 +111,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
             {/* Visibility Card - The Bento Masterpiece */}
             <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-primary-main/10 to-emerald-500/20 rounded-[48px] blur-xl opacity-25 group-hover:opacity-40 transition-all duration-1000" />
-                <div className="relative p-8 md:p-12 bg-white dark:bg-black border border-zinc-200 dark:border-white/5 rounded-[48px] shadow-2xl overflow-hidden">
+                <div className="relative p-8 md:p-12 bg-surface dark:bg-bg-soft border border-zinc-200 dark:border-border-main rounded-[48px] shadow-2xl overflow-hidden">
                     {/* Background Texture */}
                     <div className="absolute top-0 right-0 p-12 opacity-[0.03] dark:opacity-[0.1] -mr-16 -mt-16 text-emerald-500 pointer-events-none group-hover:rotate-12 transition-transform duration-1000">
                         <Sparkles size={300} strokeWidth={1} />
@@ -166,7 +166,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                                         : 'bg-zinc-50/50 dark:bg-white/5 border-zinc-100 dark:border-white/5 grayscale opacity-50'
                                     }`}
                                 >
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${item.active ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-white dark:bg-black text-zinc-300'}`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${item.active ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20' : 'bg-surface dark:bg-bg-app text-zinc-400'}`}>
                                         {item.active ? <Check size={20} strokeWidth={3} /> : <item.icon size={20} />}
                                     </div>
                                     <div className="flex-1">
@@ -232,7 +232,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                         }}
                         className={`p-4 rounded-2xl border transition-all ${
                             isPro 
-                            ? 'bg-white dark:bg-black text-zinc-900 dark:text-emerald-50 border-zinc-200 dark:border-white/10 hover:border-emerald-500 shadow-xl shadow-black/5 hover:-translate-y-1' 
+                            ? 'bg-surface dark:bg-bg-soft text-zinc-900 dark:text-emerald-50 border-zinc-200 dark:border-border-main hover:border-emerald-500 shadow-xl shadow-black/5 hover:-translate-y-1' 
                             : 'bg-zinc-50 dark:bg-white/5 text-zinc-200 dark:border-white/5 cursor-not-allowed'
                         }`}
                         title="Compartir Perfil"
@@ -246,7 +246,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
             <div className="grid lg:grid-cols-[1fr_400px] gap-8">
                 
                 {/* Left Side: Text Fields */}
-                <div className="bg-zinc-50 dark:bg-black/20 p-8 lg:p-12 rounded-[40px] border border-zinc-200 dark:border-white/5 space-y-10">
+                <div className="bg-surface dark:bg-bg-soft/40 p-8 lg:p-12 rounded-[40px] border border-zinc-200 dark:border-border-main space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-zinc-400 dark:text-emerald-500/80 uppercase tracking-[0.2em] ml-2">Nombre Comercial</label>
@@ -256,7 +256,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                                 className={`w-full p-6 bg-white dark:bg-black/40 text-zinc-900 dark:text-emerald-50 rounded-2xl border border-zinc-200 dark:border-white/5 font-black text-base shadow-sm focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all placeholder:text-zinc-300 ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`} 
                                 value={user.bizName || ''} 
                                 onChange={e => setUser({ ...user, bizName: e.target.value })} 
-                                placeholder="Ej: Academia Pro" 
+                                placeholder="Nombre de tu negocio" 
                             />
                         </div>
                         <div className="space-y-3">
@@ -267,7 +267,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                                 className={`w-full p-6 bg-white dark:bg-black/40 text-zinc-900 dark:text-emerald-50 rounded-2xl border border-zinc-200 dark:border-white/5 font-black text-base shadow-sm focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/5 outline-none transition-all placeholder:text-zinc-300 ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`} 
                                 value={user.businessCategory || ''} 
                                 onChange={e => setUser({ ...user, businessCategory: e.target.value })} 
-                                placeholder="Ej: Fitness, Música..." 
+                                placeholder="Rubro o tipo de actividad" 
                             />
                         </div>
                     </div>
@@ -286,7 +286,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-zinc-400 dark:text-emerald-500/80 uppercase tracking-[0.2em] ml-2 flex items-center gap-2"><Instagram size={14} className="text-emerald-500" /> Instagram</label>
-                            <input type="text" disabled={!isPro} className={`w-full p-5 bg-white dark:bg-black/40 text-zinc-900 dark:text-emerald-50 rounded-2xl border border-zinc-200 dark:border-white/5 font-bold outline-none focus:border-emerald-500/30 transition-all ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`} value={user.instagramUrl || ''} onChange={e => setUser({ ...user, instagramUrl: e.target.value })} placeholder="@tu.academia" />
+                            <input type="text" disabled={!isPro} className={`w-full p-5 bg-white dark:bg-black/40 text-zinc-900 dark:text-emerald-50 rounded-2xl border border-zinc-200 dark:border-white/5 font-bold outline-none focus:border-emerald-500/30 transition-all ${!isPro ? 'opacity-50 cursor-not-allowed' : ''}`} value={user.instagramUrl || ''} onChange={e => setUser({ ...user, instagramUrl: e.target.value })} placeholder="@usuario" />
                         </div>
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-zinc-400 dark:text-emerald-500/80 uppercase tracking-[0.2em] ml-2 flex items-center gap-2"><Facebook size={14} className="text-emerald-500" /> Facebook</label>
@@ -298,7 +298,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                 {/* Right Side: Photo + Visuals */}
                 <div className="space-y-8">
                     {/* Image Upload Card */}
-                    <div className="bg-zinc-900 dark:bg-black p-8 rounded-[40px] border border-white/5 shadow-2xl space-y-8 relative overflow-hidden group">
+                    <div className="bg-surface dark:bg-bg-soft p-8 rounded-[40px] border border-zinc-200 dark:border-border-main shadow-2xl space-y-8 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[80px] -mr-16 -mt-16 pointer-events-none group-hover:bg-emerald-500/20 transition-all duration-700" />
                         
                         <div className="space-y-1 relative z-10">
@@ -319,7 +319,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                                     onChange={handleImageUpload}
                                 />
                                 <div className="absolute -inset-2 bg-gradient-to-tr from-emerald-500 to-primary-main rounded-[40px] blur opacity-20 group-hover/photo:opacity-40 transition duration-500"></div>
-                                <div className="relative w-48 h-48 rounded-[36px] bg-zinc-800 dark:bg-zinc-900 flex items-center justify-center overflow-hidden border-2 border-white/10 shadow-2xl transition-transform group-hover/photo:scale-[1.03]">
+                                <div className="relative w-48 h-48 rounded-[36px] bg-zinc-100 dark:bg-bg-app flex items-center justify-center overflow-hidden border-2 border-zinc-200 dark:border-border-main shadow-2xl transition-transform group-hover/photo:scale-[1.03]">
                                     {user.photoUrl ? (
                                         <div className="relative w-full h-full">
                                             <img src={user.photoUrl} alt="Preview" className="w-full h-full object-cover group-hover/photo:opacity-40 transition-opacity" />
@@ -339,7 +339,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                                         <UserIcon size={64} className="text-zinc-700 group-hover/photo:opacity-20 transition-opacity" />
                                     )}
                                     
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover/photo:opacity-100 bg-black/60 backdrop-blur-[2px] transition-all">
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover/photo:opacity-100 bg-black/20 dark:bg-black/60 backdrop-blur-[2px] transition-all">
                                         {isUploadingImage ? (
                                             <RefreshCw size={24} className="animate-spin text-white" />
                                         ) : (
@@ -382,7 +382,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                     </div>
 
                     {/* Quick Stats Bento */}
-                    <div className="bg-zinc-50 dark:bg-white/5 p-6 rounded-[32px] border border-zinc-200 dark:border-white/5 flex items-center justify-between">
+                    <div className="bg-surface dark:bg-bg-soft/40 p-6 rounded-[32px] border border-zinc-200 dark:border-border-main flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-white dark:bg-black flex items-center justify-center text-emerald-500 shadow-sm">
                                 <UserIcon size={20} />
@@ -398,7 +398,7 @@ const AcademyTab: React.FC<AcademyTabProps> = ({
                                 <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">Eventos</p>
                                 <p className="text-lg font-black text-zinc-900 dark:text-emerald-50 font-mono tracking-tighter">{scheduleCount}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-black flex items-center justify-center text-emerald-500 shadow-sm">
+                            <div className="w-10 h-10 rounded-xl bg-surface dark:bg-bg-app flex items-center justify-center text-emerald-500 shadow-sm border border-zinc-100 dark:border-border-main">
                                 <Star size={20} />
                             </div>
                         </div>

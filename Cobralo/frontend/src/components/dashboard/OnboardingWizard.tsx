@@ -7,18 +7,18 @@ interface OnboardingWizardProps {
     hasServices: boolean;
     hasPayments: boolean;
     hasStudents: boolean;
+    hasAgenda: boolean;
+    onDismiss?: () => void;
 }
 
-const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPayments, hasStudents }) => {
-    // 4th step logic: assume agenda is configured if they have students (simplified) or just keep it as a goal
-    const hasAgenda = false; 
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPayments, hasStudents, hasAgenda, onDismiss }) => {
 
     // Determine progress
     const steps = [
         {
             id: 'service',
-            title: '1. Definí qué enseñás',
-            desc: 'Configurá tus clases, áreas y precios base para empezar.',
+            title: '1. Tus Servicios',
+            desc: 'Editá los precios base seleccionados en el registro.',
             icon: Layers,
             done: hasServices,
             to: '/app/settings?tab=services',
@@ -27,29 +27,29 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPay
         {
             id: 'payment',
             title: '2. Medios de cobro',
-            desc: 'Vinculá Mercado Pago o agregá tu Alias/CBU.',
+            desc: 'Cargá tu alias o integrá Mercado Pago.',
             icon: CreditCard,
             done: hasPayments,
             to: '/app/settings?tab=payment-accounts',
             color: 'from-purple-500 to-indigo-400'
         },
         {
-            id: 'student',
-            title: '3. Tu primer alumno',
-            desc: 'Registralo y asignalo a un servicio para cobrarle.',
-            icon: Users,
-            done: hasStudents,
-            to: '/app/students',
-            color: 'from-emerald-500 to-teal-400'
-        },
-        {
             id: 'class',
-            title: '4. Agenda y Horarios',
-            desc: 'Organizá tus días y automatizá los avisos de asistencia.',
+            title: '3. Agenda y Horarios',
+            desc: 'Organizá tu grilla semanal para asignar alumnos.',
             icon: Calendar,
             done: hasAgenda, 
             to: '/app/calendar',
             color: 'from-amber-500 to-orange-400'
+        },
+        {
+            id: 'student',
+            title: '4. Tu primer alumno',
+            desc: 'Registralo y asignalo a tus horarios para cobrarle.',
+            icon: Users,
+            done: hasStudents,
+            to: '/app/students',
+            color: 'from-emerald-500 to-teal-400'
         }
     ];
 
@@ -84,7 +84,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPay
                     </div>
 
                     {/* High-Fidelity Progress Indicator */}
-                    <div className="shrink-0 flex items-center gap-6 bg-white dark:bg-zinc-900/60 p-5 md:p-6 rounded-[32px] border border-black/[0.03] dark:border-white/[0.05] shadow-xl self-start xl:self-center">
+                    <div className="shrink-0 flex items-center gap-6 bg-white dark:bg-black/60 p-5 md:p-6 rounded-[32px] border border-black/[0.03] dark:border-white/[0.05] shadow-xl self-start xl:self-center">
                         <div className="flex flex-col items-end">
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Progreso Total</span>
                             <span className="text-4xl font-black text-text-main tabular-nums leading-none mt-1">{progress}%</span>
@@ -124,18 +124,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPay
                         return (
                             <Link 
                                 key={step.id} 
-                                to={step.done || !isAccessible ? '#' : step.to}
+                                to={!isAccessible ? '#' : step.to}
                                 className={`
                                     group relative flex flex-col p-8 rounded-[40px] border transition-all duration-500 h-full min-h-[220px]
                                     ${step.done 
-                                        ? 'bg-emerald-500/[0.02] border-emerald-500/20' 
+                                        ? 'bg-emerald-500/[0.02] border-emerald-500/20 hover:border-emerald-500/40 cursor-pointer' 
                                         : (isAccessible
                                             ? 'bg-white dark:bg-zinc-900/40 border-black/[0.05] dark:border-white/[0.05] hover:border-primary-main/40 hover:shadow-2xl hover:shadow-primary-main/10 cursor-pointer'
                                             : 'bg-zinc-100/50 dark:bg-zinc-950/20 border-transparent opacity-40 grayscale cursor-not-allowed')
                                     }
-                                    ${!step.done && isAccessible && "hover:-translate-y-2 active:scale-[0.97]"}
+                                    ${isAccessible && "hover:-translate-y-2 active:scale-[0.97]"}
                                 `}
-                                onClick={(e: React.MouseEvent) => (step.done || !isAccessible) && e.preventDefault()}
+                                onClick={(e: React.MouseEvent) => !isAccessible && e.preventDefault()}
                             >
                                 <div className="flex items-start justify-between mb-8 relative z-10">
                                     <div className={`
@@ -201,7 +201,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ hasServices, hasPay
                                 <p className="text-white/80 font-bold text-xs uppercase tracking-widest">Ya tenés la base configurada</p>
                             </div>
                         </div>
-                        <button className="px-8 py-3 bg-white text-primary-main font-black uppercase tracking-widest text-[11px] rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">
+                        <button 
+                            onClick={onDismiss}
+                            className="px-8 py-3 bg-white text-primary-main font-black uppercase tracking-widest text-[11px] rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">
                             Ir a tablero PRO
                         </button>
                     </motion.div>

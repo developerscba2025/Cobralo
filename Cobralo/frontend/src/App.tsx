@@ -8,7 +8,7 @@ import LoadingFallback from './components/LoadingFallback';
 
 // Generic Loading Spinner for Public Routes
 const GenericLoading = () => (
-  <div className="min-h-screen bg-[#0E1113] flex items-center justify-center">
+  <div className="min-h-screen bg-bg-app flex items-center justify-center">
     <div className="w-8 h-8 border-2 border-primary-main/20 border-t-primary-main rounded-full animate-spin" />
   </div>
 );
@@ -32,6 +32,7 @@ const NotificationsPage = lazy(() => import('./pages/Notifications'));
 const AttendanceConfirmPage = lazy(() => import('./pages/AttendanceConfirmPage'));
 const StudentPaymentSuccess = lazy(() => import('./pages/StudentPaymentSuccess'));
 const Support = lazy(() => import('./pages/Support'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -133,6 +134,11 @@ function App() {
                   <Route path="support" element={
                     <PrivateRoute>
                       <Support />
+                    </PrivateRoute>
+                  } />
+                  <Route path="admin" element={
+                    <PrivateRoute>
+                      <AdminPanel />
                     </PrivateRoute>
                   } />
                   <Route path="*" element={<NotFound />} />

@@ -51,11 +51,11 @@ export const ProLock: React.FC<ProLockProps> = ({ featureName, children }) => {
             {/* Upgrade Modal */}
             {showModal && (
                 <div 
-                    className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[3000] p-4 animate-in fade-in duration-300"
+                    className="fixed inset-0 modal-overlay z-[3000] flex items-center justify-center p-4 animate-in fade-in duration-300"
                     onClick={() => setShowModal(false)}
                 >
                     <div 
-                        className="card-premium relative max-w-lg w-full p-8 md:p-10 animate-in zoom-in-95 duration-300"
+                        className="glass-premium rounded-[32px] relative max-w-lg w-full p-8 md:p-10 animate-in zoom-in-95 duration-300"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button 

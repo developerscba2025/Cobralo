@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../db';
+import { notificationService } from '../services/notificationService';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 
@@ -224,6 +225,10 @@ router.post('/public/submit/:token', submitRatingLimiter, async (req, res) => {
         const { token } = req.params;
         const { value, comment, studentName } = req.body;
 
+        if (!value || isNaN(Number(value)) || Number(value) < 1 || Number(value) > 5) {
+            return res.status(400).json({ error: 'La calificación debe ser un número entre 1 y 5' });
+        }
+
         const user = await prisma.user.findFirst({
             where: {
                 ratingToken: String(token) as string,
@@ -276,6 +281,55 @@ router.patch('/:id/toggle-comment', auth, async (req: any, res) => {
     } catch (error) {
         console.error('Error al togglear comentario:', error);
         res.status(500).json({ error: 'Error al actualizar visibilidad' });
+    }
+});
+
+const contactTeacherLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 3, // Limit each IP to 3 contact requests per hour
+    message: { error: 'Demasiados mensajes enviados. Por favor, intentalo más tarde.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// POST /api/ratings/public/profile/:id/contact - Public route to contact a teacher
+router.post('/public/profile/:id/contact', contactTeacherLimiter, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, message } = req.body;
+
+        if (!name || !email || !message) {
+            return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: Number(id) },
+            select: { email: true, name: true, bizName: true, isPro: true }
+        });
+
+        if (!user || !user.isPro) {
+            return res.status(404).json({ error: 'Profesor no encontrado o no disponible para contacto' });
+        }
+
+        // Send email using notificationService
+        const subject = `Nuevo mensaje de contacto de ${name} - Cobralo`;
+        const emailBody = `
+            <h2>Has recibido un nuevo mensaje de contacto</h2>
+            <p><strong>De:</strong> ${name} (${email})</p>
+            <p><strong>Para:</strong> ${user.bizName || user.name}</p>
+            <hr />
+            <p><strong>Mensaje:</strong></p>
+            <p style="white-space: pre-wrap;">${message}</p>
+            <hr />
+            <p><small>Este mensaje fue enviado a través de tu perfil público en Cobralo.</small></p>
+        `;
+
+        await notificationService.sendEmail(user.email, subject, emailBody);
+
+        res.json({ message: 'Mensaje enviado correctamente' });
+    } catch (error) {
+        console.error('Error in contact teacher route:', error);
+        res.status(500).json({ error: 'No se pudo enviar el mensaje' });
     }
 });
 

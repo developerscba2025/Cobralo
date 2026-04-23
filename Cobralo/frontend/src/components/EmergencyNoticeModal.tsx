@@ -133,13 +133,13 @@ const EmergencyNoticeModal: React.FC<EmergencyNoticeModalProps> = ({
                 <motion.div
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm"
+                    className="absolute inset-0 modal-overlay"
                 />
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="relative bg-white dark:bg-bg-soft w-full max-w-lg rounded-[40px] p-8 shadow-2xl border border-zinc-100 dark:border-border-main overflow-hidden flex flex-col max-h-[90vh]"
+                    className="relative glass-premium w-full max-w-lg rounded-[40px] p-8 overflow-hidden flex flex-col max-h-[90vh]"
                 >
                     {/* Header */}
                     <button onClick={onClose} className="absolute right-6 top-6 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white transition">
@@ -190,7 +190,7 @@ const EmergencyNoticeModal: React.FC<EmergencyNoticeModalProps> = ({
                         <label className="text-[10px] font-black uppercase tracking-widest text-text-muted ml-1">Motivo / Personalización</label>
                         <textarea 
                             value={reason}
-                            placeholder="Ej: Estoy con gripe, viaje familiar, trámite personal..."
+                            placeholder="Motivo de la ausencia"
                             onChange={(e) => setReason(e.target.value)}
                             className="w-full bg-black/5 dark:bg-white/5 border border-border-main rounded-2xl p-4 text-xs font-bold text-text-main focus:outline-none focus:ring-2 focus:ring-primary-main/30 min-h-[60px] resize-none"
                         />
@@ -201,10 +201,10 @@ const EmergencyNoticeModal: React.FC<EmergencyNoticeModalProps> = ({
                         <button
                             onClick={handleMarkAllCancelled}
                             disabled={isSaving || markingComplete}
-                            className={`w-full mb-6 py-4 rounded-3xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all ${
+                            className={`w-full btn mb-6 py-4 rounded-[24px] uppercase tracking-widest text-[10px] justify-center gap-2 transition-all ${
                                 markingComplete 
                                     ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
-                                    : 'bg-primary-main text-white shadow-xl shadow-primary-glow hover:scale-[1.02] active:scale-95'
+                                    : 'btn-primary'
                             }`}
                         >
                             {isSaving ? <Loader2 className="animate-spin" size={16} /> : markingComplete ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}

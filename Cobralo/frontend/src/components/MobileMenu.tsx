@@ -25,7 +25,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onOpenLegal })
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] md:hidden"
+                        className="fixed inset-0 modal-overlay z-[100] md:hidden"
                     />
 
                     {/* Menu Panel */}

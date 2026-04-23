@@ -94,11 +94,11 @@ const DashboardMockup = () => {
           </motion.div>
           
           <h2 className="font-black mb-8 tracking-tighter" style={{ color: '#fafafa', lineHeight: 0.9, fontSize: 'clamp(2rem, 8vw, 6rem)' }}>
-            La potencia de <br/>
+            La potencia de un PRO<br/>
             <span style={{
               background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #fafafa 100%)',
               WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>un Pro.</span>
+            }}>ahora interactivo</span>
           </h2>
         </div>
 

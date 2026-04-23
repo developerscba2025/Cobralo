@@ -9,11 +9,12 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "dev": "concurrently \"npm run dev -w backend\" \"wait-on http://127.0.0.1:3000/health && npm run dev -w frontend\"",
     "build": "npm run build -w frontend",
     "install-all": "npm install"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "wait-on": "^9.0.5"
   }
 }

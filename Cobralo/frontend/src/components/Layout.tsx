@@ -38,32 +38,33 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
     const [startY, setStartY] = useState(0);
     const PULL_THRESHOLD = 80;
 
-    // Fetch pending students count
+    // Fetch pending students count (lightweight — only fetches a number from the backend)
     useEffect(() => {
         if (!user) return;
         const fetchPending = async () => {
             try {
-                const data = await api.getStudents();
-                if (Array.isArray(data)) {
-                    setPendingCount(data.filter((s:any) => s.status === 'pending').length);
-                }
+                const count = await api.getPendingCount();
+                setPendingCount(count);
             } catch (error) { /* silent */ }
         };
         fetchPending();
     }, [location.pathname, user]);
 
+
     // Auto-sync plan status (specifically for admin or upgraded accounts)
     const { updateUser } = useAuth();
     useEffect(() => {
-        if (!user || user.plan === 'PRO') return;
+        // Only poll if user exists, has a token, and is not PRO yet
+        const token = localStorage.getItem('token');
+        if (!user || !token || user.plan === 'PRO') return;
         
         const syncUser = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) return;
+            const currentToken = localStorage.getItem('token');
+            if (!currentToken) return; // Stop if user logged out mid-interval
             try {
                 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
                 const res = await fetch(`${API_URL}/auth/me`, { 
-                    headers: { 'Authorization': `Bearer ${token}` } 
+                    headers: { 'Authorization': `Bearer ${currentToken}` } 
                 });
                 if (res.ok) {
                     const freshData = await res.json();
@@ -78,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
         syncUser();
         const interval = setInterval(syncUser, 30000);
         return () => clearInterval(interval);
-    }, [user?.plan]);
+    }, [user?.plan, user?.id]);
 
     // Poll unread notifications every 60 seconds
 
@@ -128,9 +129,11 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
         setIsRefreshing(true);
         setPullDistance(PULL_THRESHOLD);
         
-        // Visual feedback then reload or re-fetch
+        // Soft reload: navigate to same path resets component state without a white flash
         setTimeout(() => {
-            window.location.reload();
+            navigate(location.pathname, { replace: true });
+            setIsRefreshing(false);
+            setPullDistance(0);
         }, 800);
     };
 
@@ -382,26 +385,13 @@ const Layout: React.FC<LayoutProps> = ({ children, scrollable = true, fitted = f
                 </div>
 
                 <div className={`flex-1 flex flex-col min-h-0 w-full overflow-hidden`}>
-                    <AnimatePresence mode="wait">
-                        <motion.div 
-                            key={location.pathname}
-                            initial={{ opacity: 0, y: 12, filter: 'blur(10px)' }}
-                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                            exit={{ opacity: 0, y: -12, filter: 'blur(10px)' }}
-                            transition={{ 
-                                type: "spring",
-                                stiffness: 260,
-                                damping: 20
-                            }}
-                            className="flex-1 flex flex-col min-h-0 w-full overflow-hidden"
-                        >
-                            <div className={`flex-1 flex flex-col min-h-0 ${fitted ? 'p-1.5 sm:p-3 md:p-4 lg:p-6' : (scrollable ? 'overflow-y-auto custom-scrollbar pt-2 pb-24 sm:py-3 md:py-4 lg:py-6' : 'py-2 sm:py-3 md:py-4 lg:py-6')}`}>
-                                <Container className={`flex-1 flex flex-col min-h-0 ${fitted ? '!p-0 !max-w-none' : ''}`}>
-                                    {children}
-                                </Container>
-                            </div>
-                        </motion.div>
-                    </AnimatePresence>
+                    <div className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
+                        <div className={`flex-1 flex flex-col min-h-0 ${fitted ? 'p-1.5 sm:p-3 md:p-4 lg:p-6' : (scrollable ? 'overflow-y-auto custom-scrollbar pt-2 pb-24 sm:py-3 md:py-4 lg:py-6' : 'py-2 sm:py-3 md:py-4 lg:py-6')}`}>
+                            <Container className={`flex-1 flex flex-col min-h-0 ${fitted ? '!p-0 !max-w-none' : ''}`}>
+                                {children}
+                            </Container>
+                        </div>
+                    </div>
                 </div>
 
             </main>

@@ -89,7 +89,7 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser }
             <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-black text-text-main">Cuentas de Pago</h2>
                 <p className="text-sm font-bold text-text-muted">
-                    Configurá tus CVU, CBU o Alias (ej. Mercado Pago, Brubank) para que tus alumnos puedan elegir dónde pagarte.
+                    Configurá tus CVU, CBU o Alias (ej. bancos o billeteras) para que tus alumnos puedan elegir dónde pagarte.
                 </p>
             </div>
 
@@ -144,7 +144,7 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser }
                                 <input
                                     required
                                     type="text"
-                                    placeholder="Ej: Mercado Pago"
+                                    placeholder="Nombre de la cuenta (ej. Banco)"
                                     className="w-full p-4 bg-white dark:bg-black dark:text-white rounded-2xl border-none font-bold text-sm outline-none shadow-sm focus:ring-2 focus:ring-primary-main/20 transition-all"
                                     value={newAccount.name}
                                     onChange={e => setNewAccount({ ...newAccount, name: e.target.value })}
@@ -155,7 +155,7 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser }
                                 <input
                                     required
                                     type="text"
-                                    placeholder="Ej: mi.negocio.mp"
+                                    placeholder="Alias o número de CBU"
                                     className="w-full p-4 bg-white dark:bg-black dark:text-white rounded-2xl border-none font-bold text-sm outline-none shadow-sm focus:ring-2 focus:ring-primary-main/20 transition-all"
                                     value={newAccount.alias}
                                     onChange={e => setNewAccount({ ...newAccount, alias: e.target.value })}
@@ -206,11 +206,22 @@ const PaymentAccountsTab: React.FC<PaymentAccountsTabProps> = ({ user, setUser }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="block text-[10px] font-black text-zinc-400 dark:text-blue-500/40 uppercase ml-4 tracking-widest">Access Token</label>
-                        <input type="password" className="w-full p-5 bg-surface text-text-main rounded-[20px] border-none font-bold text-text-main shadow-sm focus:ring-2 focus:ring-blue-400/20 outline-none" value={user.mpAccessToken || ''} onChange={e => setUser({ ...user, mpAccessToken: e.target.value })} placeholder="APP_USR-..." />
+                        <input 
+                            type="password" 
+                            className="w-full p-5 bg-surface text-text-main rounded-[20px] border-none font-bold text-text-main shadow-sm focus:ring-2 focus:ring-blue-400/20 outline-none" 
+                            value={user.mpAccessToken === 'TOKEN_CONFIGURADO_Y_ENCRIPTADO' ? '********************' : (user.mpAccessToken || '')} 
+                            onFocus={(e) => {
+                                if (user.mpAccessToken === 'TOKEN_CONFIGURADO_Y_ENCRIPTADO') {
+                                    setUser({ ...user, mpAccessToken: '' });
+                                }
+                            }}
+                            onChange={e => setUser({ ...user, mpAccessToken: e.target.value })} 
+                            placeholder={user.mpAccessToken === 'TOKEN_CONFIGURADO_Y_ENCRIPTADO' ? 'Token configurado' : 'Ingresá el token de acceso'} 
+                        />
                     </div>
                     <div className="space-y-2">
                         <label className="block text-[10px] font-black text-zinc-400 dark:text-blue-500/40 uppercase ml-4 tracking-widest">Public Key</label>
-                        <input type="text" className="w-full p-5 bg-surface text-text-main rounded-[20px] border-none font-bold text-text-main shadow-sm focus:ring-2 focus:ring-blue-400/20 outline-none" value={user.mpPublicKey || ''} onChange={e => setUser({ ...user, mpPublicKey: e.target.value })} placeholder="APP_USR-..." />
+                        <input type="text" className="w-full p-5 bg-surface text-text-main rounded-[20px] border-none font-bold text-text-main shadow-sm focus:ring-2 focus:ring-blue-400/20 outline-none" value={user.mpPublicKey || ''} onChange={e => setUser({ ...user, mpPublicKey: e.target.value })} placeholder="Ingresá la clave pública" />
                     </div>
                 </div>
             </div>

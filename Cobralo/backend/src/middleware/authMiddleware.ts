@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../db';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -11,7 +12,7 @@ export interface AuthRequest extends Request {
     userEmail?: string;
 }
 
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
 
@@ -22,6 +23,16 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
 
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
+
+        const user = await prisma.user.findUnique({
+            where: { id: decoded.userId },
+            select: { id: true }
+        });
+
+        if (!user) {
+            res.status(401).json({ error: 'Usuario inexistente o eliminado' });
+            return;
+        }
 
         req.userId = decoded.userId;
         req.userEmail = decoded.email;

@@ -37,7 +37,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, setUser, tab }) => {
                             className="w-full py-3.5 px-5 lg:py-4 lg:px-6 bg-surface text-text-main rounded-xl lg:rounded-[20px] border-none font-bold text-text-main placeholder-zinc-300 shadow-sm focus:ring-2 focus:ring-primary-main/20 transition-all outline-none text-sm"
                             value={user.email || ''}
                             onChange={e => setUser({ ...user, email: e.target.value })}
-                            placeholder="tu@email.com"
+                            placeholder="Email"
                         />
                     </div>
                 </div>
@@ -50,7 +50,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ user, setUser, tab }) => {
                             className="w-full py-3.5 px-5 lg:py-4 lg:px-6 bg-surface text-text-main rounded-xl lg:rounded-[20px] border-none font-bold text-text-main placeholder-zinc-300 shadow-sm focus:ring-2 focus:ring-primary-main/20 transition-all outline-none text-sm"
                             value={user.phoneNumber || ''}
                             onChange={e => setUser({ ...user, phoneNumber: e.target.value })}
-                            placeholder="+54 9 11 1234-5678"
+                            placeholder="Número de teléfono"
                         />
                     </div>
                     <div className="space-y-2">

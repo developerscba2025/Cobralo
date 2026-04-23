@@ -64,10 +64,6 @@ const Payments = () => {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-    useEffect(() => {
-        loadData();
-    }, [activeTab, selectedYear, selectedMonth]);
-
     const loadData = async () => {
         try {
             setLoading(true);
@@ -103,6 +99,16 @@ const Payments = () => {
             setDeleteModal({ isOpen: false, paymentId: null });
         }
     };
+
+    useEffect(() => {
+        loadData();
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (activeTab === 'history') {
+            loadData();
+        }
+    }, [selectedYear, selectedMonth]);
 
     const handleRecordPayment = async (student: Student) => {
         // Optimistic update
@@ -210,10 +216,12 @@ const Payments = () => {
     };
 
     const pendingStudents = useMemo(() => {
-        return students.filter(s => 
-            s.status === 'pending' && 
-            s.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        return students
+            .filter(s => 
+                s.status === 'pending' && 
+                s.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .sort((a, b) => (a.deadline_day || 10) - (b.deadline_day || 10));
     }, [students, searchTerm]);
 
     const filteredHistory = useMemo(() => {
@@ -229,7 +237,7 @@ const Payments = () => {
         );
     }, [receipts, searchTerm]);
 
-    const totalCollected = payments.reduce((acc, p) => acc + Number(p.amount), 0);
+    const totalCollected = filteredHistory.reduce((acc, p) => acc + Number(p.amount), 0);
 
     const handleExportMonthlyClosing = () => {
         if (filteredHistory.length === 0) {
@@ -278,13 +286,13 @@ const Payments = () => {
                         </div>
 
                         <div className="flex gap-4">
-                            <div className="px-6 py-3 bg-surface/80 backdrop-blur-xl border border-border-main/50 rounded-2xl flex items-center gap-4 shadow-sm">
-                                <div className="w-10 h-10 rounded-xl bg-primary-main/10 flex items-center justify-center text-primary-main">
+                            <div className="px-6 py-4 glass-premium rounded-[24px] flex items-center gap-4 transition-all hover:scale-[1.02]">
+                                <div className="w-10 h-10 rounded-xl bg-primary-main/20 flex items-center justify-center text-primary-main shadow-inner">
                                     <DollarSign size={22} strokeWidth={3} />
                                 </div>
-                                <div>
-                                    <p className="text-[9px] font-black uppercase text-text-muted tracking-widest leading-none mb-1">Recaudado (Período)</p>
-                                    <p className="font-black text-text-main text-xl leading-none">
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-black uppercase text-emerald-500/70 tracking-widest leading-none">Recaudado (Período)</p>
+                                    <p className="font-black text-text-main text-2xl leading-none tabular-nums">
                                         {user?.currency || '$'}{totalCollected.toLocaleString('es-AR')}
                                     </p>
                                 </div>
@@ -293,11 +301,12 @@ const Payments = () => {
                     </header>
 
                     {/* Control Bar: Tabs + Search */}
-                    <div className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface/50 border border-border-main/50 p-2 rounded-[28px]">
+                    <div className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 glass-premium p-2 rounded-[28px]">
                         <div className="flex p-1 bg-bg-app rounded-2xl w-full sm:w-auto">
                             {[
                                 { id: 'pending', label: 'Pendientes', icon: Clock },
                                 { id: 'history', label: 'Historial', icon: Banknote },
+                                { id: 'receipts', label: 'Recibos', icon: ReceiptIcon },
                             ].map(tab => (
                                 <button
                                     key={tab.id}
@@ -367,7 +376,7 @@ const Payments = () => {
                                                     <motion.div 
                                                         key={student.id} 
                                                         layout
-                                                        className="group bg-surface/50 backdrop-blur-sm p-5 2xl:p-6 rounded-[32px] border border-border-main/50 hover:border-primary-main/30 hover:bg-surface transition-all duration-300 relative flex flex-col justify-between"
+                                                        className="group glass-premium p-5 2xl:p-6 rounded-[32px] hover:border-primary-main/30 hover:bg-surface/90 transition-all duration-300 relative flex flex-col justify-between"
                                                     >
                                                         <div className="flex items-center justify-between mb-4">
                                                             <div className="flex items-center gap-3">
@@ -398,10 +407,35 @@ const Payments = () => {
                                                                 
                                                                 <div className="hidden sm:block">
                                                                     <p className="text-[9px] font-black text-text-muted/60 uppercase tracking-widest leading-none mb-1 text-right">Estado</p>
-                                                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                                                        <span className="text-[8px] font-black text-amber-500 uppercase">Pendiente</span>
-                                                                    </div>
+                                                                    
+                                                                    {(() => {
+                                                                        const today = new Date().getDate();
+                                                                        const deadline = student.deadline_day || 10;
+                                                                        const diff = deadline - today;
+                                                                        
+                                                                        let badgeClass = "bg-amber-500/10 border-amber-500/20 text-amber-500";
+                                                                        let dotClass = "bg-amber-500";
+                                                                        let label = "Pendiente";
+                                                                        
+                                                                        if (diff < 0) {
+                                                                            badgeClass = "bg-red-500/10 border-red-500/20 text-red-500";
+                                                                            dotClass = "bg-red-500";
+                                                                            label = "Vencido";
+                                                                        } else if (diff === 0) {
+                                                                            badgeClass = "bg-orange-500/10 border-orange-500/20 text-orange-500";
+                                                                            dotClass = "bg-orange-500";
+                                                                            label = "Vence Hoy";
+                                                                        } else if (diff <= 3) {
+                                                                            label = "Vence Pronto";
+                                                                        }
+                                                                        
+                                                                        return (
+                                                                            <div className={`flex items-center gap-1.5 px-2 py-1 border rounded-lg ${badgeClass}`}>
+                                                                                <div className={`w-1.5 h-1.5 rounded-full ${dotClass} animate-pulse`} />
+                                                                                <span className="text-[8px] font-black uppercase">{label}</span>
+                                                                            </div>
+                                                                        );
+                                                                    })()}
                                                                 </div>
                                                             </div>
 
@@ -415,7 +449,7 @@ const Payments = () => {
                                                                     </button>
                                                                 ) : (
                                                                     <Link
-                                                                        to={isPro ? "/app/settings?tab=business" : "/app/settings?tab=subscription"}
+                                                                        to={isPro ? "/app/settings?tab=payment-accounts" : "/app/settings?tab=subscription"}
                                                                         className="flex items-center justify-center gap-2 py-3 bg-surface text-text-muted border border-border-main rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-bg-app transition-all italic text-center"
                                                                     >
                                                                         <CreditCard size={14} /> {isPro ? 'Vincular' : 'Pro'}
@@ -481,7 +515,7 @@ const Payments = () => {
                                                             key={payment.id} 
                                                             initial={{ opacity: 0, x: -10 }}
                                                             animate={{ opacity: 1, x: 0 }}
-                                                            className="bg-surface/50 border border-border-main/30 rounded-2xl p-4 flex items-center justify-between hover:border-primary-main/20 hover:bg-surface transition-all group"
+                                                            className="glass-premium rounded-2xl p-4 flex items-center justify-between hover:border-primary-main/30 hover:bg-surface/90 transition-all group"
                                                         >
                                                             <div className="flex items-center gap-4 min-w-0">
                                                                 <div className="w-10 h-10 rounded-xl bg-bg-app flex items-center justify-center text-primary-main font-black text-sm border border-border-main/30">
@@ -540,7 +574,7 @@ const Payments = () => {
                                                     <motion.div 
                                                         key={receipt.id} 
                                                         layout
-                                                        className="bg-surface/50 p-5 rounded-[28px] border border-border-main/50 hover:border-primary-main/30 group transition-all"
+                                                        className="glass-premium p-5 rounded-[28px] hover:border-primary-main/40 hover:bg-surface/90 group transition-all"
                                                     >
                                                         <div className="flex items-start justify-between mb-4">
                                                             <div className="flex items-center gap-3">

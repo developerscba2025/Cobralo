@@ -99,14 +99,14 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+                        className="absolute inset-0 modal-overlay"
                     />
                     
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 30 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 30 }}
-                        className="relative bg-surface/90 dark:bg-bg-soft/90 backdrop-blur-md w-full max-w-xl rounded-[40px] p-6 sm:p-8 shadow-[0_32px_80px_rgba(0,0,0,0.4)] border border-white/10 overflow-hidden"
+                        className="relative glass-premium w-full max-w-xl rounded-[40px] p-6 sm:p-8 overflow-hidden"
                     >
                         {/* Decorative background elements */}
                         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-main/10 blur-[120px] -z-10 group-hover:bg-primary-main/20 transition-colors" />
@@ -257,7 +257,7 @@ const AttendanceBulkModal = ({ isOpen, onClose, schedule, onSuccess, attendanceD
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="w-full relative group h-16 bg-primary-main hover:bg-primary-main/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-[0.3em] text-[11px] rounded-[24px] shadow-2xl shadow-primary-main/30 transition-all active:scale-[0.98] flex items-center justify-center gap-3 overflow-hidden"
+                                className="w-full btn btn-primary h-16 uppercase tracking-[0.3em] text-[11px] rounded-[24px] justify-center transition-all active:scale-[0.98] group relative overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
                                 {isSaving ? (

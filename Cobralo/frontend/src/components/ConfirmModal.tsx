@@ -13,6 +13,7 @@ interface ConfirmModalProps {
     onCancel: () => void;
     variant?: 'danger' | 'warning' | 'info';
     isLoading?: boolean;
+    children?: React.ReactNode;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -24,7 +25,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     onConfirm,
     onCancel,
     variant = 'danger',
-    isLoading = false
+    isLoading = false,
+    children
 }) => {
     const variantStyles = {
         danger: {
@@ -47,66 +49,69 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <Portal>
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
+                    <>
+                        <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/60 flex items-center justify-center z-[2000] p-4 backdrop-blur-sm"
+                        className="fixed inset-0 z-[2000] flex items-center justify-center p-4 modal-overlay"
                         onClick={onCancel}
-                    >
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ duration: 0.2 }}
-                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        className="bg-surface w-full max-w-md rounded-[32px] p-8 shadow-2xl relative border border-border-main"
-                    >
-                        <button
-                            onClick={onCancel}
-                            className="absolute right-6 top-6 text-text-muted hover:text-text-main transition"
+                    />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                            className="relative w-full max-w-md shadow-2xl glass-premium rounded-[32px] p-8 z-[2001]"
                         >
-                            <X size={24} />
-                        </button>
+                            <button
+                                onClick={onCancel}
+                                className="absolute right-6 top-6 text-text-muted hover:text-text-main transition"
+                            >
+                                <X size={24} />
+                            </button>
 
-                        <div className="flex flex-col items-center text-center">
-                            <div className={`w-16 h-16 rounded-full ${styles.icon} flex items-center justify-center mb-4`}>
-                                <AlertTriangle size={32} />
+                            <div className="flex flex-col items-center text-center">
+                                <div className={`w-16 h-16 rounded-full ${styles.icon} flex items-center justify-center mb-4`}>
+                                    <AlertTriangle size={32} />
+                                </div>
+
+                                <h2 className="text-2xl font-black text-text-main mb-2">
+                                    {title}
+                                </h2>
+
+                                <p className="text-text-muted mb-8">
+                                    {message}
+                                </p>
+
+                                {children}
+
+                                <div className="flex gap-4 w-full mt-8">
+                                    <button
+                                        onClick={onCancel}
+                                        className="flex-1 py-4 px-6 rounded-2xl font-bold text-text-main bg-bg-app hover:brightness-95 dark:hover:brightness-110 transition"
+                                    >
+                                        {cancelText}
+                                    </button>
+                                    <button
+                                        onClick={onConfirm}
+                                        disabled={isLoading}
+                                        className={`flex-1 py-4 px-6 rounded-2xl font-bold text-white ${styles.button} transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    >
+                                        {isLoading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                <span>Borrando...</span>
+                                            </>
+                                        ) : confirmText}
+                                    </button>
+                                </div>
                             </div>
-
-                            <h2 className="text-2xl font-black text-text-main mb-2">
-                                {title}
-                            </h2>
-
-                            <p className="text-text-muted mb-8">
-                                {message}
-                            </p>
-
-                            <div className="flex gap-4 w-full">
-                                <button
-                                    onClick={onCancel}
-                                    className="flex-1 py-4 px-6 rounded-2xl font-bold text-text-main bg-bg-app hover:brightness-95 dark:hover:brightness-110 transition"
-                                >
-                                    {cancelText}
-                                </button>
-                                <button
-                                    onClick={onConfirm}
-                                    disabled={isLoading}
-                                    className={`flex-1 py-4 px-6 rounded-2xl font-bold text-white ${styles.button} transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            <span>Borrando...</span>
-                                        </>
-                                    ) : confirmText}
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </Portal>
     );
 };

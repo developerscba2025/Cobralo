@@ -111,7 +111,7 @@ const SupportModal = ({ isOpen, onClose, onSent }: SupportModalProps) => {
                       name="email"
                       type="email" 
                       required
-                      placeholder="tu@email.com"
+                      placeholder="Tu email"
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-primary/40 transition-all text-sm font-medium" 
                     />
                   </div>

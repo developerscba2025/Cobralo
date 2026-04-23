@@ -9,7 +9,10 @@ import {
     updatePrices,
     resetMonth,
     getPendingContacts,
-    getWhatsappDigest
+    getPendingCount,
+    getDashboardSummary,
+    getWhatsappDigest,
+    sendBulkMessage
 } from '../controllers/studentController';
 import { checkStudentLimit } from '../middleware/subscriptionMiddleware';
 import { authMiddleware } from '../middleware/authMiddleware';
@@ -22,8 +25,17 @@ router.put('/update-prices', updatePrices);
 // POST reset all students to pending (monthly reset)
 router.post('/reset-month', resetMonth);
 
+// POST bulk message based on wildcard template
+router.post('/bulk-message', sendBulkMessage);
+
 // GET pending students for mass WhatsApp
 router.get('/pending-contacts', getPendingContacts);
+
+// GET count of pending students (lightweight — used for sidebar badge)
+router.get('/pending/count', getPendingCount);
+
+// GET dashboard summary stats (lightweight)
+router.get('/dashboard/summary', getDashboardSummary);
 
 // GET all students
 router.get('/', getAllStudents);

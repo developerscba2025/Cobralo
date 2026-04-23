@@ -21,11 +21,13 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
     // Local state for current schedule's student IDs
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [capacity, setCapacity] = useState<number | ''>('');
+    const [title, setTitle] = useState('');
 
     useEffect(() => {
         if (isOpen && schedule) {
             setSelectedIds((schedule.students || [schedule.student]).filter(Boolean).map(s => s!.id));
             setCapacity(schedule.capacity || '');
+            setTitle(schedule.title || '');
             loadStudents();
         }
     }, [isOpen, schedule]);
@@ -58,7 +60,8 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
             // Update the schedule with the new set of student IDs and capacity
             await api.updateSchedule(schedule.id, {
                 studentIds: selectedIds,
-                capacity: capacity === '' ? null : Number(capacity)
+                capacity: capacity === '' ? null : Number(capacity),
+                title: title || null
             });
             showToast.success('Clase actualizada correctamente');
             onSuccess();
@@ -86,13 +89,13 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm"
+                        className="absolute inset-0 modal-overlay"
                     />
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative bg-white dark:bg-bg-soft w-full max-w-lg rounded-[40px] p-8 shadow-2xl border border-zinc-100 dark:border-border-main flex flex-col max-h-[90vh]"
+                        className="relative glass-premium w-full max-w-lg rounded-[40px] p-8 flex flex-col max-h-[90vh]"
                     >
                         <button
                             onClick={onClose}
@@ -101,10 +104,20 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                             <X size={24} />
                         </button>
 
-                        <div className="mb-8">
-                            <h2 className="text-3xl font-black text-text-main tracking-tighter uppercase">Integrantes de Clase</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mt-2">
-                                {schedule.startTime} - {schedule.endTime} | {selectedIds.length} alumnos
+                        <div className="mb-6">
+                            <h2 className="text-3xl font-black text-text-main tracking-tighter uppercase">Configuración de Clase</h2>
+                            <div className="mt-4 space-y-2">
+                                <label className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] ml-2">Nombre del Grupo (Opcional)</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Ej: Pilates Lunes 10hs"
+                                    value={title}
+                                    onChange={e => setTitle(e.target.value)}
+                                    className="w-full bg-bg-app border border-border-main rounded-2xl px-5 py-3 outline-none focus:ring-2 focus:ring-emerald-500/10 font-bold text-sm text-text-main transition-all"
+                                />
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mt-4 ml-2">
+                                Horario: {schedule.startTime} - {schedule.endTime} | Alumnos: {selectedIds.length}
                             </p>
                         </div>
 
@@ -195,7 +208,7 @@ const ClassParticipantsModal = ({ isOpen, onClose, schedule, onSuccess }: ClassP
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[11px] rounded-[24px] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-3"
+                                className="w-full btn btn-primary py-5 uppercase tracking-widest text-[11px] rounded-[24px] justify-center transition-all disabled:opacity-30 gap-3"
                             >
                                 {isSaving ? (
                                     <>

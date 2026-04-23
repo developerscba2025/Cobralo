@@ -58,7 +58,7 @@ Alias ${paymentMethod}: ${alias}`;
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 modal-overlay flex items-center justify-center z-[2000] p-4"
                     onClick={onClose}
                 >
                     <motion.div
@@ -66,7 +66,7 @@ Alias ${paymentMethod}: ${alias}`;
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[32px] p-8 shadow-2xl relative border border-slate-100 dark:border-slate-700"
+                        className="glass-premium w-full max-w-sm rounded-[32px] p-8 relative overflow-hidden"
                     >
                         <button
                             onClick={onClose}

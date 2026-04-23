@@ -1,31 +1,12 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Quote, MessageSquare, CreditCard, Calendar } from 'lucide-react';
+import { api } from '../../services/api';
 
-const TESTIMONIALS = [
-  {
-    name: 'Martina',
-    initials: 'M',
-    role: 'Clases de Yoga · Palermo',
-    text: 'Antes perdía horas con Excel y me daba vergüenza cobrar. Ahora mis alumnos ya saben que el recordatorio les llega por WhatsApp y me pagan sin que yo diga nada.',
-    rating: 5,
-    gradient: 'linear-gradient(135deg, #065f46, #059669)',
-  },
-  {
-    name: 'Julián',
-    initials: 'J',
-    role: 'Entrenador Personal · CABA',
-    text: 'Envié 15 cobros en un clic y liquidé la semana en 5 minutos. Cobralo es el asistente que no puedo pagar pero que ahora tengo.',
-    rating: 5,
-    gradient: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-  },
-  {
-    name: 'Carla',
-    initials: 'C',
-    role: 'Profe de Inglés · Rosario',
-    text: 'Para los que trabajamos por hora, el tiempo es plata. Me ahorré literalmente una tarde entera de mandar mensajes por mes.',
-    rating: 5,
-    gradient: 'linear-gradient(135deg, #7c3aed, #8b5cf6)',
-  },
+const GRADIENTS = [
+  'linear-gradient(135deg, #065f46, #059669)',
+  'linear-gradient(135deg, #1e40af, #3b82f6)',
+  'linear-gradient(135deg, #7c3aed, #8b5cf6)',
 ];
 
 const INTEGRATIONS = [
@@ -34,7 +15,29 @@ const INTEGRATIONS = [
   { icon: Calendar, label: 'Google Calendar', color: '#4285F4' },
 ];
 
-const Testimonials = () => (
+const Testimonials = () => {
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const data = await api.getLandingData();
+        if (data.testimonials && data.testimonials.length > 0) {
+          setTestimonials(data.testimonials);
+        } else {
+          setTestimonials([]);
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+        setTestimonials([]);
+      }
+    };
+    fetchTestimonials();
+  }, []);
+
+  if (!testimonials || testimonials.length === 0) return null;
+
+  return (
   <section id="testimonios" className="section-padding relative overflow-hidden" style={{ background: '#0E1113' }}>
     {/* Top accent line */}
     <div
@@ -106,7 +109,9 @@ const Testimonials = () => (
 
       {/* ── Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
-        {TESTIMONIALS.map((t, i) => (
+        {testimonials.map((t, i) => {
+          const gradient = GRADIENTS[i % GRADIENTS.length];
+          return (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 30 }}
@@ -127,7 +132,7 @@ const Testimonials = () => (
 
             {/* Stars */}
             <div className="flex gap-1 mb-8 relative z-10">
-              {[...Array(t.rating)].map((_, j) => (
+              {[...Array(t.rating || 5)].map((_, j) => (
                 <Star key={j} size={14} style={{ color: '#fbbf24' }} fill="#fbbf24" strokeWidth={0} />
               ))}
             </div>
@@ -142,12 +147,20 @@ const Testimonials = () => (
 
             {/* Author */}
             <div className="flex items-center gap-4 relative z-10">
-              <div
-                className="w-12 h-12 rounded-[18px] overflow-hidden flex items-center justify-center text-sm font-black text-white flex-shrink-0 transition-all duration-500 group-hover:rounded-2xl group-hover:rotate-6 shadow-xl"
-                style={{ background: t.gradient }}
-              >
-                {t.initials}
-              </div>
+              {t.photoUrl ? (
+                <img 
+                  src={t.photoUrl} 
+                  alt={t.name}
+                  className="w-12 h-12 rounded-[18px] object-cover flex-shrink-0 transition-all duration-500 group-hover:rounded-2xl group-hover:rotate-6 shadow-xl"
+                />
+              ) : (
+                <div
+                  className="w-12 h-12 rounded-[18px] overflow-hidden flex items-center justify-center text-sm font-black text-white flex-shrink-0 transition-all duration-500 group-hover:rounded-2xl group-hover:rotate-6 shadow-xl"
+                  style={{ background: gradient }}
+                >
+                  {t.initials}
+                </div>
+              )}
               <div className="flex flex-col">
                 <p className="text-sm font-bold tracking-tight" style={{ color: '#fafafa' }}>{t.name}</p>
                 <p className="text-[11px] font-black uppercase tracking-[0.1em] opacity-40" style={{ color: '#a1a1aa' }}>
@@ -156,10 +169,11 @@ const Testimonials = () => (
               </div>
             </div>
           </motion.div>
-        ))}
+        )})}
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default Testimonials;

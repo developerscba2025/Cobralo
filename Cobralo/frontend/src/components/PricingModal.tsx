@@ -44,11 +44,11 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
 
     return (
         <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[2000] p-4 animate-in fade-in duration-300"
+            className="fixed inset-0 modal-overlay flex items-center justify-center z-[2000] p-4 animate-in fade-in duration-300"
             onClick={onClose}
         >
             <div 
-                className="card-premium relative max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8 md:p-12 animate-in zoom-in-95 duration-300"
+                className="glass-premium rounded-[32px] relative max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar p-8 md:p-12 animate-in zoom-in-95 duration-300"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button 

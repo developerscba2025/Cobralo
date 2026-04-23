@@ -53,10 +53,10 @@ const WhatsappMessageEditor = ({ value, onChange, disabled, placeholder }: any) 
     );
 };
 
-const DEFAULT_REMINDER = "{saludo} {nombre_pila}, te escribo de *{negocio}* para recordarte tu pago de *{servicio}* correspondiente a {mes_actual}.\n\nMonto: *{moneda}{monto}*\n\nAvisame cualquier cosa. Gracias!";
-const DEFAULT_CLASS_REMINDER = "Hola {nombre_pila}! Te recuerdo que tenemos cita a las *{hora_inicio}*.\n\nPor favor, confirmame ac\u00E1 si ven\u00EDs: {url_confirmar}\n\nSi necesit\u00E1s cancelar, us\u00E1 este enlace: {url_cancelar}. Nos vemos!";
-const DEFAULT_WELCOME = "Hola {nombre_pila}! Te damos la bienvenida a *{negocio}*.\n\nEstamos felices de que te sumes a tus clases de *{servicio}*.\n\nCualquier duda que tengas, pod\u00E9s escribirnos por ac\u00E1. Nos vemos!";
-const DEFAULT_GENERAL = "*AVISO IMPORTANTE*\n\n{saludo} {nombre_pila}, te escribimos de *{negocio}* para informarte que:\n\n{mensaje}\n\nSaludos!";
+const DEFAULT_REMINDER = "*RECORDATORIO DE PAGO*\n\n{saludo} {nombre_pila}, te escribo de *{negocio}* para recordarte tu pago de *{servicio}* correspondiente a {mes_actual}.\n\nMonto: *{moneda}{monto}*\n\nAvisame cualquier cosa. Gracias!";
+const DEFAULT_CLASS_REMINDER = "*RECORDATORIO DE CLASE*\n\n¡Hola {nombre_pila}! Te recuerdo que tenemos cita a las *{hora_inicio}*.\n\nPor favor, confirmame acá si venís: {url_confirmar}\n\nSi necesitás cancelar, usá este enlace: {url_cancelar}. ¡Nos vemos!";
+const DEFAULT_WELCOME = "*¡BIENVENIDO/A!*\n\n¡Hola {nombre_pila}! Te damos la bienvenida oficial a *{negocio}*. ¡Qué alegría que te sumes!\n\nEstamos muy felices de que empieces tus clases de *{servicio}*. Queremos asegurarnos de que tengas la mejor experiencia posible con nosotros.\n\nCualquier duda que tengas, podés escribirme por acá. ¡Nos vemos muy pronto!";
+const DEFAULT_GENERAL = "*AVISO IMPORTANTE*\n\n{saludo} {nombre_pila}, te escribimos de *{negocio}* para informarte lo siguiente:\n\n{mensaje}\n\nCualquier duda quedamos a tu entera disposición. ¡Saludos!";
 
 const VAR_DEFS = {
     '{alumno}': 'Nombre completo',

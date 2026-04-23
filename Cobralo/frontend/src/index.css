@@ -7,27 +7,22 @@
   --font-accent: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  /* Theme Tokens Linked to CSS Variables */
+  /* Theme Tokens */
   --color-primary-main: var(--primary);
   --color-primary-light: var(--primary-light);
   --color-primary-glow: var(--primary-glow);
   
-  --spacing-safe-top: env(safe-area-inset-top);
-  --spacing-safe-bottom: env(safe-area-inset-bottom);
-  --spacing-safe-left: env(safe-area-inset-left);
-  --spacing-safe-right: env(safe-area-inset-right);
+  /* Fondos (Backgrounds) */
+  --color-bg-app: var(--bg-app);             /* Fondo general de la pantalla */
+  --color-bg-soft: var(--bg-soft-app);       /* Fondo secundario grisáceo */
+  --color-bg-soft-app: var(--bg-soft-app);   /* Alias explícito */
+  --color-bg-dark: var(--bg-dark);           /* Token legacy para componentes antiguos */
+  --color-surface: var(--surface);           /* Fondo de las tarjetas/modales */
   
-  --color-bg-app: var(--bg-app);
-  --color-bg-soft: var(--surface);
-  --color-bg-dark: var(--bg-app);
-  --color-surface: var(--surface);
-  --color-bg-soft-app: var(--surface);
-  
-  --color-text-main: var(--text-main);
-  --color-text-muted: var(--text-muted);
-  --color-text-soft: var(--text-soft);
-  
-  --color-bg-landing: #0E1113;
+  /* Textos */
+  --color-text-main: var(--text-main);       /* Texto principal oscuro */
+  --color-text-muted: var(--text-muted);     /* Texto secundario gris */
+  --color-text-soft: var(--text-soft);       /* Texto para placeholders o bordes sutiles */
   
   --color-border-emerald: var(--border-main);
   --color-border-main: var(--border-main);
@@ -44,20 +39,29 @@
     --primary-glow: rgba(16, 185, 129, 0.15);
     --primary-light: #34d399;
     --primary-dark: #059669;
-    --text-main: #0f172a;
-    --text-muted: #475569;
-    --text-soft: #64748b;
-    --border-main: rgba(0, 0, 0, 0.06);
-    --surface: #ffffff;
-    --bg-app: #f8fafc;
-    --bg-soft-app: #f1f5f9;
+    
+    /* Textos más definidos */
+    --text-main: #0f172a;      /* Slate 900 - Casi negro */
+    --text-muted: #475569;     /* Slate 600 - Gris medio oscuro */
+    --text-soft: #64748b;      /* Slate 500 - Gris para placeholders */
+    
+    /* Superficies y fondos */
+    --surface: #ffffff;        /* Blanco puro para tarjetas */
+    --bg-app: #eef2f6;         /* Slate/Zinc mix - Fondo ligeramente más profundo para excelente contraste */
+    --bg-soft-app: #e2e8f0;    /* Slate 200 - Para resaltar áreas */
+    
+    /* Bordes más sutiles pero visibles */
+    --border-main: #cbd5e1;    /* Slate 300 - Más oscuro para definición de tarjetas y controles */
     --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
     --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
     
     /* Semantic supports for legacy */
     --bg: var(--bg-app);
     --bg-soft: var(--surface);
+    --bg-dark: #e2e8f0;         /* En light mode: más oscuro para inputs */
+    --bg-soft-app: #e2e8f0;     /* Slate 200 */
     --text: var(--text-main);
+    color-scheme: light;
   }
 
   .dark {
@@ -75,7 +79,10 @@
     /* Semantic supports for legacy */
     --bg: var(--bg-app);
     --bg-soft: var(--surface);
+    --bg-dark: #0b0f11;         /* En dark mode: más oscuro que bg-app */
+    --bg-soft-app: #171A1D;     /* surface en dark mode */
     --text: var(--text-main);
+    color-scheme: dark;
   }
 
   html {
@@ -91,7 +98,16 @@
 
   input[type="checkbox"], input[type="radio"] {
     accent-color: var(--primary);
-    color-scheme: dark; /* Fallback to look dark everywhere to avoid white squares */
+  }
+
+  /* Hide number input spin buttons */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 
   /* Selective Transitions for Premium Feeling without Jitter */
@@ -99,6 +115,15 @@
     transition-property: background-color, border-color, color, fill, stroke, transform, box-shadow;
     transition-duration: 300ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+
+  .dark select option {
+    background-color: #171A1D; /* Corresponds to var(--surface) in dark mode */
+    color: #fafafa; /* Corresponds to var(--text-main) in dark mode */
   }
 
   body {
@@ -214,9 +239,22 @@
   }
 
   .dark .glass-card {
-    background: rgba(15, 23, 15, 0.7);
-    border: 1px solid rgba(34, 197, 94, 0.1);
-    box-shadow: none;
+    background: rgba(23, 26, 29, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-premium {
+    @apply bg-surface/95 dark:bg-[#121416]/95 backdrop-blur-3xl border border-white/5 shadow-2xl;
+  }
+
+  .glass-emerald {
+    @apply bg-emerald-500/5 dark:bg-emerald-500/[0.05] backdrop-blur-2xl border border-emerald-500/10 shadow-lg shadow-emerald-500/2;
+  }
+
+  .modal-overlay {
+    @apply bg-black/30 dark:bg-black/80 backdrop-blur-[40px] transition-all duration-500;
   }
 
   .btn {
@@ -260,21 +298,12 @@
   }
 
   .card-premium {
-    @apply bg-surface/80 dark:bg-bg-soft/50 backdrop-blur-2xl rounded-[32px] border border-border-main shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all duration-500 overflow-hidden relative;
-    box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.02);
-  }
-
-  .dark .card-premium {
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-  }
-
-  .card-premium::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-primary-main/5 to-transparent opacity-0 transition-opacity duration-500 pointer-events-none;
+    @apply bg-surface/80 dark:bg-[#171A1D]/60 backdrop-blur-3xl rounded-[32px] border border-border-main dark:border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_32px_64px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_32px_80px_rgba(0,0,0,0.4)] transition-all duration-700 overflow-hidden relative;
+    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   .card-premium:hover {
-    @apply border-primary-main/30 shadow-[0_32px_80px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.5)];
+    @apply border-border-main dark:border-white/10;
   }
 
   .card-premium:hover::before {

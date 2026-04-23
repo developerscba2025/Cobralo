@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Bell, CheckCheck, Calendar, DollarSign, Star, Zap, RefreshCw, X, ArrowRight } from 'lucide-react';
+import { Bell, CheckCheck, Calendar, DollarSign, Star, Zap, RefreshCw, X, ArrowRight, Trash2, Clock, CalendarClock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Layout from '../components/Layout';
 
@@ -37,7 +37,7 @@ const SYSTEM_NOTIFICATIONS: AppNotification[] = [
         title: '🤖 Beta: Portal del Alumno',
         body: 'Estamos construyendo un espacio de autogestión para tus alumnos. ¡Próximamente podrán ver sus créditos y pagos solos!',
         isRead: false,
-        createdAt: new Date().toISOString(),
+        createdAt: '2026-04-10T10:00:00.000Z',
     },
     {
         id: -2,
@@ -45,7 +45,7 @@ const SYSTEM_NOTIFICATIONS: AppNotification[] = [
         title: '📈 Próximamente: Gastos y AFIP',
         body: 'Muy pronto vas a poder registrar tus gastos operativos y exportar reportes optimizados para tu contador.',
         isRead: false,
-        createdAt: new Date().toISOString(),
+        createdAt: '2026-04-05T10:00:00.000Z',
     },
     {
         id: -3,
@@ -53,7 +53,7 @@ const SYSTEM_NOTIFICATIONS: AppNotification[] = [
         title: '📱 Desarrollo: App Móvil Nativa',
         body: 'Llevá Cobralo en tu bolsillo. Estamos terminando el desarrollo para iOS y Android con notificaciones push en tiempo real.',
         isRead: false,
-        createdAt: new Date().toISOString(),
+        createdAt: '2026-04-01T10:00:00.000Z',
     }
 ];
 
@@ -95,11 +95,20 @@ const NotificationsPage: React.FC = () => {
             const data = await res.json();
             const fetched = Array.isArray(data) ? data : [];
             
-            const readSystemIds = JSON.parse(localStorage.getItem('read-system-notifications') || '[]');
-            const systemWithReadState = SYSTEM_NOTIFICATIONS.map(n => ({
-                ...n,
-                isRead: readSystemIds.includes(n.id)
-            }));
+            const dismissedSystemIds = JSON.parse(localStorage.getItem('dismissed-system-notifications') || '[]');
+            const snoozedSystem = JSON.parse(localStorage.getItem('snoozed-system-notifications') || '{}');
+            const now = new Date();
+
+            const systemWithReadState = SYSTEM_NOTIFICATIONS
+                .filter(n => !dismissedSystemIds.includes(n.id))
+                .filter(n => {
+                    const snoozeDate = snoozedSystem[n.id];
+                    return !snoozeDate || new Date(snoozeDate) <= now;
+                })
+                .map(n => ({
+                    ...n,
+                    isRead: readSystemIds.includes(n.id)
+                }));
 
             const all = [...systemWithReadState, ...fetched].sort((a,b) => 
                 new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -108,10 +117,20 @@ const NotificationsPage: React.FC = () => {
             setNotifications(all);
         } catch (e) { 
             const readSystemIds = JSON.parse(localStorage.getItem('read-system-notifications') || '[]');
-            const systemWithReadState = SYSTEM_NOTIFICATIONS.map(n => ({
-                ...n,
-                isRead: readSystemIds.includes(n.id)
-            }));
+            const dismissedSystemIds = JSON.parse(localStorage.getItem('dismissed-system-notifications') || '[]');
+            const snoozedSystem = JSON.parse(localStorage.getItem('snoozed-system-notifications') || '{}');
+            const now = new Date();
+
+            const systemWithReadState = SYSTEM_NOTIFICATIONS
+                .filter(n => !dismissedSystemIds.includes(n.id))
+                .filter(n => {
+                    const snoozeDate = snoozedSystem[n.id];
+                    return !snoozeDate || new Date(snoozeDate) <= now;
+                })
+                .map(n => ({
+                    ...n,
+                    isRead: readSystemIds.includes(n.id)
+                }));
             setNotifications(systemWithReadState);
         }
         setLoading(false);
@@ -149,6 +168,49 @@ const NotificationsPage: React.FC = () => {
             window.dispatchEvent(new CustomEvent('notifications-updated'));
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const dismissNotification = async (e: React.MouseEvent, id: number) => {
+        e.stopPropagation();
+        try {
+            if (id < 0) {
+                const dismissedSystemIds = JSON.parse(localStorage.getItem('dismissed-system-notifications') || '[]');
+                if (!dismissedSystemIds.includes(id)) {
+                    dismissedSystemIds.push(id);
+                    localStorage.setItem('dismissed-system-notifications', JSON.stringify(dismissedSystemIds));
+                }
+            } else {
+                await fetch(`${API_URL}/notifications/${id}/dismiss`, { method: 'PATCH', headers: { ...getAuthHeader() } });
+            }
+            
+            setNotifications(prev => prev.filter(n => n.id !== id));
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const snoozeNotification = async (e: React.MouseEvent, id: number, days: number) => {
+        e.stopPropagation();
+        try {
+            const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+            if (id < 0) {
+                const snoozed = JSON.parse(localStorage.getItem('snoozed-system-notifications') || '{}');
+                snoozed[id] = until;
+                localStorage.setItem('snoozed-system-notifications', JSON.stringify(snoozed));
+            } else {
+                await fetch(`${API_URL}/notifications/${id}/snooze`, { 
+                    method: 'PATCH', 
+                    headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ until })
+                });
+            }
+            
+            setNotifications(prev => prev.filter(n => n.id !== id));
+            window.dispatchEvent(new CustomEvent('notifications-updated'));
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -220,47 +282,84 @@ const NotificationsPage: React.FC = () => {
                                         {items.map(n => {
                                             const cfg = typeConfig[n.type] ?? { icon: <Bell size={18} />, color: 'text-zinc-400', bg: 'bg-zinc-400/10' };
                                             return (
-                                                <motion.button
+                                                <motion.div
                                                     layout
                                                     initial={{ opacity: 0, x: -20 }}
                                                     animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
                                                     key={n.id}
-                                                    onClick={() => !n.isRead && markRead(n.id)}
-                                                    className={`group w-full text-left flex items-center gap-6 p-6 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden ${
+                                                    className={`group w-full flex items-center justify-between p-6 rounded-[2.5rem] border transition-all duration-500 relative overflow-hidden ${
                                                         n.isRead 
                                                         ? 'bg-transparent border-border-main opacity-60 backdrop-blur-sm grayscale' 
                                                         : 'bg-surface border-border-main shadow-xl hover:border-primary-main/30'
                                                     }`}
                                                 >
-                                                    {!n.isRead && (
-                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-main/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 -z-10" />
-                                                    )}
-                                                    
-                                                    <div className={`shrink-0 w-14 h-14 rounded-3xl flex items-center justify-center transition-transform group-hover:scale-110 ${cfg.bg} ${cfg.color}`}>
-                                                        {cfg.icon}
-                                                    </div>
-                                                    
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-3 mb-1">
-                                                            <p className="text-sm font-black text-text-main uppercase tracking-tight truncate">{n.title}</p>
+                                                    <button 
+                                                        className="flex-1 flex items-center gap-6 text-left focus:outline-none"
+                                                        onClick={() => !n.isRead && markRead(n.id)}
+                                                    >
+                                                        {!n.isRead && (
+                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-main/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 -z-10" />
+                                                        )}
+                                                        
+                                                        <div className={`shrink-0 w-14 h-14 rounded-3xl flex items-center justify-center transition-transform group-hover:scale-110 ${cfg.bg} ${cfg.color}`}>
+                                                            {cfg.icon}
+                                                        </div>
+                                                        
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-3 mb-1">
+                                                                <p className="text-sm font-black text-text-main uppercase tracking-tight truncate">{n.title}</p>
+                                                                {!n.isRead && (
+                                                                    <span className="shrink-0 w-2 h-2 rounded-full bg-primary-main shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                                                )}
+                                                            </div>
+                                                            <p className="text-xs font-bold text-text-muted/80 leading-relaxed font-accent">{n.body}</p>
+                                                        </div>
+                                                        
+                                                        <div className="shrink-0 flex flex-col items-end gap-2 pr-4">
+                                                            <span className="text-[10px] font-black text-text-muted uppercase tracking-widest bg-black/5 px-2 py-1 rounded-lg">
+                                                                {relativeTime(n.createdAt)}
+                                                            </span>
                                                             {!n.isRead && (
-                                                                <span className="shrink-0 w-2 h-2 rounded-full bg-primary-main shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-[10px] font-black text-primary-main uppercase tracking-[0.2em] italic">
+                                                                    Leer <ArrowRight size={10} />
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs font-bold text-text-muted/80 leading-relaxed font-accent">{n.body}</p>
-                                                    </div>
-                                                    
-                                                    <div className="shrink-0 flex flex-col items-end gap-2">
-                                                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest bg-black/5 px-2 py-1 rounded-lg">
-                                                            {relativeTime(n.createdAt)}
-                                                        </span>
-                                                        {!n.isRead && (
-                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-[10px] font-black text-primary-main uppercase tracking-[0.2em] italic">
-                                                                Leer <ArrowRight size={10} />
+                                                    </button>
+
+                                                    <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity pl-4 border-l border-border-main/50">
+                                                        <button 
+                                                            onClick={(e) => dismissNotification(e, n.id)}
+                                                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                                            title="Descartar permanentemente"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                        <div className="relative group/snooze">
+                                                            <button 
+                                                                className="w-10 h-10 flex items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-colors"
+                                                                title="Postergar"
+                                                            >
+                                                                <Clock size={16} />
+                                                            </button>
+                                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full ml-2 opacity-0 group-hover/snooze:opacity-100 invisible group-hover/snooze:visible transition-all flex flex-col gap-1 bg-surface border border-border-main p-2 rounded-2xl shadow-xl z-50">
+                                                                <button 
+                                                                    onClick={(e) => snoozeNotification(e, n.id, 1)}
+                                                                    className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-text-main hover:bg-amber-500/10 hover:text-amber-500 rounded-xl whitespace-nowrap text-left flex items-center gap-2"
+                                                                >
+                                                                    <Clock size={12} /> Mañana
+                                                                </button>
+                                                                <button 
+                                                                    onClick={(e) => snoozeNotification(e, n.id, 7)}
+                                                                    className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-text-main hover:bg-amber-500/10 hover:text-amber-500 rounded-xl whitespace-nowrap text-left flex items-center gap-2"
+                                                                >
+                                                                    <CalendarClock size={12} /> 1 Semana
+                                                                </button>
                                                             </div>
-                                                        )}
+                                                        </div>
                                                     </div>
-                                                </motion.button>
+                                                </motion.div>
                                             );
                                         })}
                                     </AnimatePresence>

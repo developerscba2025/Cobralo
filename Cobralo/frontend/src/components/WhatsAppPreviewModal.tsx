@@ -1,9 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, MessageCircle, ChevronRight, FileText, Sparkles, CheckCheck } from 'lucide-react';
+import { 
+    X, Send, MessageCircle, ChevronRight, FileText, 
+    Sparkles, CheckCheck, Users, ChevronLeft, Zap
+} from 'lucide-react';
 import { showToast } from './Toast';
-
 import Portal from './Portal';
+import { api } from '../services/api';
 
 interface Student {
     id: number;
@@ -15,7 +18,11 @@ interface Student {
     payment_method?: string;
     deadline_day?: number | null;
     billing_alias?: string | null;
+    status?: 'paid' | 'pending' | 'paused';
+    createdAt?: string;
 }
+
+type MessagingGoal = 'WELCOME' | 'PAYMENT' | 'GENERAL';
 
 interface WhatsAppPreviewModalProps {
     isOpen: boolean;
@@ -23,43 +30,89 @@ interface WhatsAppPreviewModalProps {
     students: Student[];
     user: any;
     isPro: boolean;
+    initialGoal?: MessagingGoal;
     customTemplate?: string;
+    preselectedStudents?: Student[];
 }
 
-const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onClose, students = [], user, isPro }) => {
+const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ 
+    isOpen, onClose, students = [], user, isPro, initialGoal, customTemplate, preselectedStudents 
+}) => {
+    const [step, setStep] = React.useState<1 | 2 | 3>(1);
+    const [goal, setGoal] = React.useState<MessagingGoal>(initialGoal || 'GENERAL');
+    const [selectedStudentIds, setSelectedStudentIds] = React.useState<number[]>([]);
+    
     const predefinedTemplates = React.useMemo(() => [
         {
-            id: 'billing',
-            name: 'Recordatorio de Pago',
+            id: 'PAYMENT',
+            name: 'Cobros',
             icon: FileText,
-            text: user?.reminderTemplate ?? `{saludo} {nombre_pila}! \uD83D\uDC4B\n\nTe escribo de *{negocio}* para recordarte que ya pod\u00E9s realizar el pago de *{servicio}* de {mes_actual}. \uD83D\uDCDD\n\n\uD83D\uDCB0 *Monto:* {moneda}{monto}\n\uD83D\uDCB3 *Alias:* {alias}\n\nUna vez que lo realices, por favor enviame el comprobante por ac\u00E1. \u00A1Muchas gracias! \uD83D\uDE0A`
+            text: user?.reminderTemplate ?? "*RECORDATORIO DE PAGO*\n\n{saludo} {nombre}, te escribo de *{negocio}* para recordarte tu pago de *{servicio}* correspondiente a {mes}.\n\nMonto: *{monto}*\n\nPara abonar de forma rápida y segura, podés ingresar al siguiente link:\n{pago_url}\n\nAvisame cualquier cosa. Gracias!"
         },
         {
-            id: 'welcome',
+            id: 'WELCOME',
             name: 'Bienvenida',
             icon: Sparkles,
-            text: user?.welcomeTemplate ?? `\u00A1Hola {nombre_pila}! \uD83D\uDC4B\n\n\u00A1Qu\u00E9 alegr\u00EDa saludarte! Te damos la bienvenida oficial a *{negocio}*. \u2728\n\nEstamos muy felices de que te sumes a tus clases de *{servicio}*. Queremos que tengas la mejor experiencia con nosotros.\n\nCualquier duda o consulta que tengas, pod\u00E9s escribirme por este medio. \u00A1Nos vemos pronto! \uD83D\uDE0A`
+            text: user?.welcomeTemplate ?? "*¡BIENVENIDO/A!*\n\n¡Hola {nombre}! Te damos la bienvenida oficial a *{negocio}*. ¡Qué alegría que te sumes!\n\nEstamos muy felices de que empieces tus clases de *{servicio}*. Queremos asegurarnos de que tengas la mejor experiencia posible con nosotros.\n\nCualquier duda que tengas, podés escribirme por acá. ¡Nos vemos muy pronto!"
         },
         {
-            id: 'generic',
+            id: 'GENERAL',
             name: 'Aviso General',
             icon: MessageCircle,
-            text: user?.generalTemplate ?? `\uD83D\uDE80 *COMUNICADO IMPORTANTE*\n\n{saludo} {nombre_pila}, te escribimos de *{negocio}* para informarte que:\n\n[ESCRIBIR MENSAJE AQU\u00ED]\n\nCualquier duda quedamos a disposici\u00F3n. \u00A1Saludos! \uD83D\uDC4B`
+            text: user?.generalTemplate ?? "*AVISO IMPORTANTE*\n\n{saludo} *{nombre}*, te escribimos de *{negocio}* para informarte:\n\n{mensaje}\n\nCualquier duda quedamos a tu entera disposición. ¡Saludos!"
         }
     ], [user]);
 
-    const [selectedTemplate, setSelectedTemplate] = React.useState(predefinedTemplates[0]);
-    const [templateText, setTemplateText] = React.useState(selectedTemplate.text);
+    const [templateText, setTemplateText] = React.useState('');
+    const [customMessage, setCustomMessage] = React.useState(''); // Only for GENERAL mode
     const [isSending, setIsSending] = React.useState(false);
     const [currentIndex, setCurrentIndex] = React.useState(0);
-    const [selectedAccountId, setSelectedAccountId] = React.useState<number | 'default'>(
-        user?.paymentAccounts?.find((a: any) => a.isDefault)?.id || 'default'
-    );
+    const [selectedAccountId, setSelectedAccountId] = React.useState<number | 'default'>('default');
+    const [isEditing, setIsEditing] = React.useState(false);
 
-    const handleSelectTemplate = (tpl: any) => {
-        setSelectedTemplate(tpl);
-        setTemplateText(tpl.text);
-    };
+    // Filter students based on goal
+    const filteredStudentsByGoal = React.useMemo(() => {
+        if (goal === 'PAYMENT') return students.filter(s => s.status === 'pending');
+        if (goal === 'WELCOME') {
+            // New students = created in the last 7 days
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            return students.filter(s => s.createdAt ? new Date(s.createdAt) > sevenDaysAgo : true);
+        }
+        return students;
+    }, [students, goal]);
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setStep(initialGoal ? 2 : 1);
+            setGoal(initialGoal || 'GENERAL');
+            setIsSending(false);
+            setCurrentIndex(0);
+            
+            const defaultAcc = user?.paymentAccounts?.find((a: any) => (a as any).isDefault);
+            setSelectedAccountId(defaultAcc?.id || 'default');
+
+            const currentGoal = initialGoal || 'GENERAL';
+            const template = predefinedTemplates.find(t => t.id === currentGoal)?.text || '';
+            setTemplateText(customTemplate || template.replace(/[\uFFFD]/g, ''));
+            setIsEditing(currentGoal === 'GENERAL' || !!customTemplate);
+            setCustomMessage(''); // reset custom message on open
+            
+            // Selection priority: preselectedStudents > initialGoal filtering > all students
+            if (preselectedStudents && preselectedStudents.length > 0) {
+                setSelectedStudentIds(preselectedStudents.map(s => s.id));
+            } else {
+                const filtered = initialGoal === 'PAYMENT' ? students.filter(s => s.status === 'pending') : 
+                               initialGoal === 'WELCOME' ? students.filter(s => s.createdAt && (new Date().getTime() - new Date(s.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000) :
+                               students;
+                setSelectedStudentIds(filtered.map(s => s.id));
+            }
+        }
+    }, [isOpen, initialGoal, students, predefinedTemplates, customTemplate, user?.paymentAccounts, preselectedStudents]);
+
+    const activeStudents = React.useMemo(() => 
+        students.filter(s => selectedStudentIds.includes(s.id)),
+    [students, selectedStudentIds]);
 
     const getActiveAlias = () => {
         if (selectedAccountId === 'default') return user?.bizAlias || 'Alias';
@@ -67,101 +120,298 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
         return account?.alias || user?.bizAlias || 'Alias';
     };
 
-    React.useEffect(() => {
-        if (isOpen) {
-            setIsSending(false);
-            setCurrentIndex(0);
-            const defaultAcc = user?.paymentAccounts?.find((a: any) => (a as any).isDefault);
-            setSelectedAccountId(defaultAcc?.id || 'default');
-            
-            // Set initial template only on open
-            const initialTemplate = (isPro && user?.reminderTemplate) 
-                ? user.reminderTemplate 
-                : predefinedTemplates[0].text;
-            
-            setTemplateText(initialTemplate);
-            setSelectedTemplate(predefinedTemplates[0]);
-        }
-    }, [isOpen, user?.reminderTemplate, isPro, predefinedTemplates]);
-
     const buildMessage = (student: Student, text: string) => {
+        if (!student) return text;
         const activeAlias = getActiveAlias();
         const alias = student.billing_alias || activeAlias;
-        const amount = Number(student.amount) || 0;
+        const amountNum = Number(student.amount) || 0;
+        const currency = user?.currency || '$';
+        const formattedAmount = `${currency}${amountNum.toLocaleString('es-AR')}`;
         const serviceName = (student.service_name === 'General' && student.sub_category) ? student.sub_category : (student.service_name || '');
         const hour = new Date().getHours();
-        
-        const b_dias = `Buenos d\u00EDas`;
-        const b_tardes = `Buenas tardes`;
-        const b_noches = `Buenas noches`;
-        const saludo = hour < 12 ? b_dias : hour < 20 ? b_tardes : b_noches;
-        
+        const saludo = hour < 12 ? 'Buenos dias' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
         const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
         const mesActual = meses[new Date().getMonth()];
         const nombrePila = student.name ? student.name.split(' ')[0] : '';
-        
-        const sanitize = (val: string) => val.replace(/[\uFFFD\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim();
+        const appBaseUrl = import.meta.env.VITE_APP_URL || 'https://cobralo.info';
+        const pagoUrl = `${appBaseUrl}/pago/${student.id}`;
+        const sanitize = (val: string) => (val || '').toString().normalize('NFC').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim();
 
-        return text
-            .replace(/{alumno}/g, sanitize(student.name || ''))
-            .replace(/{nombre_pila}/g, sanitize(nombrePila))
-            .replace(/{saludo}/g, saludo)
-            .replace(/{mes_actual}/g, mesActual)
-            .replace(/{monto}/g, amount.toLocaleString('es-AR'))
-            .replace(/{negocio}/g, sanitize(user?.bizName || 'Tu Profe'))
-            .replace(/{servicio}/g, sanitize(serviceName))
-            .replace(/{subcategoria}/g, sanitize(student.sub_category || ''))
-            .replace(/{metodo}/g, sanitize(student.payment_method || ''))
-            .replace(/{vencimiento}/g, (student.deadline_day || '').toString())
-            .replace(/{alias}/g, sanitize(alias))
-            .replace(/{pago}/g, (student.payment_method === 'Mercado Pago' && isPro && user?.mpAccessToken) ? 'Enlace de pago adjunto' : '')
-            .replace(/{moneda}/g, user?.currency || '$')
-            .replace(/{dia}/g, new Date().toLocaleDateString('es-AR', { weekday: 'long' }))
-            .replace(/{fecha}/g, new Date().toLocaleDateString('es-AR'));
+        const replaceVar = (text: string, varName: string, value: string) => {
+            const regex = new RegExp(`{\\s*${varName}\\s*}`, 'gi');
+            return text.replace(regex, value);
+        };
+
+        let result = text;
+        result = replaceVar(result, 'alumno', sanitize(student.name));
+        result = replaceVar(result, 'nombre', sanitize(nombrePila));
+        result = replaceVar(result, 'nombre_pila', sanitize(nombrePila));
+        result = replaceVar(result, 'monto', formattedAmount);
+        result = replaceVar(result, 'servicio', sanitize(serviceName));
+        result = replaceVar(result, 'negocio', sanitize(user?.bizName || 'Tu Profe'));
+        result = replaceVar(result, 'pago_url', pagoUrl);
+        result = replaceVar(result, 'vencimiento', (student.deadline_day || '').toString());
+        result = replaceVar(result, 'mes', mesActual);
+        result = replaceVar(result, 'saludo', saludo);
+        result = replaceVar(result, 'alias', sanitize(alias));
+
+        return result.normalize('NFC').trim();
     };
 
     const openWhatsApp = (student: Student, text: string) => {
-        const message = buildMessage(student, text);
+        let message = buildMessage(student, effectiveTemplate);
+        message = message.normalize('NFC').replace(/[\uFFFD]/g, '');
         const cleanPhone = student.phone ? student.phone.replace(/\D/g, '') : '';
+        const encodedText = encodeURIComponent(message);
         const url = cleanPhone
-            ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
-            : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+            ? `https://wa.me/${cleanPhone}?text=${encodedText}`
+            : `https://api.whatsapp.com/send?text=${encodedText}`;
         window.open(url, '_blank');
     };
 
-    const handleQuickSend = (student: Student) => {
-        openWhatsApp(student, templateText);
-        onClose();
-    };
 
-    const handleStartSending = () => {
-        setIsSending(true);
-        setCurrentIndex(0);
-    };
 
     const handleSendNext = () => {
-        if (currentIndex >= students.length) return;
-        const s = students[currentIndex];
-        openWhatsApp(s, templateText);
+        if (currentIndex >= activeStudents.length) return;
+        const s = activeStudents[currentIndex];
+        openWhatsApp(s, effectiveTemplate);
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
-        if (nextIndex >= students.length) {
-            showToast.success(`Envío finalizado!`);
+        if (nextIndex >= activeStudents.length) {
+            showToast.success(`¡Envío finalizado!`);
             onClose();
         }
     };
 
+    // For GENERAL mode: inject customMessage into {mensaje} placeholder; otherwise use raw templateText
+    const effectiveTemplate = React.useMemo(() => {
+        if (goal === 'GENERAL') {
+            return templateText.replace(/{mensaje}/g, customMessage || '_[ tu aviso aquí ]_');
+        }
+        return templateText;
+    }, [goal, templateText, customMessage]);
+
     const livePreviewHtml = React.useMemo(() => {
-        const student = students[0];
-        const raw = student ? buildMessage(student, templateText) : templateText;
+        const student = activeStudents[0] || students[0];
+        const raw = student ? buildMessage(student, effectiveTemplate) : effectiveTemplate;
         return raw.replace(/&/g, '&amp;')
                   .replace(/</g, '&lt;')
                   .replace(/>/g, '&gt;')
                   .replace(/\*(.*?)\*/g, '<strong class="font-extrabold text-white">$1</strong>')
                   .replace(/_(.*?)_/g, '<em class="italic opacity-90">$1</em>')
-                  .replace(/~(.*?)~/g, '<del class="line-through opacity-50">$1</del>')
                   .replace(/[\uFFFD]/g, '');
-    }, [students, templateText, user, isPro, getActiveAlias]); // buildMessage depends on user, isPro, getActiveAlias
+    }, [activeStudents, students, effectiveTemplate, user]);
+
+    const handleGoalSelection = (selectedGoal: MessagingGoal) => {
+        setGoal(selectedGoal);
+        const template = predefinedTemplates.find(t => t.id === selectedGoal)?.text || '';
+        setTemplateText(template.replace(/[\uFFFD]/g, ''));
+        setIsEditing(selectedGoal === 'GENERAL');
+        
+        // Update selection based on new goal
+        const filtered = selectedGoal === 'PAYMENT' ? students.filter(s => s.status === 'pending') : 
+                       selectedGoal === 'WELCOME' ? students.filter(s => s.createdAt && (new Date().getTime() - new Date(s.createdAt).getTime()) < 7 * 24 * 60 * 60 * 1000) :
+                       students;
+        setSelectedStudentIds(filtered.map(s => s.id));
+        setStep(2);
+    };
+
+    const renderStep1 = () => (
+        <div className="p-8 space-y-6">
+            <div className="text-center space-y-2 mb-8">
+                <h3 className="text-2xl font-black text-text-main uppercase tracking-tight">¿Qué deseás comunicar?</h3>
+                <p className="text-sm text-text-muted font-medium">Seleccioná un objetivo para personalizar el envío</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+                {[
+                    { id: 'PAYMENT' as const, title: 'Cobros', desc: 'Recordatorios de cuotas pendientes', icon: FileText, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                    { id: 'WELCOME' as const, title: 'Bienvenida', desc: 'Mensaje para alumnos nuevos', icon: Sparkles, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                    { id: 'GENERAL' as const, title: 'Aviso General', desc: 'Comunica novedades o cambios', icon: MessageCircle, color: 'text-sky-500', bg: 'bg-sky-500/10' }
+                ].map(opt => (
+                    <button
+                        key={opt.id}
+                        onClick={() => handleGoalSelection(opt.id)}
+                        className="flex items-center gap-5 p-5 glass-premium border border-border-main rounded-[24px] hover:border-emerald-500/50 transition-all text-left group"
+                    >
+                        <div className={`w-14 h-14 rounded-2xl ${opt.bg} flex items-center justify-center shrink-0 transition-transform group-hover:scale-110`}>
+                            <opt.icon size={24} className={opt.color} />
+                        </div>
+                        <div>
+                            <p className="font-black text-text-main uppercase tracking-tight">{opt.title}</p>
+                            <p className="text-xs text-text-muted mt-0.5">{opt.desc}</p>
+                        </div>
+                        <ChevronRight size={20} className="ml-auto text-border-main group-hover:text-text-main transition-colors" />
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
+    const renderStep2 = () => (
+        <div className="flex-1 flex flex-col min-h-0">
+            <div className="px-8 pt-8 pb-4">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-black text-text-main uppercase tracking-tight">Destinatarios</h3>
+                    <button 
+                        onClick={() => setSelectedStudentIds(selectedStudentIds.length === filteredStudentsByGoal.length ? [] : filteredStudentsByGoal.map(s => s.id))}
+                        className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 hover:text-emerald-400"
+                    >
+                        {selectedStudentIds.length === filteredStudentsByGoal.length ? 'Desmarcar todos' : 'Marcar todos'}
+                    </button>
+                </div>
+                <p className="text-xs text-text-muted mb-6">
+                    {goal === 'PAYMENT' ? 'Mostrando alumnos con cuotas pendientes.' : 
+                     goal === 'WELCOME' ? 'Mostrando alumnos registrados recientemente.' : 
+                     'Seleccioná los alumnos para este aviso.'}
+                </p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto px-8 space-y-2 custom-scrollbar pb-8">
+                {filteredStudentsByGoal.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center opacity-50">
+                        <Users size={32} className="mb-4 text-text-muted" />
+                        <p className="text-xs font-bold uppercase tracking-widest">No se encontraron alumnos</p>
+                        <p className="text-[10px] mt-1">Probá cambiando el objetivo o agregando alumnos.</p>
+                    </div>
+                ) : filteredStudentsByGoal.map(s => {
+                    const isSelected = selectedStudentIds.includes(s.id);
+                    return (
+                        <button
+                            key={s.id}
+                            onClick={() => setSelectedStudentIds(prev => isSelected ? prev.filter(id => id !== s.id) : [...prev, s.id])}
+                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${isSelected ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-transparent border-transparent opacity-50'}`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black ${isSelected ? 'bg-emerald-500 text-black' : 'bg-bg-app text-text-muted'}`}>
+                                    {s.name.charAt(0)}
+                                </div>
+                                <div className="text-left">
+                                    <p className={`text-sm font-bold ${isSelected ? 'text-text-main' : 'text-text-muted'}`}>{s.name}</p>
+                                    <p className="text-[10px] uppercase font-black text-text-muted/60 tracking-widest">{s.service_name || 'General'}</p>
+                                </div>
+                            </div>
+                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 border-emerald-500 text-black' : 'border-border-main'}`}>
+                                {isSelected && <CheckCheck size={12} strokeWidth={3} />}
+                            </div>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
+    const renderStep3 = () => (
+        <div className="flex-1 flex flex-col min-h-0">
+            <div className="px-8 pt-8 shrink-0 mb-6">
+                <h3 className="text-xl font-black text-text-main uppercase tracking-tight">
+                    {goal === 'GENERAL' ? '¿Qué querés comunicar?' : 'Mensaje y Vista Previa'}
+                </h3>
+                <p className="text-xs text-text-muted mt-1">
+                    {goal === 'GENERAL'
+                        ? 'Escribí el aviso. El saludo y los datos del alumno se agregan solos.'
+                        : 'Editá el texto o revisá la previsualización antes de enviar.'}
+                </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col min-h-0 px-8 pb-8 space-y-6">
+                {goal === 'GENERAL' ? (
+                    /* GENERAL mode: only a clean textarea for the custom content */
+                    <>
+                        <textarea
+                            value={customMessage}
+                            onChange={e => setCustomMessage(e.target.value)}
+                            autoFocus
+                            className="w-full h-44 p-5 glass-premium border border-border-main rounded-3xl outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium leading-relaxed resize-none placeholder:text-text-muted/40"
+                            placeholder="Ej: A partir del lunes cambiamos el horario de clase a las 10hs..."
+                        />
+
+                        {/* WhatsApp-style locked preview */}
+                        <div>
+                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-3">Vista previa del mensaje</p>
+                            <div className="bg-bg-app/60 rounded-3xl px-4 py-6 relative">
+                                <div className="absolute inset-0 opacity-[0.03] rounded-3xl" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
+                                <div className="flex justify-end">
+                                    <div className="bg-[#dcf8c6] dark:bg-[#054740] border border-black/5 dark:border-white/5 rounded-[20px] rounded-tr-none px-4 pt-3 pb-2 shadow-xl max-w-[90%]">
+                                        <p
+                                            className="text-zinc-800 dark:text-white text-sm leading-relaxed font-medium whitespace-pre-wrap"
+                                            dangerouslySetInnerHTML={{ __html: livePreviewHtml }}
+                                        />
+                                        <div className="flex justify-end items-center gap-1 mt-1.5 opacity-60">
+                                            <span className="text-[10px] font-bold">14:20</span>
+                                            <CheckCheck size={13} className="text-[#34b7f1]" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    /* PAYMENT / WELCOME mode: full template editor + preview toggle */
+                    <>
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Plantilla del mensaje</p>
+                            <button
+                                onClick={() => setIsEditing(!isEditing)}
+                                className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    isEditing ? 'bg-emerald-500 text-black' : 'bg-white/5 text-text-muted border border-border-main'
+                                }`}
+                            >
+                                {isEditing ? 'Ver Previsualización' : 'Editar Texto'}
+                            </button>
+                        </div>
+
+                        {isEditing ? (
+                            <>
+                                <textarea
+                                    value={templateText}
+                                    onChange={e => setTemplateText(e.target.value)}
+                                    className="w-full h-52 p-5 glass-premium border border-border-main rounded-3xl outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm font-medium leading-relaxed resize-none"
+                                    placeholder="Escribí tu mensaje aquí..."
+                                />
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Variables Dinámicas</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            { label: 'Nombre', tag: '{nombre}' },
+                                            { label: 'Nombre Pila', tag: '{nombre_pila}' },
+                                            { label: 'Monto', tag: '{monto}' },
+                                            { label: 'Servicio', tag: '{servicio}' },
+                                            { label: 'Vencimiento', tag: '{vencimiento}' },
+                                            { label: 'Negocio', tag: '{negocio}' }
+                                        ].map(v => (
+                                            <button
+                                                key={v.tag}
+                                                onClick={() => setTemplateText(prev => prev + ' ' + v.tag)}
+                                                className="px-3 py-1.5 bg-white/5 border border-border-main rounded-xl text-[10px] font-bold text-text-muted hover:text-emerald-500 hover:border-emerald-500/30 transition-all"
+                                            >
+                                                {v.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="bg-bg-app/50 rounded-3xl px-4 py-6 relative min-h-[200px]">
+                                <div className="absolute inset-0 opacity-[0.03] rounded-3xl" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
+                                <div className="flex justify-end">
+                                    <div className="bg-[#dcf8c6] dark:bg-[#054740] border border-black/5 dark:border-white/5 rounded-[24px] rounded-tr-none px-5 pt-4 pb-2 shadow-xl max-w-[85%]">
+                                        <p
+                                            className="text-zinc-800 dark:text-white text-sm leading-relaxed font-medium whitespace-pre-wrap"
+                                            dangerouslySetInnerHTML={{ __html: livePreviewHtml }}
+                                        />
+                                        <div className="flex justify-end items-center gap-1.5 mt-2 opacity-60">
+                                            <span className="text-[10px] font-bold">14:20</span>
+                                            <CheckCheck size={14} className="text-[#34b7f1]" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
 
     return (
         <Portal>
@@ -173,161 +423,119 @@ const WhatsAppPreviewModal: React.FC<WhatsAppPreviewModalProps> = ({ isOpen, onC
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={onClose}
-                            className="absolute inset-0 bg-black/85 backdrop-blur-xl"
+                            className="absolute inset-0 modal-overlay"
                         />
 
                         <motion.div
-                            initial={{ opacity: 0, y: 60 }}
+                            initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 60 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            className="relative w-full max-w-lg md:max-w-xl h-full md:h-auto md:max-h-[92vh] bg-surface dark:bg-bg-soft md:rounded-[28px] shadow-2xl flex flex-col overflow-hidden border border-border-main"
+                            exit={{ opacity: 0, y: 100 }}
+                            className="relative w-full max-w-xl bg-surface h-full md:h-auto md:max-h-[90vh] md:rounded-[40px] shadow-2xl flex flex-col overflow-hidden"
                         >
+                            {/* Header */}
+                            <div className="px-8 py-6 border-b border-border-main flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-4">
+                                    {step > 1 && (
+                                        <button 
+                                            onClick={() => {
+                                                setStep((step - 1) as any);
+                                                setIsSending(false);
+                                            }}
+                                            className="p-2 hover:bg-bg-app rounded-xl transition-all"
+                                        >
+                                            <ChevronLeft size={20} />
+                                        </button>
+                                    )}
+                                    <div>
+                                        <h2 className="text-sm font-black text-text-main uppercase tracking-widest">Asistente de Mensajes</h2>
+                                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">Paso {step} de 3</p>
+                                    </div>
+                                </div>
+                                <button onClick={onClose} className="p-2 hover:bg-bg-app rounded-xl transition-all">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Main Content */}
                             {!isSending ? (
                                 <>
-                                    {/* Header */}
-                                    <div className="px-5 pt-5 pb-4 flex items-center justify-between shrink-0">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                                                <span className="text-sm font-black text-emerald-400 uppercase">
-                                                    {(students.length === 1 && students[0]) ? students[0].name?.charAt(0) : students.length}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black text-text-main leading-none">
-                                                    {students.length === 1 ? (students[0]?.name || 'Alumno') : `${students.length} alumnos`}
-                                                </p>
-                                                <p className="text-[11px] font-medium text-text-muted mt-0.5 leading-none">
-                                                    {students.length === 1
-                                                        ? (students[0]?.phone || <span className="text-amber-500">Sin teléfono</span>)
-                                                        : 'Envio masivo'
-                                                    }
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <button onClick={onClose} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-all active:scale-95">
-                                            <X size={20} className="text-text-muted hover:text-text-main transition-colors" />
-                                        </button>
-                                    </div>
-
-                                    {/* Template chips */}
-                                    <div className="px-5 pb-3 flex gap-2 flex-wrap shrink-0">
-                                        {predefinedTemplates.map(tpl => (
-                                            <button
-                                                key={tpl.id}
-                                                onClick={() => handleSelectTemplate(tpl)}
-                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
-                                                    selectedTemplate.id === tpl.id
-                                                        ? 'bg-emerald-500 border-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                                                        : 'bg-black/5 dark:bg-white/5 border-border-main text-text-muted hover:border-emerald-500/40 hover:text-text-main'
-                                                }`}
-                                            >
-                                                <tpl.icon size={12} />
-                                                <span className="truncate max-w-[120px]">{tpl.name}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {/* WhatsApp chat area */}
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-bg-app px-4 py-4 relative min-h-0">
-                                        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
-                                        <div className="relative space-y-3">
-                                            {/* Live preview bubble */}
-                                            <div className="flex justify-end">
-                                                <div className="bg-[#075E54] dark:bg-[#054740] border border-white/5 rounded-[20px] rounded-tr-none px-3.5 pt-3 pb-1.5 shadow-xl relative overflow-hidden group max-w-[90%]">
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                                                    <div className="absolute top-0 -right-2 w-3 h-3 overflow-hidden">
-                                                        <div className="w-4 h-4 bg-[#075E54] dark:bg-[#054740] rounded-bl-[12px] -translate-y-2 -translate-x-1" />
-                                                    </div>
-
-                                                    <p 
-                                                        className="text-white text-[14px] leading-[1.55] font-medium whitespace-pre-wrap relative z-10"
-                                                        dangerouslySetInnerHTML={{ __html: livePreviewHtml }}
-                                                    />
-                                                    <div className="flex justify-end items-center gap-1.5 mt-1 select-none opacity-80 relative z-10">
-                                                        <span className="text-[10px] text-white/80 font-bold uppercase tracking-tighter tabular-nums text-right">
-                                                            {new Date().toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit', hour12: false})}
-                                                        </span>
-                                                        <div className="flex items-center -space-x-1.5">
-                                                            <CheckCheck size={14} strokeWidth={3} className="text-[#34b7f1]" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                                        {step === 1 && renderStep1()}
+                                        {step === 2 && renderStep2()}
+                                        {step === 3 && renderStep3()}
                                     </div>
 
                                     {/* Footer */}
-                                    <div className="px-5 py-4 border-t border-border-main flex gap-3 shrink-0">
+                                    <div className="px-8 py-6 border-t border-border-main flex gap-4 shrink-0 bg-surface">
                                         <button
                                             onClick={onClose}
-                                            className="px-5 py-3.5 text-text-muted font-bold rounded-2xl border border-border-main hover:bg-black/5 dark:hover:bg-white/5 transition-all text-[11px] uppercase tracking-widest"
+                                            className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-main transition-colors"
                                         >
-                                            Cerrar
+                                            Cancelar
                                         </button>
-                                        {students.length === 1 ? (
+                                        {step === 2 && (
                                             <button
-                                                onClick={() => handleQuickSend(students[0])}
-                                                className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] uppercase tracking-widest"
+                                                onClick={() => setStep(3)}
+                                                disabled={selectedStudentIds.length === 0}
+                                                className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[11px] uppercase tracking-widest disabled:opacity-30"
                                             >
-                                                <Send size={16} strokeWidth={2.5} />
-                                                Enviar
+                                                Siguiente <ChevronRight size={16} strokeWidth={3} />
                                             </button>
-                                        ) : (
-                                            <button
-                                                onClick={handleStartSending}
-                                                className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] uppercase tracking-widest"
-                                            >
-                                                <Send size={16} strokeWidth={2.5} />
-                                                Iniciar envío ({students.length})
-                                            </button>
+                                        )}
+                                        {step === 3 && (
+                                            <div className="flex-1 flex gap-3">
+                                                <button
+                                                    onClick={() => {
+                                                        setIsSending(true);
+                                                        setCurrentIndex(0);
+                                                    }}
+                                                    disabled={selectedStudentIds.length === 0 || !effectiveTemplate.trim() || (goal === 'GENERAL' && !customMessage.trim())}
+                                                    className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[11px] uppercase tracking-widest disabled:opacity-30"
+                                                >
+                                                    <Send size={16} strokeWidth={3} />
+                                                    Iniciar Envío ({activeStudents.length})
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 </>
                             ) : (
-                                /* Sending flow */
-                                <>
-                                    <div className="flex-1 flex flex-col items-center justify-center space-y-10 p-8 animate-in zoom-in duration-500 bg-emerald-500/5">
-                                        <div className="relative w-48 h-48 flex items-center justify-center">
-                                            <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-pulse scale-110" />
-                                            <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                                                <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-black/5 dark:text-white/5" />
-                                                <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="10" fill="transparent" strokeDasharray={553} strokeDashoffset={553 - (553 * currentIndex) / students.length} className="text-emerald-500 transition-all duration-1000 ease-in-out" />
-                                            </svg>
-                                            <div className="text-center relative z-10">
-                                                <p className="text-6xl font-black text-text-main tracking-tighter tabular-nums drop-shadow-sm">{currentIndex}</p>
-                                                <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] mt-1">de {students.length}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="text-center space-y-4 w-full px-4">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.3em]">Preparado</p>
-                                            </div>
-                                            <h4 className="text-3xl font-black text-text-main tracking-tight truncate">{students[currentIndex]?.name}</h4>
-                                            <p className="text-xs text-text-muted flex items-center justify-center gap-2 font-medium">
-                                                <Sparkles size={14} className="text-emerald-500" />
-                                                Presioná el botón para abrir WhatsApp
-                                            </p>
+                                /* Sending Step */
+                                <div className="p-12 flex flex-col items-center justify-center text-center space-y-10">
+                                    <div className="relative w-48 h-48 flex items-center justify-center">
+                                        <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-pulse scale-110" />
+                                        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                            <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="10" fill="transparent" className="text-black/5 dark:text-white/5" />
+                                            <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="10" fill="transparent" strokeDasharray={553} strokeDashoffset={553 - (553 * currentIndex) / activeStudents.length} className="text-emerald-500 transition-all duration-1000 ease-in-out" />
+                                        </svg>
+                                        <div className="text-center relative z-10">
+                                            <p className="text-6xl font-black text-text-main tracking-tighter tabular-nums">{currentIndex}</p>
+                                            <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] mt-1">de {activeStudents.length}</p>
                                         </div>
                                     </div>
 
-                                    <div className="px-5 py-4 border-t border-border-main flex gap-3 shrink-0">
-                                        <button
-                                            onClick={() => setIsSending(false)}
-                                            className="px-5 py-3.5 text-text-muted font-bold rounded-2xl border border-border-main hover:bg-black/5 dark:hover:bg-white/5 transition-all text-[11px] uppercase tracking-widest"
-                                        >
-                                            Cancelar
-                                        </button>
+                                    <div className="space-y-4">
+                                        <h4 className="text-3xl font-black text-text-main tracking-tight uppercase">{activeStudents[currentIndex]?.name}</h4>
+                                        <p className="text-xs text-text-muted font-medium max-w-xs">
+                                            Presioná el botón para abrir el chat de WhatsApp y enviar el mensaje.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col gap-3 w-full max-w-xs">
                                         <button
                                             onClick={handleSendNext}
-                                            className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[12px] uppercase tracking-widest"
+                                            className="w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-2xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2 text-[11px] uppercase tracking-widest"
                                         >
-                                            Enviar a {students[currentIndex]?.name?.split(' ')[0]} <ChevronRight size={18} strokeWidth={3} />
+                                            Enviar a {activeStudents[currentIndex]?.name?.split(' ')[0]} <Send size={16} strokeWidth={3} />
+                                        </button>
+                                        <button
+                                            onClick={() => setIsSending(false)}
+                                            className="w-full py-4 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-red-500 transition-colors"
+                                        >
+                                            Cancelar Envío
                                         </button>
                                     </div>
-                                </>
+                                </div>
                             )}
                         </motion.div>
                     </div>

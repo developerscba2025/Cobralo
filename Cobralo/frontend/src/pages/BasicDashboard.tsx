@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
-import { Zap, Activity, TrendingUp, Users2, DollarSign, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Zap, Activity, TrendingUp, Users2, DollarSign, Clock, CheckCircle2, AlertCircle, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { Student } from '../services/api';
+import { api, type Student } from '../services/api';
 import EmptyState from '../components/EmptyState';
 import TiltCard from '../components/TiltCard';
 import Tooltip from '../components/ui/Tooltip';
+import { showToast } from '../components/Toast';
+import confetti from 'canvas-confetti';
 import { staggerContainerVariants, listItemVariants } from '../utils/motion';
 
 interface BasicDashboardProps {
@@ -20,20 +22,46 @@ interface BasicDashboardProps {
     onAction?: () => Promise<void> | void;
 }
 
-const bentoBase: React.CSSProperties = {
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border-main)',
-    borderRadius: '24px',
-    position: 'relative',
-    overflow: 'hidden',
-};
+// Using card-premium from index.css for universal consistency
+const bentoBaseClass = "card-premium";
 
-const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todaysSchedules = [], user, pendingAdjustment }) => {
+const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todaysSchedules = [], user, pendingAdjustment, onAction }) => {
     const recentActivity = [...students].sort((a, b) => (Number(b.id) - Number(a.id))).slice(0, 10);
     const paid = recentActivity.filter(s => s.status === 'paid');
     const pending = recentActivity.filter(s => s.status !== 'paid');
     const currency = user?.currency || '$';
     const collectionRate = stats.totalStudents > 0 ? Math.round((paid.length / Math.max(recentActivity.length, 1)) * 100) : 0;
+
+    const handleTogglePayment = async (student: Student, e: React.MouseEvent) => {
+        e.preventDefault();
+        try {
+            await api.togglePayment(student.id);
+            if (student.status === 'pending') {
+                const now = new Date();
+                await api.createPayment({
+                    studentId: student.id,
+                    amount: Number(student.amount) || 0,
+                    month: now.getMonth() + 1,
+                    year: now.getFullYear()
+                });
+                showToast.success('Pago registrado');
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#10B981', '#34D399', '#059669', '#F59E0B'],
+                    zIndex: 9999
+                });
+            } else {
+                showToast.success('Estado actualizado');
+            }
+            if (onAction) {
+                await onAction();
+            }
+        } catch {
+            showToast.error('Error al actualizar pago');
+        }
+    };
 
     return (
         <motion.div 
@@ -101,23 +129,22 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 }}
-                        className="p-5 sm:p-6 md:p-8 flex flex-col justify-between min-h-[140px] h-full w-full"
-                        style={{ ...bentoBase, background: 'linear-gradient(165deg, var(--color-surface) 0%, var(--color-bg-app) 100%)' }}
+                        className="p-5 sm:p-6 md:p-8 flex flex-col justify-between min-h-[140px] h-full w-full glass-emerald rounded-[28px] relative overflow-hidden"
                     >
-                        <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-primary-main/20 text-[9px] font-black text-primary-main uppercase tracking-widest"
-                                 style={{ background: 'rgba(34,197,94,0.06)' }}>
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary-main animate-pulse" />
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-[60px] -translate-y-1/4 translate-x-1/4 pointer-events-none" />
+                        
+                        <div className="flex justify-between items-start relative z-10">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-500/20 text-[9px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 Mes actual
                             </div>
                             <Tooltip content="Total recaudado este mes (sin incluir lo pendiente)">
-                                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-primary-main border border-primary-main/20"
-                                     style={{ background: 'rgba(34,197,94,0.08)' }}>
+                                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-emerald-500 bg-white/5 border border-white/10">
                                     <DollarSign size={18} />
                                 </div>
                             </Tooltip>
                         </div>
-                        <div className="mt-4 md:mt-6">
+                        <div className="mt-4 md:mt-6 relative z-10">
                             <p className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 italic">Ingresos (Mes Actual)</p>
                             {stats.paid === 0 && stats.pending === 0 && stats.totalStudents === 0 ? (
                                 <p className="text-[10px] md:text-[11px] font-black text-text-muted mt-1 opacity-60">
@@ -145,21 +172,19 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="p-5 sm:p-6 flex flex-col justify-between min-h-[120px] h-full w-full"
-                        style={bentoBase}
+                        className={`p-5 sm:p-6 flex flex-col justify-between min-h-[120px] h-full w-full ${bentoBaseClass}`}
                     >
                         <div className="flex justify-between items-start">
-                            <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Alumnos</h3>
+                            <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none">Alumnos</h3>
                             <Tooltip content="Cantidad total de personas inscriptas">
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-border-main"
-                                     style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/5 bg-white/5">
                                     <Users2 size={16} className="text-text-muted" />
                                 </div>
                             </Tooltip>
                         </div>
                         <div className="mt-4">
                             <p className="text-4xl font-black text-text-main tracking-tighter">{stats.totalStudents}</p>
-                            <p className="text-[10px] text-text-muted font-black uppercase mt-2 tracking-widest">Alumnos Activos</p>
+                            <p className="text-[10px] text-text-muted font-black uppercase mt-2 tracking-widest opacity-60">Alumnos Activos</p>
                         </div>
                     </motion.div>
                 </TiltCard>
@@ -170,26 +195,24 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="p-5 sm:p-6 flex flex-col justify-between min-h-[120px] h-full w-full"
-                        style={bentoBase}
+                        className={`p-5 sm:p-6 flex flex-col justify-between min-h-[120px] h-full w-full ${bentoBaseClass}`}
                     >
                         <div className="flex justify-between items-start">
-                            <h3 className="text-[9px] font-black text-text-muted uppercase tracking-widest">Cobrado</h3>
+                            <h3 className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest leading-none">Eficiencia</h3>
                             <Tooltip content="Porcentaje de alumnos que ya pagaron este mes">
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-primary-main/20"
-                                     style={{ background: 'rgba(34,197,94,0.06)' }}>
-                                    <TrendingUp size={16} className="text-primary-main" />
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border border-emerald-500/20 bg-emerald-500/10">
+                                    <TrendingUp size={16} className="text-emerald-500" />
                                 </div>
                             </Tooltip>
                         </div>
                         <div className="mt-4">
-                            <p className="text-4xl font-black text-primary-main tracking-tighter">{collectionRate}%</p>
-                            <p className="text-[10px] text-text-muted font-black uppercase mt-2 tracking-widest">Eficiencia de Cobro</p>
+                            <p className="text-4xl font-black text-emerald-500 tracking-tighter">{collectionRate}%</p>
+                            <p className="text-[10px] text-text-muted font-black uppercase mt-2 tracking-widest opacity-60">Tasa de Cobro</p>
                         </div>
                         {/* Progress bar */}
-                        <div className="mt-3 h-1 rounded-full bg-border-main overflow-hidden">
+                        <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
                             <div
-                                className="h-full rounded-full bg-primary-main transition-all"
+                                className="h-full rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all"
                                 style={{ width: `${collectionRate}%` }}
                             />
                         </div>
@@ -202,8 +225,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.18 }}
-                        className="col-span-1 sm:col-span-2 md:col-span-4 p-5 flex flex-col justify-between"
-                        style={bentoBase}
+                        className={`col-span-1 sm:col-span-2 md:col-span-4 p-5 flex flex-col justify-between ${bentoBaseClass}`}
                     >
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="text-[10px] font-black text-text-main uppercase tracking-widest flex items-center gap-2">
@@ -219,7 +241,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                                 const studentsList = schedule.students || (schedule.student ? [schedule.student] : []);
                                 const name = studentsList.length > 1 ? `${studentsList[0]?.name?.split(' ')[0]} +${studentsList.length - 1}` : (studentsList[0]?.name || 'Grupal');
                                 return (
-                                    <div key={schedule.id} className="min-w-[140px] p-3 rounded-2xl bg-black/5 border border-border-main shrink-0 snap-start">
+                                    <div key={schedule.id} className="min-w-[140px] p-3 rounded-2xl bg-white/5 border border-white/10 shrink-0 snap-start">
                                         <p className="text-[12px] font-black text-text-main truncate max-w-full">{schedule.startTime}</p>
                                         <p className="text-[10px] font-bold text-text-muted truncate mt-1">{name}</p>
                                     </div>
@@ -235,8 +257,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                style={bentoBase}
-                className="overflow-hidden"
+                className={`overflow-hidden card-premium`}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-5 border-b border-border-main/50">
@@ -271,7 +292,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                         {/* Mobile Cards */}
                         <div className="md:hidden divide-y divide-border-main/30">
                             {recentActivity.map((student) => (
-                                <div key={student.id} className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.015] transition-colors">
+                                <div key={student.id} className="flex items-center gap-4 px-5 py-4 hover:bg-surface/[0.015] transition-colors">
                                     <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-black text-text-muted border border-border-main uppercase shrink-0"
                                          style={{ background: 'rgba(255,255,255,0.03)' }}>
                                         {student.name.charAt(0)}
@@ -280,16 +301,26 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                                         <p className="font-bold text-sm text-text-main truncate">{student.name}</p>
                                         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest truncate opacity-60">{student.service_name}</p>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <p className="font-black text-sm text-text-main">{currency}{Number(student.amount).toLocaleString('es-AR')}</p>
-                                        <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest mt-0.5 px-2 py-0.5 rounded-md border ${
-                                            student.status === 'paid'
-                                                ? 'text-primary-main border-primary-main/20 bg-primary-main/5'
-                                                : 'text-amber-500 border-amber-500/20 bg-amber-500/5'
-                                        }`}>
-                                            {student.status === 'paid' ? <CheckCircle2 size={8} /> : <Clock size={8} />}
-                                            {student.status === 'paid' ? 'Cobrado' : 'Pendiente'}
-                                        </span>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        {student.status !== 'paid' && (
+                                            <button
+                                                onClick={(e) => handleTogglePayment(student, e)}
+                                                className="w-8 h-8 flex items-center justify-center bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                            >
+                                                <Wallet size={14} />
+                                            </button>
+                                        )}
+                                        <div className="text-right">
+                                            <p className="font-black text-sm text-text-main">{currency}{Number(student.amount).toLocaleString('es-AR')}</p>
+                                            <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest mt-0.5 px-2 py-0.5 rounded-md border ${
+                                                student.status === 'paid'
+                                                    ? 'text-primary-main border-primary-main/20 bg-primary-main/5'
+                                                    : 'text-amber-500 border-amber-500/20 bg-amber-500/5'
+                                            }`}>
+                                                {student.status === 'paid' ? <CheckCircle2 size={8} /> : <Clock size={8} />}
+                                                {student.status === 'paid' ? 'Cobrado' : 'Pendiente'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -311,7 +342,7 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                                         initial={{ opacity: 0, x: -8 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.02 * i }}
-                                        className="flex items-center px-6 py-4 hover:bg-white/[0.015] transition-colors group"
+                                        className="flex items-center px-6 py-4 hover:bg-surface/[0.015] transition-colors group"
                                     >
                                         <div className="flex-1 flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black text-text-muted border border-border-main uppercase shrink-0"
@@ -326,7 +357,15 @@ const BasicDashboard: React.FC<BasicDashboardProps> = ({ stats, students, todays
                                         <div className="w-[130px]">
                                             <span className="font-black text-sm text-text-main">{currency}{Number(student.amount).toLocaleString('es-AR')}</span>
                                         </div>
-                                        <div className="w-[110px] flex justify-end">
+                                        <div className="w-[110px] flex items-center justify-end gap-2">
+                                            {student.status !== 'paid' && (
+                                                <button
+                                                    onClick={(e) => handleTogglePayment(student, e)}
+                                                    className="w-7 h-7 flex items-center justify-center bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-sm shrink-0"
+                                                >
+                                                    <Wallet size={12} />
+                                                </button>
+                                            )}
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[8px] font-black uppercase tracking-widest ${
                                                 student.status === 'paid'
                                                     ? 'text-primary-main border-primary-main/20 bg-primary-main/5 shadow-[0_0_12px_rgba(34,197,94,0.05)]'

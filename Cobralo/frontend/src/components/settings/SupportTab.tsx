@@ -107,7 +107,7 @@ const SupportTab: React.FC = () => {
                                         name="email"
                                         type="email" 
                                         required
-                                        placeholder="mi@correo.com"
+                                        placeholder="Tu email"
                                         className="w-full px-6 py-4 bg-bg-app text-text-main rounded-2xl border border-border-main focus:border-primary-main/40 focus:ring-4 focus:ring-primary-main/5 outline-none transition-all font-bold text-sm shadow-inner" 
                                     />
                                 </div>

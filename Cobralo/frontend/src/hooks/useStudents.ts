@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { api, type Student } from '../services/api';
 import { showToast } from '../components/Toast';
-import * as XLSX from 'xlsx';
 import confetti from 'canvas-confetti';
 
 export const useStudents = (initialStudents: Student[], onAction?: () => void) => {
@@ -93,7 +92,6 @@ export const useStudents = (initialStudents: Student[], onAction?: () => void) =
             return;
         }
 
-        // Formatear datos para el Excel
         const data = filteredStudents.map(s => {
             const schedulesText = s.schedules?.map(sch => {
                 const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -101,50 +99,61 @@ export const useStudents = (initialStudents: Student[], onAction?: () => void) =
             }).join(', ') || 'Flexible / Sin horario';
 
             return {
-                'NOMBRE COMPLETO': s.name.toUpperCase(),
-                'ESTADO': s.status === 'paid' ? 'AL DÍA' : s.status === 'paused' ? 'PAUSADO' : 'PENDIENTE',
-                'TELEFONO': s.phone || '',
-                'SERVICIO': s.service_name || '',
-                'PLAN': s.planType === 'PACK' ? 'Pack' : s.planType === 'PER_CLASS' ? 'Por Clase' : 'Mensual',
-                'MONTO ($)': Number(s.amount) || 0,
-                'DIA PAGO': s.due_day || '',
-                'CLASES DISP': s.planType === 'PACK' ? (s.credits || 0) : 'N/A',
-                'RECUPEROS': s.makeup_classes || 0,
-                'METODO PAGO': s.payment_method || '',
-                'HORARIOS': schedulesText,
-                'ALIAS/CBU': s.billing_alias || '',
-                'NOTAS': s.notes || ''
+                name: s.name.toUpperCase(),
+                status: s.status === 'paid' ? 'AL DÍA' : s.status === 'paused' ? 'PAUSADO' : 'PENDIENTE',
+                phone: s.phone || '',
+                service: s.service_name || '',
+                plan: s.planType === 'PACK' ? 'Pack' : s.planType === 'PER_CLASS' ? 'Por Clase' : 'Mensual',
+                amount: Number(s.amount) || 0,
+                due_day: s.due_day || '',
+                credits: s.planType === 'PACK' ? (s.credits || 0) : 'N/A',
+                makeup: s.makeup_classes || 0,
+                method: s.payment_method || '',
+                schedules: schedulesText,
+                alias: s.billing_alias || '',
+                notes: s.notes || ''
             };
         });
 
-        const ws = XLSX.utils.json_to_sheet(data);
+        const totalPending = filteredStudents
+            .filter(s => s.status !== 'paid')
+            .reduce((acc, s) => acc + (Number(s.amount) || 0), 0);
         
-        // Ajustar anchos de columna (wch = width in characters)
-        const wscols = [
-            { wch: 30 }, // Nombre
-            { wch: 12 }, // Estado
-            { wch: 15 }, // Telefono
-            { wch: 20 }, // Servicio
-            { wch: 12 }, // Plan
-            { wch: 10 }, // Monto
-            { wch: 8 },  // Dia Pago
-            { wch: 10 }, // Clases Disp
-            { wch: 10 }, // Recuperos
-            { wch: 15 }, // Metodo Pago
-            { wch: 35 }, // Horarios
-            { wch: 20 }, // Alias
-            { wch: 40 }  // Notas
-        ];
-        ws['!cols'] = wscols;
+        const totalPaid = filteredStudents
+            .filter(s => s.status === 'paid')
+            .reduce((acc, s) => acc + (Number(s.amount) || 0), 0);
 
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Lista de Alumnos");
-        
-        // Nombre del archivo con fecha legible
-        const date = new Date().toISOString().split('T')[0];
-        XLSX.writeFile(wb, `Cobralo_Alumnos_${date}.xlsx`);
-        
-        showToast.success('Excel generado correctamente');
+        import('../utils/excel').then(({ exportToExcel, formatExcelCurrency }) => {
+            exportToExcel({
+                filename: 'Cobralo_Alumnos',
+                sheetName: 'Lista de Alumnos',
+                title: 'Reporte General de Alumnos',
+                data,
+                columns: [
+                    { header: 'NOMBRE COMPLETO', key: 'name', width: 35 },
+                    { header: 'ESTADO', key: 'status', width: 15 },
+                    { header: 'TELÉFONO', key: 'phone', width: 15 },
+                    { header: 'SERVICIO', key: 'service', width: 20 },
+                    { header: 'PLAN', key: 'plan', width: 12 },
+                    { header: 'MONTO ($)', key: 'amount', width: 12 },
+                    { header: 'DÍA PAGO', key: 'due_day', width: 10 },
+                    { header: 'CLASES DISP.', key: 'credits', width: 12 },
+                    { header: 'RECUPEROS', key: 'makeup', width: 12 },
+                    { header: 'MÉTODO PAGO', key: 'method', width: 15 },
+                    { header: 'HORARIOS', key: 'schedules', width: 40 },
+                    { header: 'ALIAS/CBU', key: 'alias', width: 25 },
+                    { header: 'NOTAS', key: 'notes', width: 40 }
+                ],
+                summaryData: {
+                    'Total Alumnos': filteredStudents.length,
+                    'Alumnos con deuda': filteredStudents.filter(s => s.status !== 'paid').length,
+                    'Total recaudado (mes)': formatExcelCurrency(totalPaid),
+                    'Total pendiente de cobro': formatExcelCurrency(totalPending),
+                    'Proyección Total': formatExcelCurrency(totalPaid + totalPending)
+                }
+            });
+            showToast.success('Excel generado correctamente');
+        });
     };
 
     return {

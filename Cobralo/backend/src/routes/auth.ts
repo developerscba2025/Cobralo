@@ -6,8 +6,8 @@ import { authLimiter } from '../middleware/rateLimiter';
 import { notificationService } from '../services/notificationService';
 import crypto from 'crypto';
 import { authMiddleware, AuthRequest } from '../middleware/authMiddleware';
-import { encrypt } from '../utils/crypto';
-
+import { encrypt, decrypt } from '../utils/crypto';
+import { OAuth2Client } from 'google-auth-library';
 const router = Router();
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -20,45 +20,87 @@ if (!JWT_SECRET) {
 // POST /api/auth/register
 router.post('/register', authLimiter, async (req: Request, res: Response) => {
     try {
-        let { email, password, name, bizName, businessCategory, phoneNumber } = req.body;
+        let { email, password, name, bizName, businessCategory, phoneNumber, services, paymentAlias } = req.body;
 
         if (!email || !password || !name) {
             res.status(400).json({ error: 'Email, password y nombre son requeridos' });
             return;
         }
 
-        // Normalización
         email = email.toLowerCase().trim();
 
-        // Complejidad de Contraseña
         if (!PASSWORD_REGEX.test(password)) {
             res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&)' });
             return;
         }
 
-        // Check if user exists
         const existingUser = await prisma.user.findUnique({ where: { email } });
-        if (existingUser) {
+        if (existingUser && existingUser.password !== 'PRE_APPROVED_DUMMY_ACCOUNT') {
             res.status(400).json({ error: 'El email ya está registrado' });
             return;
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user with 14-day Trial (Plan Inicial)
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                name,
-                bizName,
-                businessCategory,
-                phoneNumber,
-                plan: 'INITIAL',
-                subscriptionExpiry: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
-                isPro: false // Trial is now for the BASIC plan
+        const user = await prisma.$transaction(async (tx) => {
+            let newUser;
+
+            if (existingUser && existingUser.password === 'PRE_APPROVED_DUMMY_ACCOUNT') {
+                // Actualiza el usuario pre-aprobado conservando su plan PRO
+                newUser = await tx.user.update({
+                    where: { id: existingUser.id },
+                    data: {
+                        password: hashedPassword,
+                        name,
+                        bizName,
+                        businessCategory,
+                        phoneNumber,
+                        defaultService: services && services.length > 0 ? services[0].name : 'General',
+                        defaultPrice: services && services.length > 0 ? Number(services[0].price) : 0,
+                    }
+                });
+            } else {
+                // Crea un usuario normal desde cero
+                newUser = await tx.user.create({
+                    data: {
+                        email,
+                        password: hashedPassword,
+                        name,
+                        bizName,
+                        businessCategory,
+                        phoneNumber,
+                        plan: 'INITIAL',
+                        subscriptionExpiry: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), 
+                        isPro: false,
+                        defaultService: services && services.length > 0 ? services[0].name : 'General',
+                        defaultPrice: services && services.length > 0 ? Number(services[0].price) : 0,
+                    }
+                });
             }
+
+            if (services && services.length > 0) {
+                const servicesData = services.map((s: any) => ({
+                    ownerId: newUser.id,
+                    name: s.name,
+                    defaultPrice: Number(s.price)
+                }));
+                await tx.userService.createMany({
+                    data: servicesData
+                });
+            }
+
+            if (paymentAlias) {
+                await tx.businessPaymentAccount.create({
+                    data: {
+                        ownerId: newUser.id,
+                        name: 'Transferencia',
+                        alias: paymentAlias,
+                        isDefault: true
+                    }
+                });
+            }
+
+            return newUser;
         });
 
         // Generate token
@@ -102,6 +144,10 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         }
 
         // Check password
+        if (!user.password) {
+            res.status(401).json({ error: 'Esta cuenta está vinculada a Google. Iniciá sesión con Google.' });
+            return;
+        }
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
             res.status(401).json({ error: 'Credenciales inválidas' });
@@ -265,13 +311,20 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                 notificationsEnabled: true,
                 classRemindersEnabled: true,
                 classReminderMinutes: true,
-                isPublicProfileVisible: true
+                isPublicProfileVisible: true,
+                mpAccessToken: true,
+                mpPublicKey: true
             }
         });
 
         if (!user) {
             res.status(401).json({ error: 'Usuario no encontrado' });
             return;
+        }
+
+        // Mask the MP token if it exists before sending it to the frontend
+        if (user.mpAccessToken) {
+            user.mpAccessToken = 'TOKEN_CONFIGURADO_Y_ENCRIPTADO';
         }
 
         res.json(user);
@@ -284,13 +337,19 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
 // PUT /api/auth/profile - Update user profile and settings
 router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
+        console.log(`[DEBUG] Profile update request body keys: ${Object.keys(req.body).join(', ')}`);
+        if (req.body.welcomeTemplate) {
+            console.log(`[DEBUG] welcomeTemplate received (length ${req.body.welcomeTemplate.length}): ${req.body.welcomeTemplate.substring(0, 50)}...`);
+            console.log(`[DEBUG] welcomeTemplate hex: ${req.body.welcomeTemplate.split('').map((c: string) => c.charCodeAt(0).toString(16).padStart(4, '0')).join(' ')}`);
+        }
+
         const { 
             name, email, bizName, bizAlias, businessCategory, phoneNumber, taxId, 
             billingAddress, reminderTemplate, classReminderTemplate, welcomeTemplate, generalTemplate, defaultPrice, defaultService, 
             defaultSurcharge, currency, receiptFooter,
             notificationsEnabled, isPublicProfileVisible,
             biography, photoUrl, instagramUrl, facebookUrl, mpAccessToken,
-            workStartHour, classRemindersEnabled, classReminderMinutes
+            workStartHour, workEndHour, classRemindersEnabled, classReminderMinutes
         } = req.body;
 
         // Fetch current user data for comparison
@@ -310,17 +369,6 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
             // Only proceed with update/check if the email is DIFFERENT from the current one
             if (normalized !== currentUser.email.toLowerCase()) {
                 sanitizedEmail = normalized;
-                // Check if email is already taken by ANOTHER user
-                const existingUser = await prisma.user.findFirst({
-                    where: { 
-                        email: sanitizedEmail,
-                        NOT: { id: req.userId }
-                    }
-                });
-                if (existingUser) {
-                    res.status(400).json({ error: 'El email ya está en uso por otro usuario' });
-                    return;
-                }
             }
         }
 
@@ -331,10 +379,12 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
             bizAlias, 
             businessCategory, 
             phoneNumber,
-            reminderTemplate, 
-            classReminderTemplate,
-            welcomeTemplate,
-            generalTemplate,
+            // Sanitize templates: normalize Unicode and strip replacement characters
+            // Sanitize templates: normalize Unicode and strip replacement characters/control chars
+            reminderTemplate: reminderTemplate != null ? reminderTemplate.normalize('NFC').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim() || null : undefined, 
+            classReminderTemplate: classReminderTemplate != null ? classReminderTemplate.normalize('NFC').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim() || null : undefined,
+            welcomeTemplate: welcomeTemplate != null ? welcomeTemplate.normalize('NFC').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim() || null : undefined,
+            generalTemplate: generalTemplate != null ? generalTemplate.normalize('NFC').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim() || null : undefined,
             defaultPrice: defaultPrice !== undefined ? Number(defaultPrice) : undefined,
             defaultService, 
             defaultSurcharge: defaultSurcharge !== undefined ? Number(defaultSurcharge) : undefined,
@@ -345,6 +395,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
             notificationsEnabled: notificationsEnabled !== undefined ? Boolean(notificationsEnabled) : undefined,
             isPublicProfileVisible: isPublicProfileVisible !== undefined ? Boolean(isPublicProfileVisible) : undefined,
             workStartHour: workStartHour !== undefined ? Number(workStartHour) : undefined,
+            workEndHour: workEndHour !== undefined ? Number(workEndHour) : undefined,
             classRemindersEnabled: classRemindersEnabled !== undefined ? Boolean(classRemindersEnabled) : undefined,
             classReminderMinutes: classReminderMinutes !== undefined ? Number(classReminderMinutes) : undefined,
             biography, 
@@ -358,7 +409,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
             Object.entries(rawData).filter(([_, v]) => v !== undefined)
         );
 
-        if (mpAccessToken) {
+        if (mpAccessToken && mpAccessToken !== 'TOKEN_CONFIGURADO_Y_ENCRIPTADO') {
             dataToUpdate.mpAccessToken = encrypt(mpAccessToken);
         }
 
@@ -391,6 +442,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                 classReminderMinutes: true,
                 isPublicProfileVisible: true,
                 workStartHour: true,
+                workEndHour: true,
                 biography: true,
                 photoUrl: true,
                 instagramUrl: true,
@@ -402,6 +454,10 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                 isAdmin: true
             }
         });
+
+        if ((updatedUser as any).mpAccessToken) {
+            (updatedUser as any).mpAccessToken = 'TOKEN_CONFIGURADO_Y_ENCRIPTADO';
+        }
 
         // Generate calendarToken if it doesn't exist
         if (!updatedUser.calendarToken) {
@@ -440,6 +496,7 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
                     ratingTokenExpires: true,
                     isAdmin: true,
                     workStartHour: true,
+                    workEndHour: true,
                     notificationsEnabled: true,
                     classRemindersEnabled: true,
                     classReminderMinutes: true,
@@ -484,6 +541,10 @@ router.post('/change-password', authLimiter, authMiddleware, async (req: AuthReq
         }
 
         // Check current password
+        if (!user.password) {
+            res.status(401).json({ error: 'Esta cuenta no tiene contraseña. Iniciaste sesión con Google.' });
+            return;
+        }
         const isValidPassword = await bcrypt.compare(currentPassword, user.password);
         if (!isValidPassword) {
             res.status(401).json({ error: 'La contraseña actual es incorrecta' });
@@ -564,21 +625,29 @@ router.delete('/delete-account', authLimiter, authMiddleware, async (req: AuthRe
     try {
         const { password } = req.body;
         
-        if (!password) {
-            res.status(400).json({ error: 'La contraseña es requerida para eliminar la cuenta.' });
-            return;
-        }
-
         const user = await prisma.user.findUnique({ where: { id: req.userId } });
         if (!user) {
             res.status(401).json({ error: 'Usuario no encontrado' });
             return;
         }
 
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            res.status(401).json({ error: 'Contraseña incorrecta. Operación cancelada.' });
-            return;
+        if (!user.password || user.password === 'GOOGLE_OAUTH_NO_PASSWORD') {
+            // Google user: require typing "ELIMINAR" as confirmation
+            if (password !== 'ELIMINAR') {
+                res.status(401).json({ error: 'Para confirmar, escribí exactamente: ELIMINAR', isGoogleUser: true });
+                return;
+            }
+        } else {
+            // Regular user: require password
+            if (!password) {
+                res.status(400).json({ error: 'La contraseña es requerida para eliminar la cuenta.' });
+                return;
+            }
+            const isValidPassword = await bcrypt.compare(password, user.password);
+            if (!isValidPassword) {
+                res.status(401).json({ error: 'Contraseña incorrecta. Operación cancelada.' });
+                return;
+            }
         }
 
         await prisma.user.delete({
@@ -589,6 +658,111 @@ router.delete('/delete-account', authLimiter, authMiddleware, async (req: AuthRe
     } catch (error) {
         console.error('Delete account error:', error);
         res.status(500).json({ error: 'Error al eliminar la cuenta' });
+    }
+});
+
+// Google OAuth Setup
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+
+const getGoogleCallbackUrl = () => {
+    if (process.env.GOOGLE_CALLBACK_URL) return process.env.GOOGLE_CALLBACK_URL;
+    return process.env.FRONTEND_URL?.includes('localhost') 
+        ? 'http://localhost:3000/api/auth/google/callback' 
+        : 'https://cobralo.info/api/auth/google/callback';
+};
+
+const googleClient = new OAuth2Client(
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    getGoogleCallbackUrl()
+);
+
+// GET /api/auth/google
+router.get('/google', (req: Request, res: Response) => {
+    const url = googleClient.generateAuthUrl({
+        access_type: 'offline',
+        scope: [
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/userinfo.email',
+        ],
+        prompt: 'consent'
+    });
+    res.redirect(url);
+});
+
+// GET /api/auth/google/callback
+router.get('/google/callback', async (req: Request, res: Response) => {
+    const code = req.query.code as string;
+    try {
+        if (!code) {
+            throw new Error('No code provided');
+        }
+
+        const { tokens } = await googleClient.getToken(code);
+        googleClient.setCredentials(tokens);
+
+        // Fetch user info
+        const oauth2 = googleClient.request({
+            url: 'https://www.googleapis.com/oauth2/v2/userinfo'
+        });
+        const userInfo = (await oauth2).data as any;
+
+        const email = userInfo.email;
+        const name = userInfo.name;
+        const googleId = userInfo.id;
+
+        if (!email) {
+             res.redirect(`${process.env.FRONTEND_URL}/login?error=EmailNotProvided`);
+             return;
+        }
+
+        let user = await prisma.user.findUnique({ where: { email } });
+        let isNewUser = false;
+
+        if (user) {
+            // Vincular cuenta si no la tiene
+            if (!user.googleId) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: { googleId }
+                });
+            }
+        } else {
+            // Crear usuario nuevo
+            isNewUser = true;
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    name,
+                    googleId,
+                    password: 'GOOGLE_OAUTH_NO_PASSWORD',
+                    plan: 'INITIAL',
+                    subscriptionExpiry: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+                    isPro: false,
+                    defaultService: 'General',
+                    defaultPrice: 0,
+                    calendarToken: require('crypto').randomBytes(20).toString('hex')
+                }
+            });
+        }
+
+        // Generate JWT
+        const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+
+        if (isNewUser) {
+            // New user: redirect to login page so they can complete the onboarding wizard
+            const gname = encodeURIComponent(name || '');
+            const gemail = encodeURIComponent(email || '');
+            res.redirect(`${process.env.FRONTEND_URL}/app/login?token=${token}&isNew=true&gname=${gname}&gemail=${gemail}`);
+        } else {
+            // Existing user: go straight to dashboard
+            res.redirect(`${process.env.FRONTEND_URL}/app/dashboard?token=${token}`);
+        }
+        
+    } catch (error) {
+        console.error('Google OAuth error:', error);
+        res.redirect(`${process.env.FRONTEND_URL}/login?error=OAuthFailed`);
     }
 });
 

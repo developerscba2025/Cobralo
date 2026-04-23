@@ -87,7 +87,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
                                         key={service.id} 
                                         className={`group relative p-6 rounded-[32px] border transition-all duration-500 overflow-hidden ${
                                             isEditing 
-                                            ? 'bg-zinc-50 dark:bg-black/40 border-emerald-500 shadow-2xl shadow-emerald-500/10 scale-[1.02] z-10' 
+                                            ? 'bg-zinc-50 dark:bg-bg-soft/40 border-emerald-500 shadow-2xl shadow-emerald-500/10 scale-[1.02] z-10' 
                                             : 'bg-zinc-50/50 dark:bg-white/5 border-zinc-200 dark:border-white/5 hover:border-emerald-500/30 hover:bg-zinc-50 dark:hover:bg-white/[0.08] hover:shadow-xl hover:shadow-black/5'
                                         }`}
                                     >
@@ -105,7 +105,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
                                                         <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest ml-1">Identificador</label>
                                                         <input 
                                                             autoFocus
-                                                            className="w-full bg-white dark:bg-black/20 border border-zinc-200 dark:border-white/10 p-4 rounded-2xl text-sm font-bold outline-none focus:border-emerald-500/50 transition-all text-zinc-900 dark:text-emerald-50"
+                                                            className="w-full bg-white dark:bg-bg-soft/20 border border-zinc-200 dark:border-white/10 p-4 rounded-2xl text-sm font-bold outline-none focus:border-emerald-500/50 transition-all text-zinc-900 dark:text-emerald-50"
                                                             value={editName}
                                                             onChange={e => setEditName(e.target.value)}
                                                         />
@@ -117,7 +117,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
                                                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 font-black text-sm">{user.currency}</div>
                                                             <input 
                                                                 type="number"
-                                                                className="w-full bg-white dark:bg-black/20 border border-zinc-200 dark:border-white/10 p-4 pl-10 rounded-2xl text-lg font-black outline-none focus:border-emerald-500/50 transition-all font-mono text-zinc-900 dark:text-emerald-50"
+                                                                className="w-full bg-white dark:bg-bg-soft/20 border border-zinc-200 dark:border-white/10 p-4 pl-10 rounded-2xl text-lg font-black outline-none focus:border-emerald-500/50 transition-all font-mono text-zinc-900 dark:text-emerald-50"
                                                                 value={editPrice}
                                                                 onChange={e => setEditPrice(e.target.value)}
                                                             />
@@ -205,7 +205,7 @@ const ServicesTab: React.FC<ServicesTabProps> = ({
 
                 {/* Add Service Section (Side Panel Bento) */}
                 <div className="order-1 lg:order-2 space-y-6 lg:sticky lg:top-8">
-                    <div className="bg-zinc-900 dark:bg-black p-8 rounded-[40px] shadow-2xl shadow-emerald-500/5 border border-white/5 space-y-8 relative overflow-hidden group">
+                    <div className="bg-surface dark:bg-bg-soft p-8 rounded-[40px] shadow-2xl shadow-emerald-500/5 border border-zinc-200 dark:border-border-main space-y-8 relative overflow-hidden group">
                         {/* Decorative Gradient Overlay */}
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[80px] -mr-16 -mt-16 pointer-events-none group-hover:bg-emerald-500/20 transition-all duration-700" />
                         

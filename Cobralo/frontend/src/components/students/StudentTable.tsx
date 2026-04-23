@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     MessageCircle, MoreHorizontal, User, Calendar, 
     FileText, ClipboardList, Trash2, Edit2, PlusCircle, X,
-    CheckCircle2, Clock, Phone
+    CheckCircle2, Check, Clock, Phone
 } from 'lucide-react';
 import type { Student } from '../../services/api';
 import Tooltip from '../ui/Tooltip';
@@ -42,21 +42,17 @@ const StudentRow: React.FC<StudentRowProps> = ({
     const isPaid = student.status === 'paid';
 
     return (
-        <motion.tr 
-            layout
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+        <tr 
             className={`group border-b border-border-main/40 transition-colors ${isSelected ? 'bg-primary-main/5 dark:bg-primary-main/10' : 'hover:bg-black/[0.02] dark:hover:bg-white/[0.02]'}`}
         >
             {/* Checkbox */}
             <td className="py-4 pl-5 pr-3 w-10">
-                <input 
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => onToggleSelect(student.id)}
-                    className="w-4 h-4 rounded border-border-main text-primary-main focus:ring-primary-main/20 cursor-pointer"
-                />
+                <div 
+                    onClick={() => onToggleSelect(student.id)}
+                    className={`w-5 h-5 rounded-[6px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all ${isSelected ? 'bg-primary-main border-primary-main text-white' : 'bg-bg-app border-border-main text-transparent hover:border-text-muted/40'}`}
+                >
+                    <Check size={12} strokeWidth={4} />
+                </div>
             </td>
 
             {/* Alumno */}
@@ -160,7 +156,7 @@ const StudentRow: React.FC<StudentRowProps> = ({
                     </Tooltip>
                 </div>
             </td>
-        </motion.tr>
+        </tr>
     );
 };
 
@@ -204,19 +200,19 @@ const StudentTable: React.FC<StudentTableProps> = ({
 
     return (
         <>
-            <div className="bg-surface border border-border-main rounded-[32px] overflow-hidden shadow-sm relative flex flex-col">
+            <div className="card-premium flex flex-col h-full min-h-0 relative">
                 <div className="relative flex-1">
                     <div className="overflow-x-auto w-full hide-scrollbar">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-border-main/50 bg-black/[0.02] dark:bg-white/[0.02]">
                                     <th className="py-3.5 pl-5 pr-3 w-10">
-                                        <input 
-                                            type="checkbox"
-                                            checked={allSelected}
-                                            onChange={onToggleAll}
-                                            className="w-4 h-4 rounded border-border-main text-primary-main focus:ring-primary-main/20 cursor-pointer"
-                                        />
+                                        <div 
+                                            onClick={onToggleAll}
+                                            className={`w-5 h-5 rounded-[6px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all ${allSelected ? 'bg-primary-main border-primary-main text-white' : 'bg-surface border-border-main text-transparent hover:border-text-muted/40'}`}
+                                        >
+                                            <Check size={12} strokeWidth={4} />
+                                        </div>
                                     </th>
                                     <th className="py-3.5 px-3 text-[9px] font-black text-text-muted uppercase tracking-widest">Alumno</th>
                                     <th className="py-3.5 px-3 text-[9px] font-black text-text-muted uppercase tracking-widest hidden sm:table-cell">Estado</th>
@@ -227,7 +223,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                <AnimatePresence mode="popLayout">
+                                <>
                                     {paginatedStudents.map((student) => (
                                         <StudentRow 
                                             key={student.id}
@@ -240,7 +236,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                                             currency={currency}
                                         />
                                     ))}
-                                </AnimatePresence>
+                                </>
                             </tbody>
                         </table>
                     </div>
@@ -303,7 +299,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                             animate={{opacity: 1}} 
                             exit={{opacity: 0}} 
                             onClick={handleCloseActionMenu} 
-                            className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+                            className="absolute inset-0 modal-overlay"
                         />
                         <motion.div 
                             initial={{opacity: 0, y: 50, scale: 0.95}} 

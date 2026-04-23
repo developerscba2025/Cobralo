@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import ConfirmModal from '../ConfirmModal';
 import { api } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { showToast } from '../Toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,12 +33,20 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
 }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [deleteConfirmValue, setDeleteConfirmValue] = useState('');
+    const { user } = useAuth();
+    const isGoogleUser = user?.password === 'GOOGLE_OAUTH_NO_PASSWORD' || !user?.password;
     const navigate = useNavigate();
 
     const handleDeleteAccount = async () => {
+        if (!deleteConfirmValue) {
+            showToast.error(isGoogleUser ? 'Por favor escribí ELIMINAR' : 'La contraseña es requerida');
+            return;
+        }
+
         try {
             setDeleting(true);
-            await api.deleteAccount();
+            await api.deleteAccount(deleteConfirmValue);
             localStorage.removeItem('token');
             showToast.success('Cuenta eliminada permanentemente');
             navigate('/app/login');
@@ -46,6 +55,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
         } finally {
             setDeleting(false);
             setIsDeleteModalOpen(false);
+            setDeleteConfirmValue('');
         }
     };
 
@@ -140,12 +150,28 @@ const SecurityTab: React.FC<SecurityTabProps> = ({
             <ConfirmModal
                 isOpen={isDeleteModalOpen}
                 title="¿Eliminar tu cuenta?"
-                message="Esta acción es irreversible y borrará todos tus alumnos, pagos y configuraciones permanentemente."
+                message={isGoogleUser 
+                    ? "Esta acción es irreversible. Para confirmar, escribí la palabra ELIMINAR a continuación:" 
+                    : "Esta acción es irreversible. Ingresá tu contraseña para confirmar la eliminación:"}
                 confirmText={deleting ? "Eliminando..." : "Sí, eliminar cuenta"}
                 cancelText="Cancelar"
                 onConfirm={handleDeleteAccount}
-                onCancel={() => setIsDeleteModalOpen(false)}
-            />
+                onCancel={() => {
+                    setIsDeleteModalOpen(false);
+                    setDeleteConfirmValue('');
+                }}
+            >
+                <div className="mt-4 w-full">
+                    <input
+                        type={isGoogleUser ? "text" : "password"}
+                        className="w-full p-4 bg-surface text-text-main rounded-2xl border border-red-500/20 focus:border-red-500 outline-none font-bold text-center uppercase tracking-widest placeholder:text-zinc-500 placeholder:normal-case"
+                        placeholder={isGoogleUser ? "Escribí ELIMINAR" : "Tu contraseña"}
+                        value={deleteConfirmValue}
+                        onChange={(e) => setDeleteConfirmValue(e.target.value)}
+                        autoFocus
+                    />
+                </div>
+            </ConfirmModal>
         </div>
     );
 };

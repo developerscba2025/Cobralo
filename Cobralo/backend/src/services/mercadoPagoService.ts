@@ -67,13 +67,33 @@ export const BASE_SUBSCRIPTION_PLANS = {
  * Obtener los planes con el multiplicador de inflación aplicado
  */
 export const getCalculatedPlans = async () => {
-    const ipcSetting = await prisma.systemSetting.findUnique({ where: { key: 'ipc_multiplier' } });
-    const factor = parseFloat(ipcSetting?.value || '1.0');
+    // Buscar multiplicador y precios base
+    const settingsKeys = ['ipc_multiplier', 'base_price_basic_monthly', 'base_price_pro_monthly', 'base_price_pro_trimestral'];
+    const settings = await prisma.systemSetting.findMany({
+        where: { key: { in: settingsKeys } }
+    });
+
+    const settingsMap = settings.reduce((acc, curr) => {
+        acc[curr.key] = curr.value;
+        return acc;
+    }, {} as Record<string, string>);
+
+    const factor = parseFloat(settingsMap['ipc_multiplier'] || '1.0');
     
+    // Obtener precios base, con fallback a los hardcodeados
+    const basePrices = {
+        BASIC_MONTHLY: parseFloat(settingsMap['base_price_basic_monthly'] || String(BASE_SUBSCRIPTION_PLANS.BASIC_MONTHLY.price)),
+        PRO_MONTHLY: parseFloat(settingsMap['base_price_pro_monthly'] || String(BASE_SUBSCRIPTION_PLANS.PRO_MONTHLY.price)),
+        PRO_TRIMESTRAL: parseFloat(settingsMap['base_price_pro_trimestral'] || String(BASE_SUBSCRIPTION_PLANS.PRO_TRIMESTRAL.price)),
+    };
+
     const plans: any = {};
     for (const [key, plan] of Object.entries(BASE_SUBSCRIPTION_PLANS)) {
+        // Obtener el precio base actual para este plan
+        const currentBasePrice = basePrices[key as keyof typeof basePrices] || plan.price;
+        
         // Redondear a las decenas más cercanas para un precio "limpio"
-        const dynamicPrice = Math.round((plan.price * factor) / 10) * 10;
+        const dynamicPrice = Math.round((currentBasePrice * factor) / 10) * 10;
         plans[key] = { ...plan, price: dynamicPrice };
     }
     return plans as typeof BASE_SUBSCRIPTION_PLANS;
@@ -146,11 +166,14 @@ export const createMercadoPagoPreference = async (
             },
             auto_return: 'approved',
             external_reference,
-            metadata,
-            expires: true,
-            expiration_date_from: new Date().toISOString(),
-            expiration_date_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            metadata
         };
+
+        if (planId !== 'CLASS_PAYMENT') {
+            preference.expires = true;
+            preference.expiration_date_from = new Date().toISOString();
+            preference.expiration_date_to = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        }
 
         if (planId === 'CLASS_PAYMENT') {
             preference.notification_url = `${webhookUrl}/api/payments/webhook/${userId}`;
@@ -192,9 +215,12 @@ export const getMercadoPagoPayment = async (paymentId: string, customAccessToken
 /**
  * Obtener información de una preferencia
  */
-export const getMercadoPagoPreference = async (preferenceId: string) => {
+export const getMercadoPagoPreference = async (preferenceId: string, customAccessToken?: string) => {
     try {
-        const response = await mercadoPagoClient.get(`/checkout/preferences/${preferenceId}`);
+        const headers = {
+            'Authorization': `Bearer ${customAccessToken || mercadoPagoConfig.accessToken}`
+        };
+        const response = await axios.get(`${mercadoPagoConfig.apiUrl}/checkout/preferences/${preferenceId}`, { headers });
         return response.data;
     } catch (error) {
         console.error('Error getting Mercado Pago preference:', error);

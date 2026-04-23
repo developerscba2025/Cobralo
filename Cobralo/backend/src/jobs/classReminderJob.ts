@@ -65,7 +65,7 @@ export async function runClassReminderJob() {
                         },
                     });
 
-                    const appBaseUrl = process.env.APP_BASE_URL || 'https://cobraloapp.com';
+                    const appBaseUrl = process.env.APP_BASE_URL || 'https://cobralo.info';
                     const confirmUrl = `${appBaseUrl}/confirmar/${confirmToken}`;
                     const cancelUrl = `${appBaseUrl}/cancelar/${confirmToken}`;
 

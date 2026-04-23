@@ -38,10 +38,11 @@ interface AuthContextType {
     token: string | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    register: (name: string, email: string, password: string, bizName?: string, businessCategory?: string, phoneNumber?: string) => Promise<{ success: boolean; error?: string }>;
+    register: (name: string, email: string, password: string, bizName?: string, businessCategory?: string, phoneNumber?: string, services?: any[], paymentAlias?: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     isAuthenticated: boolean;
     isPro: boolean;
+    isAdmin: boolean;
     updateUser: (updatedUser: Partial<User>) => void;
 }
 
@@ -56,6 +57,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     useEffect(() => {
         const validateToken = async () => {
+            // Handle token passed in URL (e.g. Google OAuth redirect to /app/dashboard?token=...)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            // Only grab URL token if it's on the dashboard path (not on login page, which handles it separately)
+            if (urlToken && !window.location.pathname.includes('/app/login')) {
+                localStorage.setItem('token', urlToken);
+                // Clean the token from URL to avoid leaking it
+                urlParams.delete('token');
+                const newSearch = urlParams.toString();
+                const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+                window.history.replaceState({}, '', newUrl);
+            }
+
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
                 try {
@@ -102,12 +116,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const register = async (name: string, email: string, password: string, bizName?: string, businessCategory?: string, phoneNumber?: string) => {
+    const register = async (name: string, email: string, password: string, bizName?: string, businessCategory?: string, phoneNumber?: string, services?: any[], paymentAlias?: string) => {
         try {
             const res = await fetch(`${API_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password, bizName, businessCategory, phoneNumber })
+                body: JSON.stringify({ name, email, password, bizName, businessCategory, phoneNumber, services, paymentAlias })
             });
             const data = await res.json();
 
@@ -146,6 +160,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             logout,
             isAuthenticated: !!token && !!user,
             isPro: user?.plan === 'PRO',
+            isAdmin: user?.isAdmin === true,
             updateUser
         }}>
             {children}

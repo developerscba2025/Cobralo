@@ -78,14 +78,14 @@ const AttendanceModal: React.FC<AttendanceModalProps> = ({ student, onClose, onU
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                className="fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4"
                 onClick={onClose}
             >
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="card-premium w-full max-w-lg overflow-hidden relative"
+                    className="glass-premium rounded-[32px] w-full max-w-lg overflow-hidden relative"
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                     {/* Header */}

@@ -51,7 +51,7 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
                         placeholder="Buscar por nombre, teléfono o servicio..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3.5 bg-surface dark:bg-[#111113] border border-border-main rounded-2xl outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 shadow-sm transition-all text-sm font-bold text-text-main placeholder:text-text-muted/50"
+                        className="w-full pl-12 pr-4 py-3.5 bg-surface dark:bg-bg-soft border border-border-main rounded-2xl outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/10 shadow-sm transition-all text-sm font-bold text-text-main placeholder:text-text-muted/50"
                     />
                 </div>
 
@@ -59,7 +59,7 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
                     <Tooltip content="Crear una nueva ficha de alumno">
                         <button 
                             onClick={onNewStudent}
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-black rounded-2xl text-sm font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20"
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-black rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20"
                         >
                             <Plus size={18} />
                             <span>Nuevo</span>

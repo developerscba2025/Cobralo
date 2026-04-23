@@ -51,7 +51,7 @@ const ExtraPaymentModal: React.FC<ExtraPaymentModalProps> = ({
     return (
         <Portal>
             <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 modal-overlay" onClick={onClose} />
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative w-full max-w-sm bg-white dark:bg-bg-soft rounded-3xl p-6 shadow-2xl border border-zinc-100 dark:border-border-emerald z-10">
                     <h2 className="text-xl font-black text-text-main mb-2">Pago Extra</h2>
                     <p className="text-sm font-bold text-text-muted mb-6">Registrar pago manual adicional para {student.name}</p>
@@ -64,7 +64,7 @@ const ExtraPaymentModal: React.FC<ExtraPaymentModalProps> = ({
                                     type="number" 
                                     min="0"
                                     className="w-full p-4 pl-8 bg-zinc-50 dark:bg-bg-dark rounded-xl font-bold border-none outline-none focus:ring-2 focus:ring-primary-main/20 text-text-main"
-                                    placeholder="Ej: 5000"
+                                    placeholder="Monto"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     autoFocus
@@ -76,7 +76,7 @@ const ExtraPaymentModal: React.FC<ExtraPaymentModalProps> = ({
                             <input 
                                 type="text" 
                                 className="w-full p-4 bg-zinc-50 dark:bg-bg-dark rounded-xl font-bold border-none outline-none focus:ring-2 focus:ring-primary-main/20 text-text-main text-sm"
-                                placeholder="Ej: Pago parcial, materiales, etc."
+                                placeholder="Concepto del pago"
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
                             />

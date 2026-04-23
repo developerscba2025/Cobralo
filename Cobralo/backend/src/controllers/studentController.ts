@@ -112,7 +112,7 @@ export const getWhatsappDigest = async (req: AuthRequest, res: Response) => {
 
         const currency = student.owner.currency || '$';
         const bizName = student.owner.bizName || student.owner.name;
-        const statusText = student.status === 'paid' ? 'Al día ✅' : 'Pendiente ⏳';
+        const statusText = student.status === 'paid' ? 'Al día' : 'Pendiente';
         const debtAmount = Number(student.balance_due || student.amount).toLocaleString('es-AR');
         
         let amountText = 'Estás al día. ¡Gracias!';
@@ -130,16 +130,16 @@ export const getWhatsappDigest = async (req: AuthRequest, res: Response) => {
             : 'Consultame por los medios de pago disponibles.';
 
         // Generate text
-        let message = `📊 *Resumen de Cuenta - ${bizName}*\n\n`;
+        let message = `*Resumen de Cuenta - ${bizName}*\n\n`;
         message += `Hola *${student.name.split(' ')[0]}*, te envío tu estado actual:\n\n`;
-        message += `✅ *Estado:* ${statusText}\n`;
-        message += `💰 *Deuda Pendiente:* ${amountText}\n`;
+        message += `*Estado:* ${statusText}\n`;
+        message += `*Deuda Pendiente:* ${amountText}\n`;
         
         if (student.planType === 'PACK') {
-            message += `🎫 *Clases restantes:* ${student.credits}\n`;
+            message += `*Clases restantes:* ${student.credits}\n`;
         }
 
-        message += `\n💳 *Opciones de Pago:*\n${paymentOptions}\n\n`;
+        message += `\n*Opciones de Pago:*\n${paymentOptions}\n\n`;
         message += `*Cualquier duda, avisame. ¡Saludos!*`;
 
         const link = `https://wa.me/${student.phone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(message)}`;
@@ -435,5 +435,135 @@ export const getPendingContacts = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Error fetching pending contacts:', error);
         res.status(500).json({ error: 'Error fetching pending contacts' });
+    }
+};
+
+/**
+ * GET /api/students/pending/count - Get count of pending students (lightweight)
+ */
+export const getPendingCount = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.userId) {
+            res.status(401).json({ error: 'Autenticación requerida' });
+            return;
+        }
+        const count = await prisma.student.count({
+            where: {
+                ownerId: req.userId,
+                status: 'pending',
+                isActive: true
+            }
+        });
+        res.json({ count });
+    } catch (error) {
+        console.error('Error al contar pendientes:', error);
+        res.status(500).json({ error: 'Error fetching pending count' });
+    }
+};
+
+/**
+ * GET /api/students/dashboard/summary - Get summary stats for dashboard
+ */
+export const getDashboardSummary = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.userId) {
+            res.status(401).json({ error: 'Autenticación requerida' });
+            return;
+        }
+
+        const [totalStudents, pendingData] = await Promise.all([
+            prisma.student.count({
+                where: { ownerId: req.userId, isActive: true }
+            }),
+            prisma.student.aggregate({
+                where: {
+                    ownerId: req.userId,
+                    status: 'pending',
+                    isActive: true
+                },
+                _count: true,
+                _sum: {
+                    amount: true
+                }
+            })
+        ]);
+
+        res.json({
+            totalStudents,
+            pendingCount: pendingData._count,
+            pendingAmount: Number(pendingData._sum.amount || 0)
+        });
+    } catch (error) {
+        console.error('Error in dashboard summary:', error);
+        res.status(500).json({ error: 'Error calculating dashboard summary' });
+    }
+};
+
+/**
+ * POST /api/students/bulk-message - Send a free-form mass WhatsApp message using a wildcard template
+ */
+export const sendBulkMessage = async (req: AuthRequest, res: Response) => {
+    try {
+        const { studentIds, message } = req.body;
+        const userId = req.userId;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Autenticación requerida' });
+            return;
+        }
+
+        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0 || !message) {
+            res.status(400).json({ error: 'Faltan alumnos o el mensaje está vacío.' });
+            return;
+        }
+
+        // 1. Fetch selected students AND the user (for business name/currency)
+        const [students, user] = await Promise.all([
+            prisma.student.findMany({
+                where: { 
+                    id: { in: studentIds },
+                    ownerId: userId 
+                }
+            }),
+            prisma.user.findUnique({
+                where: { id: userId }
+            })
+        ]);
+
+        if (!user) {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+
+        const { notificationService } = require('../services/notificationService');
+
+        let successCount = 0;
+        let failCount = 0;
+
+        // 2. Send messages
+        for (const student of students) {
+            if (!student.phone) {
+                failCount++;
+                continue;
+            }
+
+            // Use the unified notification service to replace variables
+            const personalizedMessage = notificationService.replaceVariables ? 
+                notificationService.replaceVariables(message, student, user) :
+                notificationService.formatMessage(message, student, user, 'UPCOMING'); // Fallback
+
+            const sent = await notificationService.sendWhatsApp(student.phone, personalizedMessage);
+            
+            if (sent) successCount++;
+            else failCount++;
+        }
+
+        res.json({ 
+            message: `Proceso finalizado. Enviados: ${successCount}. Fallidos: ${failCount}.` 
+        });
+
+    } catch (error) {
+        console.error('Error en bulk message:', error);
+        res.status(500).json({ error: 'Error interno al enviar los mensajes masivos.' });
     }
 };

@@ -10,7 +10,14 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).userId;
         const notifications = await prisma.notification.findMany({
-            where: { ownerId: userId },
+            where: { 
+                ownerId: userId,
+                isDismissed: false,
+                OR: [
+                    { snoozedUntil: null },
+                    { snoozedUntil: { lte: new Date() } }
+                ]
+            },
             orderBy: { createdAt: 'desc' },
             take: 50,
         });
@@ -61,6 +68,37 @@ router.patch('/:id/read', authMiddleware, async (req: Request, res: Response) =>
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to mark as read' });
+    }
+});
+
+// PATCH /api/notifications/:id/dismiss - Mark one as dismissed
+router.patch('/:id/dismiss', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const id = parseInt(req.params.id as string);
+        await prisma.notification.update({
+            where: { id, ownerId: userId },
+            data: { isDismissed: true },
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to dismiss notification' });
+    }
+});
+
+// PATCH /api/notifications/:id/snooze - Snooze notification
+router.patch('/:id/snooze', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).userId;
+        const id = parseInt(req.params.id as string);
+        const { until } = req.body;
+        await prisma.notification.update({
+            where: { id, ownerId: userId },
+            data: { snoozedUntil: new Date(until) },
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to snooze notification' });
     }
 });
 

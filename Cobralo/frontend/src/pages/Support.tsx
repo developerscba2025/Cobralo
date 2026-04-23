@@ -163,7 +163,7 @@ const Support = () => {
                                             name="email"
                                             type="email" 
                                             required
-                                            placeholder="mi@email.com"
+                                            placeholder="Tu email"
                                             className="w-full px-8 py-5 bg-bg-app/50 text-text-main rounded-3xl border border-border-main focus:border-primary-main/40 focus:ring-4 focus:ring-primary-main/5 outline-none transition-all font-bold text-base shadow-inner" 
                                         />
                                     </div>
@@ -175,7 +175,7 @@ const Support = () => {
                                         name="subject"
                                         type="text" 
                                         required
-                                        placeholder="Ej: Problemas con un pago, sugerencia de mejora..."
+                                        placeholder="Describí tu consulta con el mayor detalle posible..."
                                         className="w-full px-8 py-5 bg-bg-app/50 text-text-main rounded-3xl border border-border-main focus:border-primary-main/40 focus:ring-4 focus:ring-primary-main/5 outline-none transition-all font-bold text-base shadow-inner" 
                                     />
                                 </div>
@@ -210,26 +210,29 @@ const Support = () => {
                     </div>
                 </div>
 
-                {/* FAQ / Simple Links */}
+                {/* FAQ / Quick Links */}
                 <div className="pt-12 border-t border-border-main/50">
-                    <h5 className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] text-center mb-8 opacity-40">Preguntas Frecuentes y Enlaces Útiles</h5>
+                    <h5 className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] text-center mb-8 opacity-40">Accesos Rápidos</h5>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { title: '¿Cómo cobrar con MP?', desc: 'Vinculá tu cuenta en menos de 1 minuto.' },
-                            { title: 'Gestión de Alumnos', desc: 'Aprendé a cargar y organizar tu academia.' },
-                            { title: 'Planes y Precios', desc: 'Conocé todos los beneficios de Cobralo PRO.' }
+                            { title: '¿Cómo cobrar con MP?', desc: 'Vinculá tu cuenta en menos de 1 minuto.', href: '/app/settings?tab=payment-accounts' },
+                            { title: 'Gestión de Alumnos', desc: 'Aprendé a cargar y organizar tu academia.', href: '/app/students' },
+                            { title: 'Planes y Precios', desc: 'Conocé todos los beneficios de Cobralo PRO.', href: '/app/settings?tab=subscription' }
                         ].map((faq, i) => (
-                            <motion.div 
-                                key={i} 
+                            <motion.a
+                                key={i}
+                                href={faq.href}
                                 whileHover={{ scale: 1.02 }}
-                                className="p-6 bg-surface/20 border border-border-main/50 rounded-3xl hover:bg-surface/40 transition-all cursor-pointer group"
+                                className="p-6 bg-surface/20 border border-border-main/50 rounded-3xl hover:bg-surface/40 hover:border-primary-main/20 transition-all cursor-pointer group block"
                             >
                                 <p className="text-xs font-black text-text-main uppercase tracking-tight mb-1 group-hover:text-primary-main transition-colors">{faq.title}</p>
                                 <p className="text-[10px] font-bold text-text-muted opacity-70 uppercase tracking-tighter">{faq.desc}</p>
-                            </motion.div>
+                                <p className="text-[9px] font-black text-primary-main/60 uppercase tracking-widest mt-3 group-hover:text-primary-main transition-colors">Ver →</p>
+                            </motion.a>
                         ))}
                     </div>
                 </div>
+
             </div>
         </Layout>
     );

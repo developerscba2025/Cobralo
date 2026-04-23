@@ -74,7 +74,7 @@ const LegalModal = ({ isOpen, onClose, type }: LegalModalProps) => {
         Solo compartimos datos con servicios esenciales: Mercado Pago (pagos), Google Cloud (alojamiento), Twilio/WhatsApp API (notificaciones) y herramientas de anal\u00edtica. No vendemos datos a terceros con fines publicitarios.
 
         ### 6. Transferencia Internacional
-        Los datos pueden ser procesados en servidores ubicados fuera de Argentina (p. ej. EE.UU.), garantizando siempre niveles de protecci\u00f3n adecuados seg\u00fan est\u00e1ndares internacionales.
+        Los datos pueden ser procesados en servidores ubicados fuera de Argentina (p. ej. servidores remotos), garantizando siempre niveles de protección adecuados según estándares internacionales.
 
         ### 7. Per\u00edodo de Conservaci\u00f3n
         Los datos se conservan mientras la cuenta est\u00e9 activa. Al darse de baja, se otorga un plazo de 30 d\u00edas para exportar la informaci\u00f3n antes de su eliminaci\u00f3n o anonimizaci\u00f3n definitiva.

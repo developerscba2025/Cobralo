@@ -80,23 +80,24 @@ const StudentNotes: React.FC<StudentNotesProps> = ({
     return (
         <AnimatePresence>
             {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 flex items-center justify-end z-50 backdrop-blur-sm"
-                    onClick={onClose}
-                >
+                <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-end modal-overlay"
+                        onClick={onClose}
+                    />
                     <motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                        className="h-full w-full max-w-md bg-white dark:bg-slate-800 shadow-2xl flex flex-col"
+                        className="h-full w-full max-w-md shadow-2xl flex flex-col glass-premium border-l border-border-main rounded-l-[32px] z-[51]"
                     >
                         {/* Header */}
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <div className="p-6 border-b border-border-main flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-800 dark:text-white">
                                     Notas
@@ -125,7 +126,7 @@ const StudentNotes: React.FC<StudentNotesProps> = ({
                                 <button
                                     onClick={handleAddNote}
                                     disabled={isAdding || !newNote.trim()}
-                                    className="p-3 bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white rounded-xl transition"
+                                    className="p-3 w-12 h-12 flex items-center justify-center bg-primary-main hover:bg-primary-glow/80 active:scale-95 disabled:opacity-50 text-black rounded-[16px] transition-all shadow-lg shadow-primary-main/20"
                                 >
                                     <Plus size={20} />
                                 </button>
@@ -168,7 +169,7 @@ const StudentNotes: React.FC<StudentNotesProps> = ({
                             )}
                         </div>
                     </motion.div>
-                </motion.div>
+                </>
             )}
         </AnimatePresence>
     );

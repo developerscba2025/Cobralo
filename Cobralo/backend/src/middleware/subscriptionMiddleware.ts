@@ -68,7 +68,7 @@ export const checkStudentLimit = async (req: AuthRequest, res: Response, next: N
         // Solo verificar límite si está en plan FREE
         if (!user.isPro || user.plan !== 'PRO') {
             const studentCount = await prisma.student.count({
-                where: { ownerId: req.userId }
+                where: { ownerId: req.userId, isActive: true }
             });
 
             // FREE plan: máximo 5 estudiantes (configurable)
@@ -148,7 +148,7 @@ export const enforceFreeRiderBlock = async (req: AuthRequest, res: Response, nex
 
         if (!user?.isPro || user.plan !== 'PRO') {
             const studentCount = await prisma.student.count({
-                where: { ownerId: req.userId }
+                where: { ownerId: req.userId, isActive: true }
             });
 
             const FREE_STUDENT_LIMIT = 5;

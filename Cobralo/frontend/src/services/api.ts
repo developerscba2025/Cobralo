@@ -53,28 +53,49 @@ export interface Student {
     status: 'paid' | 'pending' | 'paused';
     schedules?: ClassSchedule[];
     // Phase 4
-    planType?: 'MONTHLY' | 'PACK' | 'PER_CLASS';
+    planType?: 'MONTHLY' | 'PACK' | 'PER_CLASS' | 'UNLIMITED';
     credits?: number;
     sub_category?: string | null;
     billing_alias?: string | null;
     makeup_classes?: number;
     isFlexible?: boolean;
     notes?: string;
+    createdAt?: string;
 }
 
 export interface ClassSchedule {
     id: number;
     studentId?: number;
+    groupId?: number | null;
     studentIds?: number[];
+    title?: string | null;
     dayOfWeek: number;
     startTime: string;
     endTime: string;
     capacity?: number;
+    subcategory?: string | null;
     isRecurring: boolean;
     date?: string;
     dayName?: string;
     student?: { id: number; name: string; service_name: string; phone: string };
     students?: Array<{ id: number; name: string; service_name: string; phone: string }>;
+    group?: { id: number; name: string; color?: string; subcategory?: string | null } | null;
+}
+
+export interface Group {
+    id: number;
+    name: string;
+    ownerId: number;
+    serviceId?: number | null;
+    capacity?: number | null;
+    color?: string | null;
+    subcategory?: string | null;
+    notes?: string | null;
+    isActive: boolean;
+    service?: UserService | null;
+    students: Array<{ id: number; name: string; phone: string; service_name: string; status: string }>;
+    schedules: ClassSchedule[];
+    createdAt: string;
 }
 
 export interface Payment {
@@ -106,6 +127,7 @@ export interface UnifiedSchedule extends ClassSchedule {
     }>;
     isRecurring: boolean;
     date?: string;
+    group?: { id: number; name: string; color?: string } | null;
 }
 
 export interface Expense {
@@ -146,6 +168,7 @@ export interface User {
     mpPublicKey?: string;
     notificationsEnabled?: boolean;
     workStartHour?: number;
+    workEndHour?: number;
     isPublicProfileVisible?: boolean;
     biography?: string;
     photoUrl?: string;
@@ -236,11 +259,29 @@ export const api = {
         return res.json();
     },
 
+    // GET /api/students/pending/count (lightweight — only returns { count: number })
+    async getPendingCount(): Promise<number> {
+        const res = await fetchWithTimeout(`${API_URL}/students/pending/count`, {
+            headers: { ...getAuthHeader() }
+        });
+        const data = await res.json();
+        return data.count ?? 0;
+    },
+
+    // GET /api/students/dashboard/summary (lightweight)
+    async getDashboardSummary(): Promise<{ totalStudents: number; pendingCount: number; pendingAmount: number }> {
+        const res = await fetchWithTimeout(`${API_URL}/students/dashboard/summary`, {
+            headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
+
     // POST /api/students
     async createStudent(data: Omit<Student, 'id' | 'status'>): Promise<Student> {
         const res = await fetchWithTimeout(`${API_URL}/students`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -250,7 +291,7 @@ export const api = {
     async updateStudent(id: number, data: Partial<Student>): Promise<Student> {
         const res = await fetchWithTimeout(`${API_URL}/students/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -278,7 +319,7 @@ export const api = {
     async updatePrices(data: { percentage: number; service: string }): Promise<{ message: string }> {
         const res = await fetchWithTimeout(`${API_URL}/students/update-prices`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -312,7 +353,7 @@ export const api = {
     async createPayment(data: { studentId: number; amount: number; month: number; year: number }): Promise<Payment> {
         const res = await fetchWithTimeout(`${API_URL}/payments`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -341,7 +382,7 @@ export const api = {
     async createNote(data: { studentId: number; content: string }): Promise<StudentNote> {
         const res = await fetchWithTimeout(`${API_URL}/notes`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -392,10 +433,11 @@ export const api = {
         capacity?: number;
         isRecurring: boolean;
         date?: string;
+        title?: string;
     }): Promise<ClassSchedule> {
         const res = await fetchWithTimeout(`${API_URL}/calendar`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -410,10 +452,11 @@ export const api = {
         capacity?: number | null;
         isRecurring?: boolean;
         date?: string;
+        title?: string | null;
     }): Promise<ClassSchedule> {
         const res = await fetchWithTimeout(`${API_URL}/calendar/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -424,6 +467,105 @@ export const api = {
         const res = await fetchWithTimeout(`${API_URL}/calendar/${id}`, {
             method: 'DELETE',
             headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
+    // ============ GROUPS ============
+
+    // GET /api/groups
+    async getGroups(): Promise<Group[]> {
+        const res = await fetchWithTimeout(`${API_URL}/groups`, {
+            headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
+    // GET /api/groups/:id
+    async getGroup(id: number): Promise<Group> {
+        const res = await fetchWithTimeout(`${API_URL}/groups/${id}`, {
+            headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
+    // POST /api/groups
+    async createGroup(data: { 
+        name: string; 
+        serviceId?: number; 
+        capacity?: number; 
+        color?: string; 
+        notes?: string;
+        studentIds?: number[];
+    }): Promise<Group> {
+        const res = await fetchWithTimeout(`${API_URL}/groups`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify(data)
+        });
+        return res.json();
+    },
+
+    // PUT /api/groups/:id
+    async updateGroup(id: number, data: Partial<Group>): Promise<Group> {
+        const res = await fetchWithTimeout(`${API_URL}/groups/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify(data)
+        });
+        return res.json();
+    },
+
+    // DELETE /api/groups/:id
+    async deleteGroup(id: number): Promise<{ message: string }> {
+        const res = await fetchWithTimeout(`${API_URL}/groups/${id}`, {
+            method: 'DELETE',
+            headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
+    // POST /api/groups/:id/students
+    async addStudentsToGroup(groupId: number, studentIds: number[]): Promise<Group> {
+        const res = await fetchWithTimeout(`${API_URL}/groups/${groupId}/students`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify({ studentIds })
+        });
+        return res.json();
+    },
+
+    // DELETE /api/groups/:id/students/:studentId
+    async removeStudentFromGroup(groupId: number, studentId: number): Promise<Group> {
+        const res = await fetchWithTimeout(`${API_URL}/groups/${groupId}/students/${studentId}`, {
+            method: 'DELETE',
+            headers: { ...getAuthHeader() }
+        });
+        return res.json();
+    },
+
+    // POST /api/groups/:id/schedules
+    async addScheduleToGroup(groupId: number, scheduleData: { 
+        dayOfWeek: number; 
+        startTime: string; 
+        endTime: string; 
+        isRecurring: boolean; 
+        date?: string 
+    }): Promise<ClassSchedule> {
+        const res = await fetchWithTimeout(`${API_URL}/groups/${groupId}/schedules`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify(scheduleData)
+        });
+        return res.json();
+    },
+
+    // POST /api/groups/:id/schedules/link
+    async linkScheduleToGroup(groupId: number, scheduleId: number): Promise<ClassSchedule> {
+        const res = await fetchWithTimeout(`${API_URL}/groups/${groupId}/schedules/link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify({ scheduleId })
         });
         return res.json();
     },
@@ -455,6 +597,16 @@ export const api = {
         return res.json();
     },
 
+    // POST /api/students/bulk-message
+    async sendBulkMessage(data: { studentIds: number[]; message: string }): Promise<{ message: string }> {
+        const res = await fetchWithTimeout(`${API_URL}/students/bulk-message`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify(data)
+        });
+        return res.json();
+    },
+
     // ============ EXPENSES ============
 
     // GET /api/expenses/current
@@ -469,7 +621,7 @@ export const api = {
     async createExpense(data: { description: string; amount: number; category: string; date?: string }): Promise<Expense> {
         const res = await fetchWithTimeout(`${API_URL}/expenses`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -498,7 +650,7 @@ export const api = {
     async updateProfile(data: Partial<User>): Promise<User> {
         const res = await fetchWithTimeout(`${API_URL}/auth/profile`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -508,7 +660,7 @@ export const api = {
     async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
         const res = await fetchWithTimeout(`${API_URL}/auth/change-password`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         if (!res.ok) {
@@ -518,11 +670,16 @@ export const api = {
         return res.json();
     },
 
-    async deleteAccount(): Promise<{ message: string }> {
-        const res = await fetchWithTimeout(`${API_URL}/auth/me`, {
+    async deleteAccount(password: string): Promise<{ message: string }> {
+        const res = await fetchWithTimeout(`${API_URL}/auth/delete-account`, {
             method: 'DELETE',
-            headers: { ...getAuthHeader() }
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify({ password })
         });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Error al eliminar la cuenta');
+        }
         return res.json();
     },
 
@@ -532,8 +689,20 @@ export const api = {
         
         const res = await fetchWithTimeout(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify({ targetEmail, plan, expiryDate })
+        });
+        return res.json();
+    },
+
+    // POST /api/admin/users/feature
+    async updateUserFeatureAdmin(targetEmail: string, isFeatured: boolean, testimonial: string): Promise<{ message: string }> {
+        const url = `${API_URL}/admin/users/feature`;
+        
+        const res = await fetchWithTimeout(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
+            body: JSON.stringify({ targetEmail, isFeatured, testimonial })
         });
         return res.json();
     },
@@ -542,7 +711,7 @@ export const api = {
     async forgotPassword(email: string): Promise<{ message: string }> {
         const res = await fetchWithTimeout(`${API_URL}/auth/forgot-password`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify({ email })
         });
         return res.json();
@@ -552,7 +721,7 @@ export const api = {
     async resetPassword(data: { token: string; password: string }): Promise<{ message: string }> {
         const res = await fetchWithTimeout(`${API_URL}/auth/reset-password`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -563,7 +732,7 @@ export const api = {
     async markAttendance(data: { studentId: number; status: string; date?: string }): Promise<Attendance> {
         const res = await fetchWithTimeout(`${API_URL}/attendance`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -576,7 +745,7 @@ export const api = {
     }): Promise<Attendance[]> {
         const res = await fetchWithTimeout(`${API_URL}/attendance/bulk`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -620,10 +789,16 @@ export const api = {
         return res.json();
     },
 
+    // ============ LANDING PAGE ============
+    async getLandingData(): Promise<{ featuredTeachers: any[], testimonials: any[] }> {
+        const res = await fetchWithTimeout(`${API_URL}/public/landing-data`);
+        return res.json();
+    },
+
     async submitRating(token: string, data: { value: number, comment: string, studentName?: string }): Promise<{ message: string }> {
         const res = await fetchWithTimeout(`${API_URL}/ratings/public/submit/${token}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -641,7 +816,7 @@ export const api = {
     async createService(data: { name: string; defaultPrice: number }): Promise<UserService> {
         const res = await fetchWithTimeout(`${API_URL}/services`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -650,7 +825,7 @@ export const api = {
     async updateService(id: number, data: { name?: string; defaultPrice?: number; updateStudents?: boolean }): Promise<UserService> {
         const res = await fetchWithTimeout(`${API_URL}/services/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -676,7 +851,7 @@ export const api = {
     async createPaymentAccount(data: { name: string; alias: string; isDefault?: boolean }): Promise<BusinessPaymentAccount> {
         const res = await fetchWithTimeout(`${API_URL}/payment-accounts`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -685,7 +860,7 @@ export const api = {
     async updatePaymentAccount(id: number, data: Partial<BusinessPaymentAccount>): Promise<BusinessPaymentAccount> {
         const res = await fetchWithTimeout(`${API_URL}/payment-accounts/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         return res.json();
@@ -721,7 +896,7 @@ export const api = {
     async createCheckoutSession(planId: string): Promise<{ checkoutUrl: string; sandboxCheckoutUrl: string; preferenceId: string }> {
         const res = await fetchWithTimeout(`${API_URL}/subscription/checkout`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify({ planId })
         });
         return res.json();
@@ -776,7 +951,7 @@ export const api = {
     async createStudentPaymentLink(data: { studentId: number, amount: number, title?: string, year?: number, month?: number }): Promise<{ checkoutUrl: string; init_point: string }> {
         const res = await fetchWithTimeout(`${API_URL}/payments/create-link`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...getAuthHeader() },
             body: JSON.stringify(data)
         });
         const result = await res.json();
@@ -791,7 +966,7 @@ export const api = {
     async sendSupportMessage(data: { name: string, email: string, subject: string, message: string }): Promise<{ status: string, message: string }> {
         const res = await fetchWithTimeout(`${API_URL}/support`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify(data)
         });
         return res.json();

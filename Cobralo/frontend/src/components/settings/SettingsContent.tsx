@@ -9,7 +9,6 @@ import RatingsTab from './RatingsTab';
 import SubscriptionTab from './SubscriptionTab';
 import LegalTab from './LegalTab';
 import PaymentAccountsTab from './PaymentAccountsTab';
-import AdminPanelTab from './AdminPanelTab';
 import type { User } from '../../services/api';
 
 interface SettingsContentProps {
@@ -144,8 +143,6 @@ const SettingsContent: React.FC<SettingsContentProps> = (props) => {
             );
         case 'legal':
             return <LegalTab />;
-        case 'admin_panel':
-            return <AdminPanelTab />;
         default:
             return null;
     }

@@ -7,49 +7,70 @@ export type NotificationType = 'UPCOMING' | 'OVERDUE' | 'CLASS_REMINDER' | 'PAYM
  * Service to handle notification logic
  */
 export const notificationService = {
-    /**
-     * Formats a message based on a template and student/user data
-     */
     formatMessage(template: string | null, student: Student, user: any, type: NotificationType, extraData?: any): string {
         const defaultTemplates = {
-            UPCOMING: "👋 Hola *{alumno}*,\n\nTe escribimos de *{negocio}* para recordarte que tu cuota de *{servicio}* vence pronto.\n\n📌 *Detalles:*\n💰 *Monto:* {monto}\n⏳ *Días restantes:* {dias}\n\n✅ Podés realizar tu pago de forma segura aquí:\n🔗 {pago_url}\n\n¡Muchas gracias!",
-            OVERDUE: "⚠️ Hola *{alumno}*,\n\nTe enviamos este recordatorio de *{negocio}* ya que tenés un pago pendiente de *{servicio}*.\n\n📌 *Detalles:*\n💵 *Monto:* {monto}\n\n✅ Si ya realizaste el pago, podés cargar el comprobante aquí:\n🔗 {pago_url}\n\nSi tenés alguna duda, estamos a tu disposición.\n¡Gracias!",
-            CLASS_REMINDER: "📅 *Recordatorio de Clase*\n\nHola *{alumno}*, te recordamos que tenemos clase hoy:\n⏰ *Hora:* {hora_inicio}\n🏢 *Servicio:* {servicio}\n\nPor favor, confirmá tu asistencia aquí:\n✅ Confirmar: {url_confirmar}\n❌ Cancelar: {url_cancelar}\n\n¡Te esperamos!",
-            PRO_REMINDER_SENT: "✅ Recordatorio PRO enviado a {alumno}. Vence en 2 días ({monto}).",
-            PAYMENT_RECEIVED: "✅ *¡Pago Recibido!*\n\nHola *{alumno}*, recibimos correctamente tu pago de *{monto}* por *{servicio}*.\n\n¡Muchísimas gracias por tu confianza en *{negocio}*!"
+            UPCOMING: "! RECORDATORIO DE PAGO !\n------------------------\nHola *{nombre}* \u00BB\n\nTe escribimos de *{negocio}*.\nTu cuota est\u00E1 por vencer.\n\n[ RESUMEN DE CUENTA ]\n\u00B7 Servicio: {servicio}\n\u00B7 Vencimiento: D\u00EDa {vencimiento}\n\u00B7 Monto: {monto}\n\nPara abonar de forma segura:\n\u00BB {pago_url}\n\nQue tengas un excelente d\u00EDa \u00B7",
+            OVERDUE: "! AVISO DE DEUDA !\n------------------------\nHola *{nombre}*,\n\nTe enviamos este aviso desde *{negocio}* por un pago pendiente.\n\n[ DETALLE ]\n\u00B7 Servicio: {servicio}\n\u00B7 Total pendiente: {monto}\n\nSi ya pagaste, carga el comprobante aqu\u00ED:\n\u00BB {pago_url}\n\nQuedamos a tu disposici\u00F3n \u00B7",
+            CLASS_REMINDER: "! RECORDATORIO DE CLASE !\n------------------------\nHola *{nombre}*, confirmamos tu turno en *{negocio}*.\n\n[ HORARIO ] \u00B7 {hora_inicio}\n[ SERVICIO ] \u00B7 {servicio}\n\nConfirm\u00E1 tu asistencia:\n[ SI ] \u00BB {url_confirmar}\n[ NO ] \u00BB {url_cancelar}\n\nTe esperamos \u00B7",
+            PRO_REMINDER_SENT: "Recordatorio PRO enviado a {alumno} ({monto})",
+            PAYMENT_RECEIVED: "! PAGO RECIBIDO !\n------------------------\nHola *{nombre}*. Tu pago ha sido acreditado exitosamente.\n\n```\nCOMPROBANTE DIGITAL\n------------------\n\u00B7 Servicio: {servicio}\n\u00B7 Monto: {monto}\n\u00B7 Estado: Al d\u00EDa\n```\n\nGracias por confiar en *{negocio}* \u00BB"
         };
 
-        let message = template || defaultTemplates[type];
-        
+        const message = template || defaultTemplates[type];
+        return this.replaceVariables(message, student, user, extraData);
+    },
+
+    /**
+     * Replaces all supported variables and normalizes the string for WhatsApp
+     */
+    replaceVariables(text: string, student: Student, user: any, extraData?: any): string {
         const bizName = user.bizName || user.name || "Tu Profe";
         const currency = user.currency || '$';
-        const amount = `${currency}${student.amount?.toString() || '0'}`;
-        const appBaseUrl = process.env.APP_BASE_URL || 'https://cobraloapp.com';
+        const amountNum = Number(student.amount) || 0;
+        const formattedAmount = `${currency}${amountNum.toLocaleString('es-AR')}`;
+        
+        const hour = new Date().getHours();
+        const saludo = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
+        
+        const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        const mesActual = meses[new Date().getMonth()];
+        const nombrePila = student.name ? student.name.split(' ')[0] : '';
+        
+        const appBaseUrl = process.env.APP_BASE_URL || 'https://cobralo.info';
         const pagoUrl = extraData?.paymentLink || `${appBaseUrl}/pago/${student.id}`;
 
-        // Basic variable replacement
-        message = message.replace(/{student_name}/g, student.name).replace(/{alumno}/g, student.name);
-        message = message.replace(/{service}/g, student.service_name || "clases").replace(/{servicio}/g, student.service_name || "clases");
-        message = message.replace(/{amount}/g, amount).replace(/{monto}/g, amount);
-        message = message.replace(/{negocio}/g, bizName);
-        message = message.replace(/{pago_url}/g, pagoUrl);
-        
-        if (extraData?.start_time) {
-            message = message.replace(/{start_time}/g, extraData.start_time).replace(/{hora_inicio}/g, extraData.start_time);
-        }
-        
-        if (extraData?.confirmUrl) {
-            message = message.replace(/{confirm_url}/g, extraData.confirmUrl).replace(/{url_confirmar}/g, extraData.confirmUrl);
-            message = message.replace(/{cancel_url}/g, extraData.cancelUrl || '').replace(/{url_cancelar}/g, extraData.cancelUrl || '');
-        }
+        let message = text
+            // Nuevas variables (Preferidas)
+            .replace(/{alumno}/g, student.name || "")
+            .replace(/{nombre}/g, nombrePila)
+            .replace(/{monto}/g, formattedAmount)
+            .replace(/{servicio}/g, student.service_name || "clases")
+            .replace(/{negocio}/g, bizName)
+            .replace(/{pago_url}/g, pagoUrl)
+            .replace(/{vencimiento}/g, (student.due_day || student.deadline_day || '').toString())
+            .replace(/{mes}/g, mesActual)
+            .replace(/{saludo}/g, saludo)
+            
+            // Variables de eventos
+            .replace(/{hora_inicio}/g, extraData?.start_time || '')
+            .replace(/{start_time}/g, extraData?.start_time || '')
+            .replace(/{url_confirmar}/g, extraData?.confirmUrl || '')
+            .replace(/{confirm_url}/g, extraData?.confirmUrl || '')
+            .replace(/{url_cancelar}/g, extraData?.cancelUrl || '')
+            .replace(/{cancel_url}/g, extraData?.cancelUrl || '')
+            .replace(/{dias}/g, extraData?.daysRemaining?.toString() || '')
 
-        if (type === 'UPCOMING') {
-            const daysRemaining = student.deadline_day ? (student.deadline_day - new Date().getDate()) : 3;
-            const days = Math.max(0, daysRemaining).toString();
-            message = message.replace(/{days}/g, days).replace(/{dias}/g, days);
-        }
+            // Alias heredados
+            .replace(/{student_name}/g, student.name || "")
+            .replace(/{nombre_pila}/g, nombrePila)
+            .replace(/{mes_actual}/g, mesActual)
+            .replace(/{amount}/g, formattedAmount)
+            .replace(/{service}/g, student.service_name || "clases")
+            .replace(/{moneda}/g, currency);
 
-        return message;
+        // NORMALIZE: Ensure characters are standard UTF-8 and strip only C0 control chars.
+        // We preserve emojis and all Unicode characters.
+        return message.normalize('NFC').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim();
     },
 
     /**
@@ -58,34 +79,54 @@ export const notificationService = {
     async sendWhatsApp(phone: string, message: string): Promise<boolean> {
         const token = process.env.WHATSAPP_TOKEN;
         const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'notificacion_general';
 
         if (!token || !phoneId || token === 'your_meta_cloud_token_here') {
-            console.warn('⚠️ WhatsApp integration skipped: Missing credentials in .env');
+            const errorMsg = 'Integración de WhatsApp omitida: Faltan credenciales en .env';
+            console.warn(`⚠️ ${errorMsg}`);
             return false;
         }
 
         try {
-            // Clean phone number (strip + and spaces)
             const cleanPhone = phone.replace(/\D/g, '');
             
+            // Note: Meta Cloud API requires 'template' for the first message to a user.
+            // If the user already replied, 'text' can be used.
+            // We use 'template' by default as configured in the system.
+            const payload = {
+                messaging_product: "whatsapp",
+                to: cleanPhone,
+                type: "template",
+                template: {
+                    name: templateName,
+                    language: { code: "es_AR" },
+                    components: [
+                        {
+                            type: "body",
+                            parameters: [
+                                { type: "text", text: message }
+                            ]
+                        }
+                    ]
+                }
+            };
+
             await axios.post(
                 `https://graph.facebook.com/v17.0/${phoneId}/messages`,
+                payload,
                 {
-                    messaging_product: "whatsapp",
-                    to: cleanPhone,
-                    type: "text",
-                    text: { body: message }
-                },
-                {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 }
             );
             
-            console.log(`✅ WhatsApp sent to ${cleanPhone}`);
+            console.log(`✅ WhatsApp enviado a ${cleanPhone} usando template ${templateName}`);
             return true;
         } catch (error: any) {
             console.error('❌ Error sending WhatsApp:', error.response?.data || error.message);
-            return false;
+            throw new Error(`Error al enviar WhatsApp: ${error.response?.data?.error?.message || error.message}`);
         }
     },
 
@@ -101,7 +142,6 @@ export const notificationService = {
         }
 
         try {
-            // Resend requires verified domains. 'onboarding@resend.dev' works out-of-the-box for testing if you send to your own registered email.
             const fromEmail = process.env.RESEND_FROM_EMAIL || 'Cobralo <onboarding@resend.dev>';
             
             await axios.post(

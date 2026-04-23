@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import rateLimit from 'express-rate-limit';
 import { 
     uploadPaymentProof, 
     getPendingProofsForTeacher, 
@@ -28,13 +29,31 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB límite
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB límite
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|webp/;
+        const mimetype = allowedTypes.test(file.mimetype);
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        }
+        cb(new Error('Solo se permiten imágenes (jpeg, jpg, png, webp)'));
+    }
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Limit each IP to 5 uploads per hour
+    message: { error: 'Demasiados comprobantes enviados. Por favor, intentalo más tarde.' },
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 const router = Router();
 
 // PUBLIC: Sube un comprobante de transferencia
-router.post('/public/:token', upload.single('verification_image'), uploadPaymentProof);
+router.post('/public/:token', uploadLimiter, upload.single('verification_image'), uploadPaymentProof);
 
 // PROTEGIDO: Frontend del profesor
 router.get('/pending', authMiddleware, getPendingProofsForTeacher);

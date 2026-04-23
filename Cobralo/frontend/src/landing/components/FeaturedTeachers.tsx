@@ -1,15 +1,39 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, MapPin, Users, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { api } from '../../services/api';
 
-const MOCK_PROS = [
-  { name: 'Lucas Ferrero', bizName: 'Acordes Online', category: 'Guitarra y Ukelele', location: 'CABA', avgRating: 4.9, students: 24, gradient: 'linear-gradient(135deg, #065f46, #059669)' },
-  { name: 'Sofía Rodriguez', bizName: 'Namaste Yoga', category: 'Yoga y Meditación', location: 'Rosario', avgRating: 4.8, students: 18, gradient: 'linear-gradient(135deg, #1e40af, #3b82f6)' },
-  { name: 'Enzo Rossi', bizName: 'Rossi Personal Trainer', category: 'Fitness Funcional', location: 'Córdoba', avgRating: 5.0, students: 12, gradient: 'linear-gradient(135deg, #7c3aed, #8b5cf6)' },
-  { name: 'Micaela Paz', bizName: 'Inglés con Mica', category: 'Idiomas / TOEFL', location: 'CABA', avgRating: 4.7, students: 31, gradient: 'linear-gradient(135deg, #b91c1c, #dc2626)' },
+const GRADIENTS = [
+  'linear-gradient(135deg, #065f46, #059669)',
+  'linear-gradient(135deg, #1e40af, #3b82f6)',
+  'linear-gradient(135deg, #7c3aed, #8b5cf6)',
+  'linear-gradient(135deg, #b91c1c, #dc2626)',
 ];
 
-const FeaturedTeachers = () => (
+const FeaturedTeachers = () => {
+  const [teachers, setTeachers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const data = await api.getLandingData();
+        if (data.featuredTeachers && data.featuredTeachers.length > 0) {
+          setTeachers(data.featuredTeachers);
+        } else {
+          setTeachers([]);
+        }
+      } catch (error) {
+        console.error('Error fetching featured teachers:', error);
+        setTeachers([]);
+      }
+    };
+    fetchTeachers();
+  }, []);
+
+  if (!teachers || teachers.length === 0) return null;
+
+  return (
   <section id="profes" className="section-padding relative overflow-hidden" style={{ background: '#0E1113' }}>
     {/* Background ambient orbs */}
     <div
@@ -52,7 +76,9 @@ const FeaturedTeachers = () => (
 
       {/* ── Professionals Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {MOCK_PROS.map((pro, i) => (
+        {teachers.map((pro, i) => {
+          const gradient = GRADIENTS[i % GRADIENTS.length];
+          return (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 32 }}
@@ -69,17 +95,26 @@ const FeaturedTeachers = () => (
             {/* Hover Background Accent */}
             <div 
                className="absolute inset-x-0 bottom-0 h-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"
-               style={{ background: `linear-gradient(to top, ${pro.gradient.split(',')[1]}15, transparent)` }}
+               style={{ background: `linear-gradient(to top, ${gradient.split(',')[1]}15, transparent)` }}
             />
 
             {/* Header: Avatar + Rating */}
             <div className="flex items-start justify-between mb-8 relative z-10">
-              <div
-                className="w-16 h-16 rounded-[24px] overflow-hidden flex items-center justify-center text-xl font-black text-white shadow-2xl transition-all duration-500 group-hover:rounded-3xl group-hover:rotate-6"
-                style={{ background: pro.gradient, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
-              >
-                {pro.name[0]}
-              </div>
+              {pro.photoUrl ? (
+                <img 
+                  src={pro.photoUrl} 
+                  alt={pro.name} 
+                  className="w-16 h-16 rounded-[24px] object-cover shadow-2xl transition-all duration-500 group-hover:rounded-3xl group-hover:rotate-6"
+                  style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+                />
+              ) : (
+                <div
+                  className="w-16 h-16 rounded-[24px] overflow-hidden flex items-center justify-center text-xl font-black text-white shadow-2xl transition-all duration-500 group-hover:rounded-3xl group-hover:rotate-6"
+                  style={{ background: gradient, boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+                >
+                  {pro.name[0]}
+                </div>
+              )}
               <div
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black"
                 style={{ 
@@ -89,7 +124,7 @@ const FeaturedTeachers = () => (
                 }}
               >
                 <Star size={12} fill="currentColor" strokeWidth={0} />
-                {pro.avgRating.toFixed(1)}
+                {pro.avgRating?.toFixed(1) || '5.0'}
               </div>
             </div>
 
@@ -123,7 +158,7 @@ const FeaturedTeachers = () => (
               </button>
             </div>
           </motion.div>
-        ))}
+        )})}
       </div>
 
       {/* ── Final Call to Action ── */}
@@ -140,6 +175,7 @@ const FeaturedTeachers = () => (
 
     </div>
   </section>
-);
+  );
+};
 
 export default FeaturedTeachers;

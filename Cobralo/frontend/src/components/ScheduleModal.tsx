@@ -102,13 +102,13 @@ const ScheduleModal = ({ isOpen, onClose, studentId, studentName }: ScheduleModa
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 modal-overlay animate-in fade-in duration-300">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="card-premium w-full max-w-lg relative overflow-hidden flex flex-col max-h-[90vh] shadow-2xl border-white/10"
+                    className="glass-premium rounded-[32px] w-full max-w-lg relative overflow-hidden flex flex-col max-h-[90vh]"
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                     {/* Header */}

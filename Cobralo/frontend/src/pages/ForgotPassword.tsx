@@ -33,9 +33,9 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="min-h-screen flex bg-[#051105] text-slate-200 overflow-hidden">
+        <div className="min-h-screen flex bg-bg-app text-text-main overflow-hidden">
             {/* Left Side - Visual/Marketing */}
-            <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-center p-20 bg-gradient-to-br from-green-950 via-[#051105] to-black">
+            <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-center p-20 bg-gradient-to-br from-green-950 via-bg-app to-black">
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-[120px]"></div>
                     <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500 rounded-full blur-[120px]"></div>
@@ -113,7 +113,7 @@ const ForgotPassword = () => {
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                                             <input
                                                 type="email"
-                                                placeholder="ejemplo@correo.com"
+                                                placeholder="Tu email"
                                                 required
                                                 value={email}
                                                 onChange={e => setEmail(e.target.value)}

@@ -31,7 +31,7 @@ interface ProDashboardProps {
 
 /* ─── Bento card style helper ─── */
 const bentoBase = "relative overflow-hidden rounded-[28px] border border-border-main transition-all duration-300";
-const bentoGlass = "bg-surface dark:bg-bg-soft shadow-sm dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)]";
+const bentoGlass = "glass-premium";
 
 import DashboardReminders from '../components/dashboard/DashboardReminders';
 import DashboardMetrics from '../components/dashboard/DashboardMetrics';
@@ -162,7 +162,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             variants={staggerContainerVariants}
             initial="initial"
             animate="animate"
-            className="space-y-4 md:space-y-6 pb-12 lg:pb-0"
+            className="relative space-y-4 md:space-y-6 pb-12 lg:pb-0"
         >
             {/* IPC Notice Banner */}
             {pendingAdjustment && (
@@ -200,7 +200,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                     className={`whitespace-nowrap flex items-center gap-2 px-3 py-1.5 border rounded-xl transition-colors ${
                         totalPendingItems > 0 
                             ? 'bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20' 
-                            : 'bg-black/5 border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10'
+                            : 'bg-black/5 border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-surface/10'
                     }`}
                 >
                     <div className={`w-1.5 h-1.5 rounded-full ${totalPendingItems > 0 ? 'bg-amber-500 animate-pulse' : 'bg-text-muted/50'}`} />
@@ -217,23 +217,25 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                 
                 {/* 1. Big card: Ingresos (PRIORITY) */}
                 <TiltCard intensity={3} className="col-span-2 lg:col-span-2">
-                    <div className={`h-full ${bentoBase} ${bentoGlass} p-5 lg:p-7 flex flex-col justify-between order-first lg:order-none`}>
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-main/5 dark:bg-primary-main/10 rounded-full blur-[60px] -translate-y-1/4 translate-x-1/4 pointer-events-none" />
+                    <div className={`h-full ${bentoBase} glass-emerald p-5 lg:p-7 flex flex-col justify-between order-first lg:order-none relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] -translate-y-1/4 translate-x-1/4 pointer-events-none" />
 
-                        <div className="flex items-center justify-between mb-4 sm:mb-6">
-                            <span className="px-3 py-1.5 bg-black/5 border border-black/10 dark:border-white/10 rounded-xl text-[10px] font-black text-text-muted flex items-center gap-2 uppercase tracking-widest">
+                        <div className="flex items-center justify-between mb-4 sm:mb-6 relative z-10">
+                            <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black text-emerald-500/80 flex items-center gap-2 uppercase tracking-widest">
                                 <TrendingUp size={11} className="text-emerald-500" /> Mes actual
                             </span>
-                            <span className={`text-[10px] font-black px-2.5 py-1.5 rounded-lg ${Number(monthChange) >= 0 ? 'text-emerald-500 bg-emerald-500/10' : 'text-red-500 bg-red-500/10'}`}>
-                                {Number(monthChange) > 0 ? '+' : ''}{monthChange}% vs mes pasado
-                            </span>
+                            {!(stats.paid === 0 && Number(monthChange) === 0) && (
+                                <span className={`text-[10px] font-black px-2.5 py-1.5 rounded-lg ${Number(monthChange) >= 0 ? 'text-emerald-500 bg-emerald-500/10' : 'text-red-500 bg-red-500/10'}`}>
+                                    {Number(monthChange) > 0 ? '+' : ''}{monthChange}% vs mes pasado
+                                </span>
+                            )}
                         </div>
 
-                        <div>
-                            <p className="text-2xl sm:text-3xl 2xl:text-5xl font-black text-text-main tracking-tighter">
+                        <div className="relative z-10">
+                            <p className="text-3xl sm:text-4xl 2xl:text-6xl font-black text-text-main tracking-tighter">
                                 <AnimatedCounter value={stats.paid} prefix={user?.currency || '$'} />
                             </p>
-                            <p className="text-[10px] sm:text-xs font-bold text-text-muted mt-1">
+                            <p className="text-[10px] sm:text-xs font-bold text-text-muted mt-1 uppercase tracking-widest opacity-60">
                                 Cobrados.{' '}
                                 <span className="text-amber-500 font-black">
                                     {user?.currency || '$'}{Number(stats.pending).toLocaleString('es-AR')} pendientes.
@@ -301,7 +303,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             <motion.div variants={fadeInUpVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
 
                 {/* Agenda de hoy */}
-                <div className={`${bentoBase} ${bentoGlass} p-5 md:p-7 pt-5 md:pt-6`}>
+                <div className="card-premium p-5 md:p-7 pt-5 md:pt-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xs font-black text-text-main uppercase tracking-widest flex items-center gap-2">
                             Agenda de hoy
@@ -339,7 +341,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                             <p className="text-[10px] font-black text-text-main tabular-nums">{schedule.startTime}</p>
                                             <div className="w-1 h-1 rounded-full bg-border-main" />
                                         </div>
-                                        <div className="flex-1 bg-white/[0.03] border border-white/[0.05] rounded-[20px] p-3 md:p-4 flex items-center justify-between hover:bg-white/[0.06] transition-all hover:translate-x-1 duration-300">
+                                        <div className="flex-1 bg-white/5 dark:bg-white/[0.03] border border-black/5 dark:border-white/[0.05] rounded-[20px] p-3 md:p-4 flex items-center justify-between hover:bg-white/10 dark:hover:bg-white/[0.06] transition-all hover:translate-x-1 duration-300">
                                             <div className="flex flex-col gap-1">
                                                 <span className="text-[13px] font-black text-text-main tracking-tight">{displayName}</span>
                                                 <span className="text-[9px] font-bold text-text-muted uppercase tracking-widest">
@@ -349,12 +351,12 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                             <div className="flex items-center gap-3">
                                                 <div className="flex -space-x-2">
                                                     {studentList.slice(0, 3).map((s, j) => (
-                                                        <div key={j} className={`w-6 h-6 rounded-full ${avatarColors[j % avatarColors.length]} border-2 border-[#090B0D] flex items-center justify-center text-[8px] font-black text-white shadow-lg`}>
+                                                        <div key={j} className={`w-6 h-6 rounded-full ${avatarColors[j % avatarColors.length]} border-2 border-bg-app flex items-center justify-center text-[8px] font-black text-white shadow-lg`}>
                                                             {s.name?.charAt(0)}
                                                         </div>
                                                     ))}
                                                     {studentList.length > 3 && (
-                                                        <div className="w-6 h-6 rounded-full bg-zinc-800 border-2 border-[#090B0D] flex items-center justify-center text-[7px] font-black text-zinc-400">
+                                                        <div className="w-6 h-6 rounded-full bg-zinc-800 border-2 border-bg-app flex items-center justify-center text-[7px] font-black text-zinc-400">
                                                             +{studentList.length - 3}
                                                         </div>
                                                     )}
@@ -380,7 +382,7 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
                                                         <a
                                                             href={generateWaLink(studentList[0])}
                                                             target="_blank" rel="noreferrer"
-                                                            className="w-8 h-8 flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-black rounded-xl transition-all"
+                                                            className="w-8 h-8 flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-text-main rounded-xl transition-all"
                                                             title="WhatsApp"
                                                         >
                                                             <MessageCircle size={13} />
@@ -414,15 +416,15 @@ const ProDashboard: React.FC<ProDashboardProps> = ({
             {/* ── Row 3: Insights ── */}
             <motion.div variants={fadeInUpVariants} className="space-y-4 md:space-y-6">
                 {/* ── Resumen Anual (Chart) ── */}
-                <div className={`${bentoBase} ${bentoGlass} p-4 sm:p-5 lg:p-7`}>
+                <div className="card-premium p-4 sm:p-5 lg:p-7">
                     <div className="flex items-center justify-between mb-4 lg:mb-6">
                         <h3 className="text-[10px] md:text-sm font-black text-text-main uppercase tracking-widest flex items-center gap-2 leading-none">
                             Resumen de Ingresos
                         </h3>
                     </div>
                     {chartData && chartData.length > 0 ? (
-                        <div className="h-48 sm:h-64 w-full relative">
-                            <ResponsiveContainer width="99%" height="100%" minHeight={0}>
+                        <div className="h-48 sm:h-64 w-full relative min-h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <XAxis 
                                         dataKey="name" 

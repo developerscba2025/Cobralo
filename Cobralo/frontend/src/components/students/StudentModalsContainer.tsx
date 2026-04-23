@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { api, type Student } from '../../services/api';
 import StudentFormModal from './StudentFormModal';
-import ExtraPaymentModal from './ExtraPaymentModal';
+import PriceUpdateModal from '../PriceUpdateModal';
 import ScheduleModal from '../ScheduleModal';
 import AttendanceModal from '../AttendanceModal';
 import ConfirmModal from '../ConfirmModal';
@@ -20,12 +20,14 @@ interface StudentModalsContainerProps {
         delete: { isOpen: boolean; student: Student | null };
         renew: { isOpen: boolean; student: Student | null };
         whatsapp: { isOpen: boolean; student: Student | null };
+        bulkMessage?: boolean;
         adjustment: boolean;
         upsell: boolean;
     };
     onClose: (type: string) => void;
     onAction: () => void;
     selectedStudents: Student[];
+    selectedIds?: number[];
     allStudents?: Student[];
     user: any;
     userServices: any[];
@@ -36,6 +38,7 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
     onClose,
     onAction,
     selectedStudents,
+    selectedIds = [],
     allStudents = [],
     user,
     userServices,
@@ -124,7 +127,7 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
                 variant="danger"
             />
 
-            {/* WhatsApp Mass Message */}
+            {/* WhatsApp Single Preview */}
             <WhatsAppPreviewModal 
                 isOpen={modals.whatsapp.isOpen}
                 onClose={() => onClose('whatsapp')}
@@ -133,13 +136,25 @@ const StudentModalsContainer: React.FC<StudentModalsContainerProps> = ({
                 isPro={user?.plan === 'PRO'}
             />
 
-            {/* Extra Payment (Adjustment in the container type) */}
-            <ExtraPaymentModal 
+            {/* WhatsApp Mass Bulk Wizard */}
+            <WhatsAppPreviewModal
+                isOpen={!!modals.bulkMessage}
+                onClose={() => onClose('bulkMessage')}
+                students={allStudents}
+                preselectedStudents={selectedStudents}
+                user={user}
+                isPro={user?.plan === 'PRO'}
+            />
+
+            {/* Price Adjustment - Bulk update (PriceUpdateModal) */}
+            <PriceUpdateModal
                 isOpen={modals.adjustment}
                 onClose={() => onClose('adjustment')}
-                onSuccess={onAction}
-                student={selectedStudents.length === 1 ? selectedStudents[0] : null}
+                students={selectedStudents as any}
                 currency={user?.currency || '$'}
+                bizName={user?.bizName || ''}
+                bizAlias={user?.bizAlias || ''}
+                template={user?.priceUpdateTemplate || '*¡Actualización de cuota!*\n\nHola {alumno}, te informamos que a partir del próximo mes tu cuota de *{servicio}* será de *{monto}*. \n\nCualquier consulta, escribinos. ¡Gracias!'}
             />
 
             {/* Renew Pack Modal */}

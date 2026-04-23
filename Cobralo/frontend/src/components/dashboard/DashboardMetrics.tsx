@@ -41,7 +41,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ students }) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Próximos Vencimientos */}
-            <div className="lg:col-span-2 relative overflow-hidden rounded-[28px] border border-border-main bg-surface dark:bg-bg-soft shadow-sm p-5 md:p-7">
+            <div className="lg:col-span-2 card-premium p-5 md:p-7">
                 <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-black text-text-main uppercase tracking-widest">Próximos Vencimientos</span>
                     <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center">
@@ -80,7 +80,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ students }) => {
             </div>
 
             {/* Distribución por servicio */}
-            <div className="relative overflow-hidden rounded-[28px] border border-border-main bg-surface dark:bg-bg-soft shadow-sm p-5 md:p-7">
+            <div className="card-premium p-5 md:p-7">
                 <div className="flex items-center justify-between mb-4">
                     <span className="text-xs font-black text-text-main uppercase tracking-widest text-nowrap">Por Servicio</span>
                     <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center">

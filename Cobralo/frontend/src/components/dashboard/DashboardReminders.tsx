@@ -43,7 +43,7 @@ const DashboardReminders: React.FC<DashboardRemindersProps> = ({
     };
 
     return (
-        <div className="relative overflow-hidden rounded-[28px] border border-border-main transition-all duration-300 bg-surface dark:bg-bg-soft shadow-sm dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-5 md:p-7 flex flex-col h-full">
+        <div className="card-premium p-5 md:p-7 flex flex-col h-full">
             <h3 className="text-xs font-black text-text-main uppercase tracking-widest flex items-center justify-between mb-5">
                 <span className="flex items-center gap-2">
                     Recordatorios
