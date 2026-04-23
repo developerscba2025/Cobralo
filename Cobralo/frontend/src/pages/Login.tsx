@@ -246,28 +246,28 @@ const Login = () => {
 
 
     return (
-        <div className="min-h-screen flex flex-col lg:flex-row text-text-main relative bg-bg-app overflow-x-hidden">
+        <div className="min-h-screen flex flex-col lg:flex-row text-white relative overflow-x-hidden" style={{ backgroundColor: '#060f06' }}>
             
             {/* ═══════════════════════════════════════════════════
                 GLOBAL BACKGROUND EFFECTS (Unified - Simpler)
             ═══════════════════════════════════════════════════ */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-bg-app" />
+                <div className="absolute inset-0" style={{ backgroundColor: '#060f06' }} />
                 
-                {/* Single Elegant Glow */}
+                {/* Green Glow */}
                 <motion.div 
                     animate={{ 
-                        opacity: [0.1, 0.15, 0.1] 
+                        opacity: [0.18, 0.28, 0.18] 
                     }}
                     transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                     className="absolute top-[-10%] left-[-10%] w-[1000px] h-[1000px] rounded-full"
-                    style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.2) 0%, transparent 70%)', filter: 'blur(100px)' }} 
+                    style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.25) 0%, transparent 70%)', filter: 'blur(80px)' }} 
                 />
                 
                 {/* Subtle Dot Grid */}
                 <div className="absolute inset-0 opacity-30"
                     style={{ 
-                        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)', 
+                        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0)', 
                         backgroundSize: '40px 40px',
                         maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
                     }} 
@@ -424,21 +424,21 @@ const Login = () => {
                     {/* Mobile logo */}
                     <div className="mb-8 lg:hidden flex items-center gap-3 justify-center">
                         <div className="w-8 h-8 rounded-lg bg-primary-main flex items-center justify-center font-black italic text-lg text-black">C</div>
-                        <span className="text-xl font-black italic tracking-tighter text-text-main">COBRALO</span>
+                        <span className="text-xl font-black italic tracking-tighter text-white">COBRALO</span>
                     </div>
 
                     <div className="mb-8 text-center">
-                        <h2 className="text-2xl font-black text-text-main tracking-tight">
+                        <h2 className="text-2xl font-black text-white tracking-tight">
                             {isRegister ? (
                                 step === 1 ? 'Crear cuenta' : step === 2 ? 'Tu Negocio' : step === 3 ? 'Servicios' : 'Finalizar'
                             ) : 'Bienvenido de vuelta'}
                         </h2>
-                        <p className="text-text-muted font-medium mt-1 text-sm">
+                        <p className="text-zinc-400 font-medium mt-1 text-sm">
                             {isRegister ? `Paso ${step} de 4 — casi listo` : 'Ingresá a tu panel de control'}
                         </p>
                     </div>
 
-                    <div className="rounded-[28px] border border-border-main dark:border-white/[0.08] relative overflow-hidden bg-surface/80 dark:bg-black/40 backdrop-blur-3xl shadow-2xl">
+                    <div className="rounded-[28px] border border-white/[0.08] relative overflow-hidden bg-black/40 backdrop-blur-3xl shadow-2xl">
 
                         {/* Progress bar */}
                         {isRegister && (
