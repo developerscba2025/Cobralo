@@ -151,7 +151,7 @@ const GroupModal = ({ isOpen, onClose, group, onSuccess }: GroupModalProps) => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     className="glass-premium rounded-[40px] w-full max-w-xl relative overflow-hidden flex flex-col max-h-[90vh] shadow-2xl border border-border-main"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                     {/* Header */}
                     <div className="p-8 border-b border-border-main flex justify-between items-start bg-white/5">
