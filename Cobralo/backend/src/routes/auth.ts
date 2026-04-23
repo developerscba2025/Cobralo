@@ -712,8 +712,10 @@ router.get('/google/callback', async (req: Request, res: Response) => {
         const name = userInfo.name;
         const googleId = userInfo.id;
 
+        const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : 'https://cobralo.info';
+
         if (!email) {
-             res.redirect(`${process.env.FRONTEND_URL}/login?error=EmailNotProvided`);
+             res.redirect(`${frontendUrl}/login?error=EmailNotProvided`);
              return;
         }
 
@@ -754,15 +756,16 @@ router.get('/google/callback', async (req: Request, res: Response) => {
             // New user: redirect to login page so they can complete the onboarding wizard
             const gname = encodeURIComponent(name || '');
             const gemail = encodeURIComponent(email || '');
-            res.redirect(`${process.env.FRONTEND_URL}/app/login?token=${token}&isNew=true&gname=${gname}&gemail=${gemail}`);
+            res.redirect(`${frontendUrl}/app/login?token=${token}&isNew=true&gname=${gname}&gemail=${gemail}`);
         } else {
             // Existing user: go straight to dashboard
-            res.redirect(`${process.env.FRONTEND_URL}/app/dashboard?token=${token}`);
+            res.redirect(`${frontendUrl}/app/dashboard?token=${token}`);
         }
         
     } catch (error) {
         console.error('Google OAuth error:', error);
-        res.redirect(`${process.env.FRONTEND_URL}/login?error=OAuthFailed`);
+        const fallbackUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : 'https://cobralo.info';
+        res.redirect(`${fallbackUrl}/login?error=OAuthFailed`);
     }
 });
 
